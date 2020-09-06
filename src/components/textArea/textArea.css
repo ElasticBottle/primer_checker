@@ -1,0 +1,15 @@
+:root {
+    --width: 700px;
+}
+
+.description {
+    align-items: center;
+    width: var(--width);
+}
+
+.input-seq {
+    width: var(--width);
+    height: 100px;
+    margin-top: 10px;
+    margin-bottom: 25px;
+}
