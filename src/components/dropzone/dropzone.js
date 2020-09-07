@@ -17,10 +17,19 @@ const DropZone = () => {
     const dragLeave = (e) => {
         e.preventDefault();
     }
-    const fileDrop = async (e) => {
+    const fileDrop = (e) => {
         e.preventDefault();
         const data = e.dataTransfer
         const files = data.files;
+        checkFiles(files)
+    }
+
+    const filesSelected = (e) => {
+        const files = e.target.files;
+        console.log(files);
+        checkFiles(files)
+    }
+    const checkFiles = async (files) => {
         let to_store = []
         for (let file of files) {
             to_store = to_store.concat(await handleFile(file))
@@ -72,17 +81,29 @@ const DropZone = () => {
         setValidFiles([...filteredFiles])
     }, [selectedFiles])
 
+
+
+
     return (<>
         <div className='container'>
-            <div className='drop-container' onDragOver={dragOver}
-                onDragEnter={dragEnter}
-                onDragLeave={dragLeave}
-                onDrop={fileDrop}>
-                <div className="drop-message">
-                    <div className="upload-icon"></div>
-                    Drag & Drop files here or click to upload
+            <label htmlFor='fasta-input'>
+                <div className='drop-container' onDragOver={dragOver}
+                    onDragEnter={dragEnter}
+                    onDragLeave={dragLeave}
+                    onDrop={fileDrop}>
+                    <div className="drop-message">
+                        <div className="upload-icon"></div>
+                        Drag & Drop files here or click to upload
+                    </div>
+                    <input
+                        className="file-input"
+                        id="fasta-input"
+                        type="file"
+                        onChange={filesSelected}
+                        multiple
+                    />
                 </div>
-            </div>
+            </label>
             <div className="file-display-container">
                 {
                     validFiles.map(
