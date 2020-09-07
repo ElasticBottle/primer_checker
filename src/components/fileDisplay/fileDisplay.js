@@ -27,14 +27,14 @@ const FileDisplay = ({ file, errorMessage, setSelectedFiles }) => {
     }
 
     return <div className="file-status-bar">
-        <div onClick={file.invalid ? () => removeFile(file.name) : () => openPreview(file)}>
+        <div >
             <div className="file-type-logo"></div>
             <div className="file-type">{fileType(file.name)}</div>
-            <span className={`file-name ${file.invalid ? 'file-error' : ''}`}>{file.name}</span>
+            <span className={`file-name ${file.invalid ? 'file-error' : ''}`} onClick={file.invalid ? () => removeFile(file.name) : () => openPreview(file)}>{file.name}</span>
             <span className="file-size">({fileSize(file.size)})</span> {file.invalid && <span className='file-error-message'>({errorMessage})</span>}
         </div>
         <div className="file-remove" onClick={() => removeFile(file.name)}>X</div>
-        <PreviewPane show={previewOpen} handleClose={setPreviewOpen(false)} content={preview} />
+        <PreviewPane show={previewOpen} handleClose={() => setPreviewOpen(false)} content={preview} />
     </div >
 }
 

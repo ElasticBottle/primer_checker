@@ -19,13 +19,13 @@ const PreviewPane = ({ show, handleClose, content }) => {
         return result
     }
     return (
-        <Modal show={show} onHide={() => handleClose()}>
+        <Modal show={show} onHide={handleClose}>
             <Modal.Header closeButton>
                 <Modal.Title>Fasta Primer Preview</Modal.Title>
             </Modal.Header>
             <Modal.Body>{formatContent(content).map((value, index) => <p key={index}>{value}</p>)}</Modal.Body>
             <Modal.Footer>
-                <Button variant="primary" onClick={() => handleClose()}>
+                <Button variant="primary" onClick={handleClose}>
                     Close
                 </Button>
             </Modal.Footer>

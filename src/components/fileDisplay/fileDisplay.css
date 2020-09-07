@@ -4,7 +4,7 @@
     margin-top: 10px;
     margin-bottom: 20px;
     position: relative;
-    line-height: 50px;
+    line-height: 30px;
     height: 50px;
 }
 
@@ -32,6 +32,7 @@
     vertical-align: top;
     margin-left: 50px;
     color: #4aa1f3;
+    cursor: pointer;
 }
 
 .file-error {
@@ -43,6 +44,7 @@
 
 .file-error-message {
     color: red;
+    font-size: small;
 }
 
 .file-type-logo {
