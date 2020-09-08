@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import './dropzone.css';
-import FileDisplay from '../fileDisplay/fileDisplay'
 import { validateFormat } from '../util';
+import Container from 'react-bootstrap/Container';
+import Form from 'react-bootstrap/Form';
 
 
-const DropZone = () => {
-    const [selectedFiles, setSelectedFiles] = useState([]);
-    const [validFiles, setValidFiles] = useState([]);
-    const [errorMessage, setErrorMessage] = useState('');
+const DropZone = ({ selectedFiles, setSelectedFiles, setErrorMessage }) => {
+
     const dragOver = (e) => {
         e.preventDefault();
     }
@@ -24,10 +23,9 @@ const DropZone = () => {
         checkFiles(files)
     }
 
-    const filesSelected = (e) => {
+    const filesSelected = async (e) => {
         const files = e.target.files;
-        console.log(files);
-        checkFiles(files)
+        await checkFiles(files)
     }
     const checkFiles = async (files) => {
         let to_store = []
@@ -69,25 +67,13 @@ const DropZone = () => {
         });
     };
 
-    useEffect(() => {
-        const filteredFiles = selectedFiles.reduce((files, current) => {
-            const match = files.find((file) => file.name === current.name)
-            if (match) {
-                return files
-            } else {
-                return files.concat(current)
-            }
-        }, [])
-        setValidFiles([...filteredFiles])
-    }, [selectedFiles])
 
 
 
-
-    return (<>
-        <div className='container'>
-            <label htmlFor='fasta-input'>
-                <div className='drop-container' onDragOver={dragOver}
+    return (
+        <Form.Group controlId='fasta-sequence'>
+            <label htmlFor='fasta-input' id='fasta-input-label'>
+                <Container className='drop-container' onDragOver={dragOver}
                     onDragEnter={dragEnter}
                     onDragLeave={dragLeave}
                     onDrop={fileDrop}>
@@ -102,19 +88,10 @@ const DropZone = () => {
                         onChange={filesSelected}
                         multiple
                     />
-                </div>
+                </Container>
             </label>
-            <div className="file-display-container">
-                {
-                    validFiles.map(
-                        (file, index) => {
-                            return <FileDisplay file={file} errorMessage={errorMessage} setSelectedFiles={setSelectedFiles} key={index} />
-                        }
-                    )
-                }
-            </div>
-        </div>
-    </>);
+        </Form.Group>
+    );
 }
 
 export default DropZone;

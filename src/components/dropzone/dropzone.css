@@ -1,27 +1,13 @@
-.container {
-    /* transform: translateY(-100%); */
-}
-
-.container p {
-    color: red;
-    text-align: center;
-}
-
 .drop-container {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0;
-    width: 700px;
     height: 100px;
-    border: 4px dashed #4aa1f3;
+    border: 4px dashed #384270;
 }
 
-.drop-message {
-    text-align: center;
-    color: #4aa1f3;
-    font-family: Arial;
-    font-size: 20px;
+#fasta-input-label {
+    display: block;
 }
 
 .upload-icon {
@@ -34,10 +20,6 @@
     padding-top: 30px;
 }
 
-.file-display-container {
-    position: fixed;
-    width: 700px;
-}
 
 .drop-container>input {
     display: none;

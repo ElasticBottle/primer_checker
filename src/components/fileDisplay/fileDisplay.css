@@ -1,50 +1,25 @@
-.file-status-bar {
-    width: 100%;
-    vertical-align: top;
-    margin-top: 10px;
-    margin-bottom: 20px;
-    position: relative;
-    line-height: 30px;
-    height: 50px;
+:root {
+    --left-margin: 30px
 }
 
-.file-status-bar>div {
-    overflow: hidden;
+.file-status-bar {
+    margin-top: 10px;
+    margin-bottom: 20px;
 }
 
 .file-type {
-    display: inline-block !important;
-    position: absolute;
+    text-transform: uppercase;
     font-size: 10px;
     font-weight: 700;
     line-height: 13px;
-    margin-top: 20px;
+    /* display: inline-block !important; */
+    position: absolute;
+    margin-top: 10px;
     padding: 0 3px;
     border-radius: 2px;
     box-shadow: 1px 1px 2px #abc;
     color: #fff;
     background: #0080c8;
-    text-transform: uppercase;
-}
-
-.file-name {
-    display: inline-block;
-    vertical-align: top;
-    margin-left: 50px;
-    color: #4aa1f3;
-    cursor: pointer;
-}
-
-.file-error {
-    display: inline-block;
-    vertical-align: top;
-    margin-left: 50px;
-    color: #9aa9bb;
-}
-
-.file-error-message {
-    color: red;
-    font-size: small;
 }
 
 .file-type-logo {
@@ -53,27 +28,54 @@
     background: url(../../images/generic.png) no-repeat center center;
     background-size: 100%;
     position: absolute;
-    margin-top: 10px;
+}
+
+.file-info {
+    margin-left: var(--left-margin);
+}
+
+.file-name {
+    display: inline-block;
+    color: #4aa1f3;
+    padding-left: 10px;
+    cursor: pointer;
+}
+
+.file-error {
+    color: #9aa9bb;
 }
 
 .file-size {
     display: inline-block;
-    vertical-align: top;
-    color: #30693D;
-    margin-left: 10px;
-    margin-right: 5px;
-    margin-left: 10px;
     color: #444242;
+    padding-left: 10px;
     font-weight: 700;
     font-size: 14px;
 }
 
-.file-remove {
+@media only screen and (min-width: 1024px) {
+    .file-error-message {
+        text-align: end;
+        color: red;
+    }
+}
+
+@media only screen and (max-width: 1024px) {
+    .file-error-message {
+        margin-left: var(--left-margin);
+        padding: 15px;
+        color: red;
+        font-size: small;
+    }
+}
+
+.file-error-message-text {
     position: absolute;
-    top: 20px;
-    right: 10px;
-    line-height: 15px;
-    cursor: pointer;
+    top: 5px;
+}
+
+.file-remove {
+    /* line-height: 15px; */
+    text-align: end;
     color: red;
-    margin-right: -10px;
 }
