@@ -25,3 +25,6 @@ yarn-error.log*
 primer_mutation_starter_pack
 NCBI
 backend
+blastDB
+blast
+ncbi-2.10.1
