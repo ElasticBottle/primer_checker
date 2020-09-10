@@ -3,50 +3,37 @@
 # script written by Sebastian Maurer-Stroh, BII A*STAR (Jan-Apr 2020)
 
 use strict;
-use warnings;
-use CGI;
-use CGI::Carp qw(fatalsToBrowser);
-# print $q->($vairableName)
 
-$c = new CGI;
-
-if ('POST' eq $c->request_method && $c->param('dl')) {
-    # yes, parameter exists
-    print $c->param()
-}
-
-# my ($primerfile,$targetfile) = @ARGV; # $primerfile [with 3 primer sequences using headers >fwd >prb >rev IN ORIENTATION OF THE REFRENCE GENOME] $targetfile [complete human host high quality genomes from GISAID]
+my ($primerfile) = @ARGV; # $primerfile [with 3 primer sequences using headers >fwd >prb >rev IN ORIENTATION OF THE REFRENCE GENOME] $targetfile [complete human host high quality genomes from GISAID]
 
 my %primerlist = ("$primerfile",0);
 # my %primerlist = ("Charite-E",0,"Charite-RdRP",1,"US-CDC-N1",2,"US-CDC-N2",3,"US-CDC-N3",4,"China-CDC-ORF1ab",5,"China-CDC-N",6,"HKU-N",7,"HKU-ORF1b",8,"BGI-Orf1ab",9,"astar113",10,"astar118",11,"astar92",12,"astar115",13,"NPHL-N",14,"NPHL-O",15,"NPHL-S",16,"CGH-N",17);
 
-my $blastdir = "C:/Program Files/NCBI/blast-2.10.1+/bin"; # ~/Software/ncbi-blast-2.10.0+/bin/  /usr/bin/
-my $blastdb = "target";
+my $bastDBFolder = "/home/yeokhw/blastDB/"
+my $blastdb = "/home/yeokhw/blastDB/target";
+my $blastdir = "/afs/bii.a-star.edu.sg/dept/mendel/METHODS/corona/gamma/blast-2.2.23/bin/";
+
 my $wordsize = 7;
 my $evalue = 700000;
 my $maxseqs = 1000000;
 
-my %targs = readFasta($targetfile,0);
-printFastaFile("$targetfile.clean",%targs);
-
 my $distfilter = 1; # distance filter turned on (1) or off (0)
 my $maxdist = 500;  # maximum distance f-p and p-r
-system "${blastdir}makeblastdb -in $targetfile.clean -dbtype nucl -out target -logfile tmp_blastdb.log";
 
-# foreach my $primerfile (sort {$primerlist{$a} <=> $primerlist{$b}} keys %primerlist) {
-#   # print "Taxon ID,Accession,%Homology FWD,%Homology REV,%Homology PRB,Species,Subject Title\n";
-#   my $blasttmpfile = "tmp_blastn_w${wordsize}e${evalue}.csv";
-#   # my $blastoutfile = "${primerfile}_blastn_w${wordsize}e${evalue}.csv";
-#   my $blastoutfile = "${primerfile}_sensitivity.csv";
-#   system "${blastdir}blastn -query $primerfile -word_size $wordsize -db $blastdb -evalue $evalue -max_target_seqs $maxseqs -ungapped -outfmt '10 qaccver saccver qlen nident length qstart qseq qend sstart sseq send pident mismatch gaps evalue bitscore ssciname stitle' -penalty -1 -reward 2 -out $blasttmpfile"; # -negative_taxidlist neg_taxid.txids 
-#   open (BLASTOUT, ">$blastoutfile") || die ("Could not open file $blastoutfile !!!\n");
-#   print BLASTOUT "qaccver,saccver,qlen,nident,length,qstart,qseq,qend,sstart,sseq,send,pident,mismatch,gaps,evalue,bitscore,ssciname,stitle\n";
-#   close(BLASTOUT);
-#   system "cat $blasttmpfile >> $blastoutfile";
-#   system "del /f $blasttmpfile";
-#   my ($miss,$miss3,$miss32,$hits) = primerBLASTcheck($primerfile,$blastoutfile, $distfilter, $maxdist, %targs);
-#   printf "$primerfile\t%.2f\t%.2f\t%.2f\t%d\n",$miss,$miss3,$miss32,$hits;
-#   }
+foreach my $primerfile (sort {$primerlist{$a} <=> $primerlist{$b}} keys %primerlist) {
+  # print "Taxon ID,Accession,%Homology FWD,%Homology REV,%Homology PRB,Species,Subject Title\n";
+  my $blasttmpfile = "${primerfile}_tmp_blastn_w${wordsize}e${evalue}.csv";
+  # my $blastoutfile = "${primerfile}_blastn_w${wordsize}e${evalue}.csv";
+  my $blastoutfile = "${primerfile}_sensitivity.csv";
+  system "${blastdir}blastn -query $primerfile -word_size $wordsize -db ${blastdb} -evalue $evalue -max_target_seqs $maxseqs -ungapped -outfmt \"10 qaccver saccver qlen nident length qstart qseq qend sstart sseq send pident mismatch gaps evalue bitscore ssciname stitle\" -penalty -1 -reward 2 -num_threads 5 -out $blasttmpfile"; # -negative_taxidlist neg_taxid.txids 
+  open (BLASTOUT, ">$blastoutfile") || die ("Could not open file $blastoutfile !!!\n");
+  print BLASTOUT "qaccver,saccver,qlen,nident,length,qstart,qseq,qend,sstart,sseq,send,pident,mismatch,gaps,evalue,bitscore,ssciname,stitle\n";
+  close(BLASTOUT);
+  system "cat $blasttmpfile >> $blastoutfile";
+  system "rm $blasttmpfile";
+  my ($miss,$miss3,$miss32,$hits) = primerBLASTcheck($primerfile,$blastoutfile, $distfilter, $maxdist, %targs);
+  printf "$primerfile\t%.2f\t%.2f\t%.2f\t%d\n",$miss,$miss3,$miss32,$hits;
+  }
 
 # subs
 
@@ -349,65 +336,4 @@ sub mismatchStringsIDnuc3prime {
     }
   # my $sim = 100*$mismatch/$len1;
   return($mismatch);
-  }
-
-sub readFasta {
-  my ($myfile,$mydesc) = @_;
-  # $mydesc:
-  # 0 ... whole ">" description line becomes identifier
-  # 1 ... everything after ">" up to the first space+ becomes identifier /^>([^\r\n\s\t]+)/
-  # 2 ... >xxx|zzzzzzz|xx  "zzzzzzz" becomes identifier /^>[^\|]+\|([^\|]+)\|/
-  my $myid;
-  my %myseqs;
-  my $multi = 0;
-  open (FILE, "$myfile") || die ("ERROR: readFasta() could not open file $myfile !!!\n");
-  while (defined(my $line = <FILE>)) {
-    $line =~ s/\r//g;
-    if ($mydesc == 0 && $line =~ /^>/) {
-      $myid = $line;
-      $myid =~ s/[>\n]+//g;
-      $myid =~ s/\s+/_/g;
-      if (exists($myseqs{$myid})) {
-        $multi++;
-        $myid =~ s/\n/_$multi\n/;
-        #~ $myid = $myid . "_$multi";
-        }
-      $myseqs{$myid} = "";
-      }
-    if ($mydesc == 1 && $line =~ /^>([^\r\n\s\t]+)/) {
-      $myid = $1;
-      if (exists($myseqs{$myid})) {
-        $multi++;
-        $myid = $myid . "_$multi";
-        }
-      $myseqs{$myid} = "";
-      }
-    if ($mydesc == 2 && $line =~ /^>[^\|]+\|([^\|]+)\|/) {
-      $myid = $1;
-      if (exists($myseqs{$myid})) {
-        $multi++;
-        $myid = $myid . "_$multi";
-        }
-      $myseqs{$myid} = "";
-      }
-    if ($mydesc == 2 && $line =~ /^>/ && $line !~ /^>[^\|]+\|([^\|]+)\|/) {
-      die ("ERROR: readFasta() identifier parsing option (/^>[^\|]+\|([^\|]+)\|/) not suitable with description lines in $myfile!!!\n");
-      }
-    if ($line !~ /^>/) {
-      $line =~ s/[^A-Za-z]//g;
-      $line = uc($line);
-      $myseqs{$myid} = $myseqs{$myid}.$line;
-      }
-    } 
-  close (FILE);
-  return(%myseqs);
-  }
-
-sub printFastaFile {
-  my ($myfile,%myseqs) = @_;
-  open (FILE, ">$myfile") || die ("ERROR: printFastaFile() could not open file $myfile to write!!!\n");
-  foreach my $id (keys %myseqs)  {
-    print FILE ">$id\n$myseqs{$id}\n";
-    }
-  close(FILE);
   }
