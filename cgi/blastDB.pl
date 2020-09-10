@@ -7,14 +7,14 @@ use warnings;
 
 
 my $blastdir = "/afs/bii.a-star.edu.sg/dept/mendel/METHODS/corona/gamma/blast-2.2.23/bin/";
-my $bastDBFolder = "/home/yeokhw/blastDB/"
+my $blastDBFolder = "/home/yeokhw/blastDB/";
 my $blastdb = "/home/yeokhw/blastDB/target";
 
-my %referenceFile = "/home/yeokhw/blastDB/gisaid_cov2020_sequences_aligned_processed.fasta"
-my %targs = readFasta($referenceFiles,0);
-printFastaFile("${blastDBFolder}$referenceFile.clean",%targs);
+my $referenceFile = "/home/yeokhw/blastDB/gisaid_cov2020_sequences_aligned_processed.fasta";
+my $targs = readFasta($referenceFile,0);
+printFastaFile("${blastDBFolder}$referenceFile.clean", $targs);
 
-system "${blastdir}makeblastdb -in ${blastDBFolder}$referenceFiles.clean -dbtype nucl -out ${blastdb} -logfile tmp_blastdb.log";
+system "${blastdir}makeblastdb -in ${blastDBFolder}$referenceFile.clean -dbtype nucl -out ${blastdb} -logfile tmp_blastdb.log";
 
 sub readFasta {
   my ($myfile,$mydesc) = @_;
