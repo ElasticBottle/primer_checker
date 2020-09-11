@@ -6,19 +6,3 @@
   color: #384270;
   font-weight: bold;
 }
-
-.alternative-upload {
-  text-align: center;
-  text-transform: uppercase;
-
-  font-weight: 700;
-  font-size: larger;
-}
-
-.upload-error-message {
-  color: red
-}
-
-.loader {
-  margin-right: 10px;
-}

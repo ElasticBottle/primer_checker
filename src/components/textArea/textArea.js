@@ -26,10 +26,14 @@ const TextArea = ({ setTextFieldFasta }) => {
             //     "name": `fasta${lastMod}`,
             //     'size': getRandomInt(80, 90)
             // }
-            setTextFieldFasta(textAreaValue)
+            setTextFieldFasta([{
+                "invalid": false,
+                "content": textAreaValue,
+                "id": "text_input_fasta",
+            }])
         } else {
             console.log('Nope');
-            setTextFieldFasta('')
+            setTextFieldFasta([])
             setErrorMessage('Sequence not recognized! Please check.')
         }
     }, [textAreaValue, setTextFieldFasta])

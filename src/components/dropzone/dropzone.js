@@ -45,12 +45,13 @@ const DropZone = ({ selectedFiles, setSelectedFiles, setErrorMessage }) => {
 
     const readFile = (file) => {
         const reader = new FileReader();
-
+        console.log(file)
         return new Promise((resolve, reject) => {
             reader.onload = function (event) {
                 if (validateFormat(event.target.result)) {
                     file['invalid'] = false
                     file['content'] = event.target.result
+                    file['id'] = file.name
                 } else {
                     console.log('file loaded but invalid format');
                     setErrorMessage('File not a recognized format. Please check')

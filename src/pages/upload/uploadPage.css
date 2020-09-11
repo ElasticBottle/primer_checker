@@ -1,0 +1,33 @@
+.alternative-upload {
+    text-align: center;
+    text-transform: uppercase;
+
+    font-weight: 700;
+    font-size: larger;
+}
+
+.upload-error-message {
+    justify-content: center;
+    color: red;
+}
+
+
+.loading-container {
+    text-align: center;
+    align-items: center;
+}
+
+
+
+.loader {
+    margin-right: 10px;
+}
+
+.loading-container button {
+    text-align: left;
+}
+
+.loading-container>span {
+    width: 3vw;
+    height: 3vw;
+}
