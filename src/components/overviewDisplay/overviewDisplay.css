@@ -1,0 +1,13 @@
+.graph-container {
+    margin-bottom: 30px;
+}
+
+.chart-title {
+    font-size: 20px;
+    text-align: center;
+    z-index: 10;
+}
+
+.recharts-wrapper {
+    margin: 0 auto;
+}

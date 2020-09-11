@@ -1,0 +1,10 @@
+.display-tag {
+    display: inline;
+    font-size: large;
+    font-weight: 600;
+}
+
+.dropdown {
+    display: inline;
+    margin-left: 15px;
+}
