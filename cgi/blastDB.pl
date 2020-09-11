@@ -12,7 +12,7 @@ my $blastdb = "/HOME_ann/BII/biipsashare/winston/primer_mutation/blastDB/target"
 
 my $referenceFile = "/HOME_ann/BII/biipsashare/winston/primer_mutation/blastDB/gisaid_cov2020_sequences_aligned_processed.fasta";
 my $targs = readFasta($referenceFile,0);
-printFastaFile("${blastDBFolder}$referenceFile.clean", $targs);
+printFastaFile("$referenceFile.clean", $targs);
 
 system "${blastdir}makeblastdb -in ${blastDBFolder}$referenceFile.clean -dbtype nucl -out ${blastdb} -logfile tmp_blastdb.log";
 
