@@ -1,0 +1,38 @@
+.recharts-wrapper {
+    margin: 0 auto;
+}
+
+
+@media only screen and (max-width: 600px) {
+    .primer-chart-title {
+        text-align: center;
+        font-size: 14px;
+    }
+
+    .primer-misses-container {
+        margin-top: 20px;
+    }
+
+
+    .primer-misses-chart-title {
+        font-size: 16px;
+    }
+
+}
+
+@media only screen and (min-width: 600px) {
+    .primer-chart-title {
+        text-align: center;
+        font-size: 20px;
+    }
+
+    .primer-misses-container {
+        margin-top: 30px;
+    }
+
+
+    .primer-misses-chart-title {
+        font-size: 22px;
+    }
+
+}
