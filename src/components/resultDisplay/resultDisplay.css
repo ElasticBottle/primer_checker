@@ -1,3 +1,8 @@
+.no-data {
+    font-size: larger;
+    font-weight: 500;
+}
+
 .result-display-container {
     margin-top: 20px;
 }
