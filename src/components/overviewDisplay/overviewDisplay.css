@@ -2,11 +2,20 @@
     margin-bottom: 30px;
 }
 
-.chart-title {
-    font-size: 20px;
-    text-align: center;
-    z-index: 10;
+@media only screen and (max-width: 600px) {
+    .chart-title {
+        font-size: 14px;
+        text-align: center;
+    }
 }
+
+@media only screen and (min-width: 600px) {
+    .chart-title {
+        font-size: 20px;
+        text-align: center;
+    }
+}
+
 
 .recharts-wrapper {
     margin: 0 auto;

@@ -14,7 +14,6 @@ import DropZone from "../../components/dropzone/dropzone";
 import TextArea from '../../components/textArea/textArea';
 import FileDisplay from '../../components/fileDisplay/fileDisplay';
 import primerCheckService from '../..//services/primerCheck';
-
 import './uploadPage.css';
 
 const UploadPage = ({ setResults }) => {
@@ -81,8 +80,8 @@ const UploadPage = ({ setResults }) => {
                 setIsLoading(false)
                 console.log('response is', response);
                 console.log('data from is: ', response.data);
-                setResults(response.data)
-                history.push("/results");
+                setResults(response.data);
+                history.push("/results/Overview");
             }).catch(e => console.log(e))
     }
     return (

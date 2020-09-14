@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Dropdown from 'react-bootstrap/Dropdown';
 import FormControl from 'react-bootstrap/FormControl';
+import { useHistory } from 'react-router-dom';
 import './dropdown.css'
 
 const CustomMenu = React.forwardRef(
@@ -31,11 +32,11 @@ const CustomMenu = React.forwardRef(
     },
 );
 
-const DropdownMenu = ({ displayOptions, resultToDisplay, setResultToDisplay }) => {
+const DropdownMenu = ({ displayOptions, resultToDisplay }) => {
+    const history = useHistory();
     const handleClick = (event) => {
         const newLabel = event.target.innerText
-        setResultToDisplay(newLabel)
-        // TODO (eb): set up react router
+        history.push(`/results/${newLabel}`)
     }
 
     return (

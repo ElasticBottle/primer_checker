@@ -17,31 +17,37 @@ import {
   BrowserRouter as Router,
   Switch,
   Route,
+  Link
 } from "react-router-dom";
 import ResultPage from "./pages/results/resultsPage";
 
 
 
 function App() {
-  const [results, setResults] = useState(new Map())
+  const [results, setResults] = useState({})
   return (
     <Router>
-      <div>
+      <Link to='/' style={{ textDecoration: 'none' }}>
         <h1 className='title'>Primer Mutation</h1>
-        <Switch>
-          <Route exact={true} path='/'>
-            <UploadPage
-              setResults={setResults}
-            />
-          </Route>
-          <Route exact={true} path="/results">
-            <ResultPage results={results} />
-          </Route>
-          <Route path='/'>
-            <div>404: Page not found</div>
-          </Route>
-        </Switch >
-      </div >
+      </Link>
+
+      <Switch>
+        <Route exact={true} path='/'>
+          <UploadPage
+            setResults={setResults}
+          />
+        </Route>
+        <Route exact={true} path="/results/:toDisplay">
+          <ResultPage results={results} />
+        </Route>
+        <Route path='/results'>
+          <ResultPage results={results} />
+        </Route>
+        <Route path='/'>
+          <div>404: Page not found</div>
+        </Route>
+      </Switch >
+
     </Router>
   );
 }
