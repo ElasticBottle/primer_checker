@@ -7,6 +7,7 @@ import './dropdown.css'
 const CustomMenu = React.forwardRef(
     ({ children, style, className, 'aria-labelledby': labeledBy }, ref) => {
         const [value, setValue] = useState('');
+
         return (
             <div
                 ref={ref}
@@ -43,16 +44,16 @@ const DropdownMenu = ({ displayOptions, resultToDisplay }) => {
         <div>
             <p className='display-tag'>Displaying</p>
             <Dropdown className='dropdown'>
-                <Dropdown.Toggle variant="light" id="dropdown-basic">
+                <Dropdown.Toggle variant="light" id="dropdown-custom-components">
                     {resultToDisplay}
                 </Dropdown.Toggle>
 
                 <Dropdown.Menu as={CustomMenu}>
                     <Dropdown.Item as="button" onClick={handleClick} active={resultToDisplay === 'Overview'}>Overview</Dropdown.Item>
-                    <Dropdown.Divider />
+                    <Dropdown.Divider>overview</Dropdown.Divider>
 
                     {displayOptions.map((displayOption, index) => {
-                        return (displayOption !== 'Overview' ?
+                        return (displayOption !== 'databaseCount' ?
                             <Dropdown.Item key={index} onClick={handleClick} active={resultToDisplay === displayOption}>{displayOption}</Dropdown.Item> : null
                         );
 
