@@ -12,12 +12,16 @@
     "react": "^16.13.1",
     "react-bootstrap": "^1.3.0",
     "react-dom": "^16.13.1",
-    "react-map-gl": "^5.2.8",
     "react-router-dom": "^5.2.0",
     "react-scripts": "3.4.3",
     "react-simple-maps": "^2.1.2",
     "react-tooltip": "^4.2.9",
-    "recharts": "^1.8.5"
+    "react-vega": "^7.4.1",
+    "recharts": "^1.8.5",
+    "vega": "^5.15.0",
+    "vega-embed": "^6.12.2",
+    "vega-lite": "^4.15.0",
+    "vega-lite-api": "^0.13.0"
   },
   "scripts": {
     "start": "react-scripts start",
