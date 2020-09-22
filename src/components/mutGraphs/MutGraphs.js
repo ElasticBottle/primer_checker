@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, memo } from "react";
 
 import vegaEmbed from "vega-embed";
 import Form from "react-bootstrap/Form";
@@ -6,14 +6,19 @@ import { debounce } from "../util";
 
 const vl = require("vega-lite-api");
 
-function buildGraph(lookBack, toPlot) {
+function buildGraph(lookBack, toPlot, timeFrameBrush) {
   const width = 700;
-
   const mutation_pct = "mutation_pct";
   const mutation_pct3 = "mutation_pct3";
   const smooth_mut = "smooth_mutation_pct";
   const smooth_mut3 = "smooth_mutation_pct3";
-  const brush = vl.selectInterval().encodings("x");
+  const brush =
+    timeFrameBrush === undefined || timeFrameBrush.length === 0
+      ? vl.selectInterval().encodings("x")
+      : vl
+          .selectInterval()
+          .encodings("x")
+          .init({ x: timeFrameBrush.map((time) => time / 1) });
   const weightedAverageCalculation = [
     vl.window(vl.mean(mutation_pct).as(smooth_mut)).frame([-lookBack, 0]),
     vl.window(vl.mean(mutation_pct3).as(smooth_mut3)).frame([-lookBack, 0]),
@@ -66,27 +71,26 @@ function buildGraph(lookBack, toPlot) {
   return chartSpec;
 }
 
-const MutGraphs = ({ toDisplay, data }) => {
+const MutGraphs = ({ toDisplay, data, timeFrameBrush, setTimeFrameBrush }) => {
   const [lookBack, setLookBack] = useState(6);
 
   function handleChange(e) {
     setLookBack(e.target.value);
   }
 
-  console.log(toDisplay, data);
   const toPlot = data.filter((data) => {
-    if (toDisplay !== "Overview") {
-      return toDisplay === data.name ? data : null;
+    if (toDisplay[0] !== "Overview") {
+      return toDisplay.includes(data.name);
     }
     return data;
   });
 
   useEffect(() => {
-    const chartSpec = buildGraph(lookBack, toPlot);
+    const chartSpec = buildGraph(lookBack, toPlot, timeFrameBrush);
     let intervalSignal = "";
     vegaEmbed("#chart", chartSpec.toJSON(), {
       patch: (spec) => {
-        console.log(spec);
+        // console.log(spec);
         const signals = spec.signals;
         for (const signal of signals) {
           if (signal.name.startsWith("sel")) {
@@ -113,12 +117,17 @@ const MutGraphs = ({ toDisplay, data }) => {
           intervalSignal,
           debounce(function (name, value) {
             const start_end_date = value.date;
-            console.log(name, value);
-          }, 280)
+            // console.log(name, value);
+            if (start_end_date === undefined) {
+              setTimeFrameBrush([]);
+            } else {
+              setTimeFrameBrush(start_end_date);
+            }
+          }, 10)
         );
       })
       .catch(console.warn);
-  }, [lookBack, toPlot]);
+  }, [lookBack, toPlot, timeFrameBrush, setTimeFrameBrush]);
 
   return (
     <>
@@ -140,4 +149,4 @@ const MutGraphs = ({ toDisplay, data }) => {
   );
 };
 
-export default MutGraphs;
+export default memo(MutGraphs);

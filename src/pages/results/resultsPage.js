@@ -6,7 +6,8 @@ import Container from "react-bootstrap/Container";
 import { useParams } from "react-router-dom";
 
 const ResultPage = ({ results }) => {
-  const { toDisplay } = useParams();
+  const { display } = useParams();
+  const toDisplay = display.split("&");
 
   return (
     <div>
