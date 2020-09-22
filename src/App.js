@@ -10,48 +10,36 @@ import React, { useState } from "react";
 // import TextArea from './components/textArea/textArea';
 // import FileDisplay from './components/fileDisplay/fileDisplay';
 // import primerCheckService from './services/primerCheck';
-import UploadPage from './pages/upload/uploadPage';
-import './App.css';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import {
-  BrowserRouter as Router,
-  Switch,
-  Route,
-  Link
-} from "react-router-dom";
+import UploadPage from "./pages/upload/uploadPage";
+import "./App.css";
+import "bootstrap/dist/css/bootstrap.min.css";
+import { BrowserRouter as Router, Switch, Route, Link } from "react-router-dom";
 import ResultPage from "./pages/results/resultsPage";
 
-
-
 function App() {
-  const [results, setResults] = useState({})
+  const [results, setResults] = useState({});
   return (
     <Router>
-      <Link to='/' style={{ textDecoration: 'none' }}>
-        <h1 className='title'>Primer Mutation</h1>
+      <Link to="/" style={{ textDecoration: "none" }}>
+        <h1 className="title">Primer Mutation</h1>
       </Link>
 
       <Switch>
-        <Route exact={true} path='/'>
-          <UploadPage
-            setResults={setResults}
-          />
+        <Route exact={true} path="/">
+          <UploadPage setResults={setResults} />
         </Route>
-        <Route exact={true} path="/results/:toDisplay">
+        <Route exact={true} path="/results/:display">
           <ResultPage results={results} />
         </Route>
-        <Route path='/results'>
+        <Route path="/results">
           <ResultPage results={results} />
         </Route>
-        <Route path='/'>
+        <Route path="/">
           <div>404: Page not found</div>
         </Route>
-      </Switch >
-
+      </Switch>
     </Router>
   );
 }
-
-
 
 export default App;
