@@ -6,7 +6,8 @@ import Form from "react-bootstrap/Form";
 import InputGroup from "react-bootstrap/InputGroup";
 import Col from "react-bootstrap/Col";
 import Row from "react-bootstrap/Row";
-import { Container } from "react-bootstrap";
+import Container from "react-bootstrap/Container";
+import { CSVLink } from "react-csv";
 
 import "./tableDisplay.css";
 
@@ -52,7 +53,7 @@ function TableDisplay({ data }) {
       },
       {
         Header: "Location",
-        accessor: "ISO_A3",
+        accessor: "country_name",
       },
     ],
     []
@@ -119,7 +120,6 @@ function TableDisplay({ data }) {
           })}
         </tbody>
       </Table>
-
       <Row className="pagination">
         <Col className="page-controls" sm={12} md={4}>
           <Button
@@ -188,6 +188,16 @@ function TableDisplay({ data }) {
             ))}
           </Form.Control>
         </Col>
+      </Row>
+      <Row>
+        <CSVLink
+          data={data}
+          filename={"sensitivity_miss.csv"}
+          className="btn btn-dark"
+          target="_blank"
+        >
+          Download Table
+        </CSVLink>
       </Row>
     </Container>
   );

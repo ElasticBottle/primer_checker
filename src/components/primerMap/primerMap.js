@@ -8,6 +8,7 @@ import {
   Geography,
 } from "react-simple-maps";
 import Container from "react-bootstrap/Container";
+import { CSVLink } from "react-csv";
 
 import "./primerMap.css";
 
@@ -20,7 +21,6 @@ const PrimerMap = ({
   setTooltipContent,
   data,
   db,
-  toDisplay,
   timeFrameBrush,
   setTimeFrameBrush,
 }) => {
@@ -35,22 +35,6 @@ const PrimerMap = ({
     }, new Map());
     return missByCountry;
   }
-
-  const dataFilter = (value) => {
-    const currDate = new Date(value.date);
-    let isWithinTimeFrame = true;
-    let isToDisplay = true;
-    if (timeFrameBrush.length !== 0) {
-      const [startDate, endDate] = timeFrameBrush;
-      isWithinTimeFrame =
-        currDate >= new Date(startDate) && currDate <= new Date(endDate);
-    }
-    if (toDisplay[0] !== "Overview") {
-      isToDisplay =
-        toDisplay.filter((name) => name === value.primer).length !== 0;
-    }
-    return isWithinTimeFrame && isToDisplay;
-  };
 
   function handleClick(countryISO3, data) {
     const timeFrame = extent(
@@ -79,14 +63,34 @@ const PrimerMap = ({
     }
   }
 
-  // const dataCleaned = filterData(data, timeFrameBrush, toDisplay);
-  const dataCleaned = data.filter(dataFilter);
-  const countryMisses = getCountryMissCounts(dataCleaned);
-  const maxMiss = Math.max(...countryMisses.values());
+  function getDateString(time) {
+    var date = new Date(time);
+    return new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+      .toISOString()
+      .split("T")[0];
+  }
 
+  const countryMisses = getCountryMissCounts(data);
+  const date =
+    timeFrameBrush.length === 0
+      ? Object.keys(db)[Object.keys(db).length - 1]
+      : getDateString(timeFrameBrush[1]);
+  const maxPctMiss = Math.max(
+    ...Array.from(countryMisses.keys()).map((country) => {
+      return countryMisses.get(country) / (db[date][country] || 1);
+    })
+  );
   return (
     <Container>
       <h2>Map of viruses mutations</h2>
+      <CSVLink
+        data={data}
+        filename={"sensitivity_miss.csv"}
+        className="btn btn-dark"
+        target="_blank"
+      >
+        Download Map Data
+      </CSVLink>
       <ComposableMap data-tip="" projectionConfig={{ scale: 200 }}>
         <ZoomableGroup>
           <Geographies geography={geoUrl}>
@@ -95,24 +99,32 @@ const PrimerMap = ({
                 const missCount = countryMisses.has(geo.properties.ISO_A3)
                   ? countryMisses.get(geo.properties.ISO_A3)
                   : 0;
+                const pctMiss = (
+                  (missCount / (db[date][geo.properties.ISO_A3] || 100)) *
+                  100
+                ).toFixed(2);
                 return (
                   <Geography
                     key={geo.rsmKey}
                     geography={geo}
                     onMouseEnter={() => {
                       const { NAME } = geo.properties;
-                      setTooltipContent(`${NAME} — ${missCount} Misses`);
+                      setTooltipContent(
+                        `${NAME}: <br/> 
+                        ${missCount} Absolute Misses.<br/> 
+                        ${pctMiss}% Miss: `
+                      );
                     }}
                     onMouseLeave={() => {
                       setTooltipContent("");
                     }}
                     onClick={() => {
-                      handleClick(geo.properties.ISO_A3, dataCleaned);
+                      handleClick(geo.properties.ISO_A3, data);
                     }}
                     style={{
                       default: {
-                        fill: missCount
-                          ? colorScale(missCount / maxMiss)
+                        fill: pctMiss
+                          ? colorScale(missCount / maxPctMiss)
                           : "#D6D6DA",
                         outline: "none",
                       },

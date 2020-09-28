@@ -9,10 +9,12 @@ import "./visualizationDisplay.css";
 const VisualizationDisplay = ({
   toDisplay,
   overviewData,
+  combinedOverview,
   mapData,
   dbCount,
+  timeFrameBrush,
+  setTimeFrameBrush,
 }) => {
-  const [timeFrameBrush, setTimeFrameBrush] = useState([]);
   const [tooltipContent, setTooltipContent] = useState("");
 
   return (
@@ -20,6 +22,7 @@ const VisualizationDisplay = ({
       <MutGraphs
         toDisplay={toDisplay}
         data={overviewData}
+        combinedOverview={combinedOverview}
         timeFrameBrush={timeFrameBrush}
         setTimeFrameBrush={setTimeFrameBrush}
       />
@@ -32,7 +35,8 @@ const VisualizationDisplay = ({
           timeFrameBrush={timeFrameBrush}
           setTimeFrameBrush={setTimeFrameBrush}
         />
-        <ReactTooltip>{tooltipContent}</ReactTooltip>
+
+        <ReactTooltip html={true}>{tooltipContent}</ReactTooltip>
       </div>
     </div>
   );
