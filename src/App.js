@@ -21,7 +21,7 @@ function App() {
   return (
     <Router>
       <Link to="/" style={{ textDecoration: "none" }}>
-        <h1 className="title">Primer Mutation</h1>
+        <h1 className="title">Primer Checker</h1>
       </Link>
 
       <Switch>

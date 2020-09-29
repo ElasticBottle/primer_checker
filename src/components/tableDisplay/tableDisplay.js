@@ -59,6 +59,26 @@ function TableDisplay({ data }) {
     []
   );
 
+  const headers = columns.map((header) => {
+    return { label: header.Header, key: header.accessor };
+  });
+  headers.push(
+    ...[
+      {
+        label: "ISO A3",
+        key: "ISO_A3",
+      },
+      {
+        label: "Virus Match Index (Start, End)",
+        key: "virus_match_idx",
+      },
+      {
+        label: "Primer Match Index (Start, End)",
+        key: "primer_match_idx",
+      },
+    ]
+  );
+
   const {
     getTableProps,
     getTableBodyProps,
@@ -192,6 +212,7 @@ function TableDisplay({ data }) {
       <Row>
         <CSVLink
           data={data}
+          headers={headers}
           filename={"sensitivity_miss.csv"}
           className="btn btn-dark"
           target="_blank"

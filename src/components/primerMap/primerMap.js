@@ -24,6 +24,39 @@ const PrimerMap = ({
   timeFrameBrush,
   setTimeFrameBrush,
 }) => {
+  const [downloadData, setDownloadData] = React.useState([]);
+  const headers = [
+    {
+      label: "Country",
+      key: "country",
+    },
+    {
+      label: "ISO A3",
+      key: "ISO_A3",
+    },
+    {
+      label: "Missed %",
+      key: "missed_pct",
+    },
+    {
+      label: "Absolute Misses",
+      key: "abs_miss",
+    },
+    {
+      label: "Submitted Virus",
+      key: "country_total",
+    },
+
+    {
+      label: "Start Date",
+      key: "startDate",
+    },
+    {
+      label: "End Date",
+      key: "endDate",
+    },
+  ];
+
   function getCountryMissCounts(data) {
     const missByCountry = data.reduce((count, data) => {
       if (count.has(data.ISO_A3)) {
@@ -63,6 +96,12 @@ const PrimerMap = ({
     }
   }
 
+  function getDates(timeFrameBrush, db) {
+    return timeFrameBrush.length === 0
+      ? [Object.keys(db)[0], Object.keys(db)[Object.keys(db).length - 1]]
+      : [getDateString(timeFrameBrush[0]), getDateString(timeFrameBrush[1])];
+  }
+
   function getDateString(time) {
     var date = new Date(time);
     return new Date(date.getTime() - date.getTimezoneOffset() * 60000)
@@ -70,24 +109,67 @@ const PrimerMap = ({
       .split("T")[0];
   }
 
+  function downloadDataClick(
+    countryMisses,
+    countryMissesPct,
+    startDate,
+    endDate,
+    data
+  ) {
+    return () => {
+      const toDownload = [];
+      for (const [countryISO, absMiss] of countryMisses) {
+        toDownload.push({
+          country: data.find((element) => element.ISO_A3 === countryISO)
+            .country_name,
+          ISO_A3: countryISO,
+          country_total: absMiss / (countryMissesPct.get(countryISO) / 100),
+          missed_pct: countryMissesPct.get(countryISO),
+          abs_miss: absMiss,
+          startDate: startDate,
+          endDate: endDate,
+        });
+      }
+      console.log("fired", toDownload);
+      setDownloadData(toDownload);
+    };
+  }
+
   const countryMisses = getCountryMissCounts(data);
-  const date =
-    timeFrameBrush.length === 0
-      ? Object.keys(db)[Object.keys(db).length - 1]
-      : getDateString(timeFrameBrush[1]);
-  const maxPctMiss = Math.max(
-    ...Array.from(countryMisses.keys()).map((country) => {
-      return countryMisses.get(country) / (db[date][country] || 1);
-    })
+  const [startDate, endDate] = getDates(timeFrameBrush, db);
+  const countryMissesPct = Array.from(countryMisses.keys()).reduce(
+    (data, country) => {
+      data.set(
+        country,
+        (
+          (countryMisses.get(country) / (db[endDate][country] || 100)) *
+          100
+        ).toFixed(2)
+      );
+      return data;
+    },
+    new Map()
   );
+  console.log("countryMissesPct :>> ", countryMissesPct);
+  console.log("countryMissesPct.values() :>> ", countryMissesPct.values());
+  const maxPctMiss = Math.max(...Array.from(countryMissesPct.values()));
+  console.log("maxPctMiss :>> ", maxPctMiss);
   return (
     <Container>
       <h2>Map of viruses mutations</h2>
       <CSVLink
-        data={data}
-        filename={"sensitivity_miss.csv"}
+        data={downloadData}
+        headers={headers}
+        filename={"geo_misses.csv"}
         className="btn btn-dark"
         target="_blank"
+        onClick={downloadDataClick(
+          countryMisses,
+          countryMissesPct,
+          startDate,
+          endDate,
+          data
+        )}
       >
         Download Map Data
       </CSVLink>
@@ -99,10 +181,8 @@ const PrimerMap = ({
                 const missCount = countryMisses.has(geo.properties.ISO_A3)
                   ? countryMisses.get(geo.properties.ISO_A3)
                   : 0;
-                const pctMiss = (
-                  (missCount / (db[date][geo.properties.ISO_A3] || 100)) *
-                  100
-                ).toFixed(2);
+                const pctMiss =
+                  countryMissesPct.get(geo.properties.ISO_A3) || 0;
                 return (
                   <Geography
                     key={geo.rsmKey}
@@ -123,9 +203,10 @@ const PrimerMap = ({
                     }}
                     style={{
                       default: {
-                        fill: pctMiss
-                          ? colorScale(missCount / maxPctMiss)
-                          : "#D6D6DA",
+                        fill:
+                          parseInt(pctMiss) !== 0
+                            ? colorScale(pctMiss / maxPctMiss)
+                            : "#949494",
                         outline: "none",
                       },
                       // default: {
