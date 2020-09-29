@@ -103,6 +103,7 @@ function TableDisplay({ data }) {
 
   return (
     <Container>
+      <h2 className="table-title">Overview of Missed Viruses</h2>
       <Table
         {...getTableProps()}
         variant="light"
