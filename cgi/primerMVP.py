@@ -1,10 +1,14 @@
-#! /afs//bii.a-star.edu.sg/dept/mendel/METHODS/corona/local/anaconda3/bin/python3.7
+# !/afs//bii.a-star.edu.sg/dept/mendel/METHODS/corona/local/anaconda3/bin/python3.7
 
-import cgi, json, sys, subprocess
-from typing import List, Dict
+import cgi
 
 # use to provide tracebacks within the cgi if something goes wrong
 import cgitb
+import json
+import subprocess
+import sys
+from io import StringIO
+from typing import Any, Dict, List, Tuple
 
 # Prints any error to t windows from which the script was executed from
 cgitb.enable()
@@ -21,9 +25,8 @@ def print_headers():
 
 def read_input():
     input_files = sys.stdin.readlines()
-    print(input_files)
     if len(input_files) != 0:
-        input_files = json.loads(input_files)
+        input_files = json.loads(input_files[0])
         return input_files
     else:
         print(
@@ -32,19 +35,22 @@ def read_input():
         return []
 
 
-def analyse_primes(input_files: List[Dict]):
+def analyse_primer(input_file: Dict[str, Any]):
     """
     Args:
-        input_files(List[Dict]): each Dict element contains keys 'invalid' and 'content'
+        input_files(Dict[str, Any]): contains keys 'invalid', 'id', and 'content'
     """
 
-    def save_file(file: Dict):
-        with open("~", "w") as f:
-            pass
+    def split_frp(content: str) -> Tuple[str, str, str]:
+        # splitted = content.split("\n")
+        # content.replace(r"\n", "")
+        # print(splitted)
+        return ("FWD_HERE", "REV_HERE", "PRB_HERE")
 
-    for file in input_files:
-        save_file(file)
-        subprocess.run()
+    primerId = input_file.get("id", "missing_id")
+    content = input_file.get("content", "missing_content")
+    fwd, rev, prb = split_frp(content)
+    print(primerId, content)
 
 
 # print(json.dumps(input_files, indent=4))
@@ -55,5 +61,12 @@ def analyse_primes(input_files: List[Dict]):
 
 def main():
     print_headers()
+    # sys.stdin = StringIO(
+    #     """{"data": [{"content": ">fwd↵GTGAAATGGTCATGTGTGGCGG↵>rev↵TATGCTAATAGTGTTTTTAACATTTG↵>prb↵CAGGTGGAACCTCATCAGGAGATGC", "id": "text_input_fasta", "invalid":false}, {"content": ">fwd↵GTGAAATGGTCATGTGTGGCGG↵>rev↵TATGCTAATAGTGTTTTTAACATTTG↵>prb↵CAGGTGGAACCTCATCAGGAGATGC", "id": "text_input_fasta3", "invalid":false}]}"""
+    # )
     input_files = read_input()
-    analyse_primes(input_files)
+    list(map(analyse_primer, input_files.get("data", [])))
+
+
+if __name__ == "__main__":
+    main()
