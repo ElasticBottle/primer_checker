@@ -19,7 +19,7 @@ import ResultPage from "./pages/results/resultsPage";
 function App() {
   const [results, setResults] = useState({});
   return (
-    <Router>
+    <Router basename="/METHODS/corona/gamma/primer/build">
       <Link to="/" style={{ textDecoration: "none" }}>
         <h1 className="title">Primer Checker</h1>
       </Link>

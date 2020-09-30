@@ -138,15 +138,15 @@ const PrimerMap = ({
   const countryMisses = getCountryMissCounts(data);
   const [startDate, endDate] = getDates(timeFrameBrush, db);
   const countryMissesPct = Array.from(countryMisses.keys()).reduce(
-    (data, country) => {
-      data.set(
+    (accumulated, country) => {
+      accumulated.set(
         country,
         (
           (countryMisses.get(country) / (db[endDate][country] || 100)) *
           100
         ).toFixed(2)
       );
-      return data;
+      return accumulated;
     },
     new Map()
   );
