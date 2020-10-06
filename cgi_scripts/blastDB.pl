@@ -6,11 +6,11 @@ use strict;
 use warnings;
 
 
-my $blastdir = "/HOME_ann/BII/biipsashare/winston/primer_mutation/ncbi-2.10.1/bin/";
-my $blastDBFolder = "/HOME_ann/BII/biipsashare/winston/primer_mutation/blastDB/";
-my $blastdb = "/HOME_ann/BII/biipsashare/winston/primer_mutation/blastDB/target";
+my $blastdir = "/afs/bii.a-star.edu/dept/mendel/METHODS/corona/gamma/bin/ncbi-2.10.1/bin/";
+my $blastDBFolder = "/home/yeokhw/blastDB/";
+my $blastdb = "/home/yeokhw/blastDB/database";
 
-my $referenceFile = "/HOME_ann/BII/biipsashare/winston/primer_mutation/blastDB/gisaid_cov2020_sequences_aligned_processed.fasta";
+my $referenceFile = "/home/yeokhw/gisaid_cov2020_sequences_aligned_processed.fasta";
 my $targs = readFasta($referenceFile,0);
 printFastaFile("$referenceFile.clean", $targs);
 

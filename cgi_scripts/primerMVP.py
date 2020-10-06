@@ -14,13 +14,13 @@ from typing import Any, Dict, List, Tuple
 
 import pandas as pd
 
-from cgi_scripts.blast import blast
+from blast import blast
 
 # Prints any error to t windows from which the script was executed from
 cgitb.enable()
 
 
-blast_dir = "/afs/bii.a-star.edu.sg/dept/mendel/METHODS/corona/gamma/bin/balst..."
+blast_dir = "/afs/bii.a-star.edu.sg/dept/mendel/METHODS/corona/gamma/bin/ncbi-blast-2.10.1+/bin/"
 blast_db_loc = "/home/yeokhw/blastdb/database"
 fasta_input = "/home/yeokhw/primer_check_support_files/fasta_inputs/"
 database_count = "/home/yeokhw/primer_check_support_files/database_count.json"
@@ -68,6 +68,7 @@ def analyse_primer(
         blast_bin=blast_dir,
         blast_db_loc=blast_db_loc,
         query_seq=f"{input_store_path}{filename}",
+        is_log=True,
     )
     return (filename, results)
 

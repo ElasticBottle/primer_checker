@@ -1,3 +1,5 @@
+#!/afs/bii.a-star.edu.sg/dept/mendel/METHODS/corona/local/anaconda3/envs/primer/bin/python3.7
+
 import argparse
 import datetime
 import json
@@ -24,8 +26,19 @@ def get_raw_count(input_path: str):
                 details[0].split("/")[1].lstrip().rstrip().replace(" ", "_").lower()
             )
             date = details[2].strip()
+            yr_month_day = date.split("-")
 
-            if date != "2020":
+            if len(yr_month_day) == 2:
+                yr_month_day.append("01")
+                date = "-".join(yr_month_day)
+
+            if len(yr_month_day) != 1:
+                if int(yr_month_day[1]) > 12 or int(yr_month_day[1]) < 1:
+                    print(f"month error {details}")
+                    continue
+                if int(yr_month_day[2]) > 31 or int(yr_month_day[2]) < 1:
+                    print(f"Day error {details}")
+                    continue
                 _, iso_a3 = CountryAlphaMap.getCode(country)
 
                 curr = count.get(date, None)
@@ -47,6 +60,7 @@ def accumulate(raw_count: Dict[str, int]):
     df.index = pd.to_datetime(df.index)
     df = df.groupby(df.index).sum()
     date_range = pd.date_range(df.index.min(), df.index.max())
+
     df = df.reindex(date_range)
     df = df.fillna(0)
     df = df.cumsum(axis=0)

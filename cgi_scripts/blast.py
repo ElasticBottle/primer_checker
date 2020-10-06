@@ -1,3 +1,5 @@
+#!/afs/bii.a-star.edu.sg/dept/mendel/METHODS/corona/local/anaconda3/envs/primer/bin/python3.7
+
 import argparse
 from io import StringIO
 import subprocess
