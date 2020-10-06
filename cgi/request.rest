@@ -1,8 +1,0 @@
-POST https://mendel.bii.a-star.edu.sg/METHODS/corona/gamma/cgi-bin/primerMVP.py
-Content-Type: application/json
-
-{"data":[{"invalid":false,"content":">fwd\r\nCCCTGTGGGTTTTACACTTAA\r\n>rev\r\nTCAGCTGATGCACAATCGT\r\n>prb\r\nCCGTCTGCGGTATGTGGAAAGGTTATGG\r\n"}]}
-
-###
-GET https://mendel.bii.a-star.edu.sg/METHODS/corona/gamma/cgi-bin/primerMVP.py
-Content-Type: text/plain
