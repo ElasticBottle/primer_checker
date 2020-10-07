@@ -19,11 +19,12 @@ from blast import blast
 # Prints any error to t windows from which the script was executed from
 cgitb.enable()
 
-
-blast_dir = "/afs/bii.a-star.edu.sg/dept/mendel/METHODS/corona/gamma/bin/ncbi-blast-2.10.1+/bin/"
-blast_db_loc = "/home/yeokhw/blastdb/database"
-fasta_input = "/home/yeokhw/primer_check_support_files/fasta_inputs/"
-database_count = "/home/yeokhw/primer_check_support_files/database_count.json"
+base_path = "/afs/bii.a-star.edu.sg/dept/mendel/METHODS/corona"
+primer_path = f"{base_path}/gamma/primer"
+blast_dir = f"{base_path}/local/anaconda3/envs/blast/bin/"
+blast_db_loc = f"{primer_path}/blastdb/database"
+fasta_input = f"{primer_path}/fasta_inputs/"
+database_count = f"{primer_path}/support_files/database_count.json"
 
 
 def print_headers():
@@ -49,7 +50,7 @@ def read_input():
 
 def analyse_primer(
     input_file: Dict[str, Any],
-    input_store_path: str = "/home/yeokhw/primer_check_support_files/fasta_inputs/",
+    input_store_path: str,
 ):
     """
     Args:
@@ -84,7 +85,7 @@ def main():
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
         jobs = {
-            executor.submit(analyse_primer, file): file.get("id", None)
+            executor.submit(analyse_primer, file, fasta_input): file.get("id", None)
             for file in input_files.get("data", [])
         }
         for future in concurrent.futures.as_completed(jobs):

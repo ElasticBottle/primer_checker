@@ -313,7 +313,6 @@ europe_map = {
     "greece": "GRC",
     "hungary": "HUN",
     "iceland": "ISL",
-    "northern_ireland": "IRL",
     "ireland": "IRL",
     "italy": "ITA",
     "latvia": "LVA",
@@ -339,6 +338,7 @@ europe_map = {
     "united_kingdom": "GBR",
     "uk": "GBR",
     "scotland": "GBR",
+    "northern_ireland": "GBR",
     "wales": "GBR",
     "england": "GBR",
 }
