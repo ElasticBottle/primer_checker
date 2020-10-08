@@ -11,10 +11,11 @@ my $blastDBFolder = $ARGV[1];
 my $blastdb = $ARGV[2];
 
 my $referenceFile = $ARGV[3];
-my $targs = readFasta($referenceFile,0);
-printFastaFile("$referenceFile.clean", $targs);
+my %targs = readFasta($referenceFile,0);
 
-system "${blastdir}makeblastdb -in ${blastDBFolder}$referenceFile.clean -dbtype nucl -out ${blastdb} -logfile tmp_blastdb.log";
+printFastaFile("$referenceFile.clean", %targs);
+
+system "${blastdir}makeblastdb -in $referenceFile.clean -dbtype nucl -out ${blastdb} -logfile tmp_blastdb.log";
 
 sub readFasta {
   my ($myfile,$mydesc) = @_;

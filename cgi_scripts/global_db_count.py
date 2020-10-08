@@ -28,11 +28,13 @@ def get_raw_count(input_path: str):
             date = details[2].strip()
             yr_month_day = date.split("-")
 
-            if len(yr_month_day) == 2:
-                yr_month_day.append("01")
-                date = "-".join(yr_month_day)
+            if len(yr_month_day) < 3:
+                print(f"Missing info {details}")
+                continue
+                # yr_month_day.append("01")
+                # date = "-".join(yr_month_day)
 
-            if len(yr_month_day) != 1:
+            if len(yr_month_day) == 3:
                 if int(yr_month_day[1]) > 12 or int(yr_month_day[1]) < 1:
                     print(f"month error {details}")
                     continue

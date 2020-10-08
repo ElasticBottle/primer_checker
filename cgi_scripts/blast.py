@@ -1,4 +1,4 @@
-#!/afs/bii.a-star.edu.sg/dept/mendel/METHODS/corona/local/anaconda3/envs/primer/bin/python3.7
+# !/afs/bii.a-star.edu.sg/dept/mendel/METHODS/corona/local/anaconda3/envs/primer/bin/python3.7
 
 import argparse
 from io import StringIO
@@ -27,7 +27,7 @@ def match_diag(alignments: pd.Series):
 
         - alignments (pd.Series): Pandas series contianing two indices:
             - "match_seq" the sequence matched
-            - "query_seq" the sequecne used for querying
+            - "query_seq" the sequence used for querying
     """
 
     def find_matches(query_query_seq, match_seq: str) -> str:
@@ -46,7 +46,7 @@ def match_diag(alignments: pd.Series):
 
 
 def clean_missed_results(result: pd.DataFrame):
-    result = result[result["abs_mismatch"] >= 1]
+    result = result[result["abs_mismatch"].astype(int) >= 1]
     df_cleaned = pd.DataFrame(
         list(
             map(
@@ -70,18 +70,16 @@ def clean_missed_results(result: pd.DataFrame):
             "misses3",
         ],
     )
-    df_cleaned["misses"] = result["abs_mismatch"]
-    df_cleaned["match_pct"] = result["pct_match"].astype(float)
-    df_cleaned["type"] = result["query_id"]
-    df_cleaned["virus_match_idx"] = result[
-        ["match_start_idx", "match_end_idx"]
-    ].aggregate(" ".join, axis=1)
-    df_cleaned["query_match_idx"] = result[
-        ["query_start_idx", "query_end_idx"]
-    ].aggregate(" ".join, axis=1)
+    df_cleaned["misses"] = result["abs_mismatch"].values
+    df_cleaned["match_pct"] = result["pct_match"].values.astype(float)
+    df_cleaned["type"] = result["query_id"].values
+    df_cleaned["virus_match_idx"] = (
+        result[["match_start_idx", "match_end_idx"]].aggregate(" ".join, axis=1).values
+    )
+    df_cleaned["query_match_idx"] = (
+        result[["query_start_idx", "query_end_idx"]].aggregate(" ".join, axis=1).values
+    )
 
-    # print(result.head())
-    # print(df_cleaned.head())
     return df_cleaned
 
 
@@ -99,7 +97,7 @@ def blast(
     Args:
 
         - blast_bin (str): Directory of the blast Files.
-        - blast_db_loc (str): absolute path to the balst database location
+        - blast_db_loc (str): absolute path to the blast database location
         - query_seq (str): The path to the query file path
         - out_file_path(str): The output path (including filename.csv) of the results if [save_csv] is set to [True]
         - is_log (bool): Option to log error messages if they occur
@@ -163,7 +161,7 @@ def blast(
             f"-reward",
             "2",
             f"-num_threads",
-            "8",
+            "5",
             f"-outfmt",
             f"10 {' '.join(blast_headers.keys())}",
             # "-out",
