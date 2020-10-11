@@ -113,12 +113,20 @@ def main():
             primerId = jobs[future]
             filename, results = future.result()
             filenames[primerId] = filename
-            to_send[primerId] = results.to_json(orient="records")
+            to_send[primerId] = results.to_dict("records")
 
     with open(database_count, "r") as f:
-        to_send["database_count"] = json.load(f)
+        to_send["databaseCount"] = json.load(f)
 
-    print([to_send, filenames])
+    print(
+        json.dumps(
+            [
+                to_send,
+                filenames,
+            ],
+            separators=(",", ":"),
+        )
+    )
     end = time.time() - start
     with open(f"{output_path}timing.txt", "a") as timings:
         timings.write("\n")

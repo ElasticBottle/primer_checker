@@ -86,7 +86,7 @@ def build_gisaid_blast_db(blast_bin: str, input_file: str, target_file: str):
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Builds a blast database from a single sequence in a fasta input",
+        description="Builds a blast database from a fasta file",
         epilog="Any errors, please open an issue!",
     )
     base_path = "C:/Users/winst/Documents/MEGA/intern_and_work_proj/ASTAR_BII/primer_checker/primer_mutation_starter_pack/"
@@ -100,7 +100,7 @@ def parse_args():
         help=" location for the fasta file which will be first cleaned and then used to build a blast database",
     )
     parser.add_argument(
-        "-cf",
+        "-cfo",
         "--cleaned_fasta_out",
         type=str,
         dest="clean_fasta_out",
@@ -116,12 +116,12 @@ def parse_args():
         help="Input path for the fasta file to be used in making the blast database. It is highly recommended that you use -ff instead so that the headings are formatted correctly.",
     )
     parser.add_argument(
-        "-b",
-        "--bast_db",
+        "-bb",
+        "--bast_bin",
         type=str,
-        dest="blast_db",
+        dest="blast_bin",
         default="C:/Users/winst/Documents/MEGA/intern_and_work_proj/ASTAR_BII/primer_checker/primer_mutation_starter_pack/NCBI/blast-2.10.1+/bin/",
-        help="Location for Blast Database exe",
+        help="Path to the Blast Bin",
     )
     parser.add_argument(
         "-bo",
@@ -129,7 +129,7 @@ def parse_args():
         type=str,
         dest="blast_db_out",
         default="D:/Datasets/GISAID_Update_Analysis/blast/blastdb/database",
-        help="Output path for the blast database",
+        help="Path to the blast database",
     )
     return parser.parse_args()
 
