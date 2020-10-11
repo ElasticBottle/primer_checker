@@ -1,6 +1,11 @@
 import React from "react";
-import { usePagination, useTable } from "react-table";
-import Table from "react-bootstrap/Table";
+import {
+  usePagination,
+  useTable,
+  useFilters,
+  useGlobalFilter,
+} from "react-table";
+import BTable from "react-bootstrap/Table";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import InputGroup from "react-bootstrap/InputGroup";
@@ -11,6 +16,13 @@ import { CSVLink } from "react-csv";
 
 import "./tableDisplay.css";
 
+import {
+  GlobalFilter,
+  DefaultNumberRangeColumnFilter,
+  CountryColumnFilter,
+  SelectColumnFilter,
+} from "./filter.js";
+
 function TableDisplay({ data }) {
   //   const memoizedData = React.useMemo(() => data);
   const columns = React.useMemo(
@@ -18,22 +30,29 @@ function TableDisplay({ data }) {
       {
         Header: "Primer",
         accessor: "primer",
+        Filter: SelectColumnFilter,
+        filter: "includes",
       },
       {
         Header: "Accession ID",
         accessor: "accession_id", // accessor is the "key" in the data
+        disableFilters: true,
       },
       {
         Header: "Virus Name",
         accessor: "virus_name",
+        disableFilters: true,
       },
       {
         Header: "Diagram",
         accessor: "match_diag",
+        disableFilters: true,
       },
       {
         Header: "Primer Type",
         accessor: "type",
+        Filter: SelectColumnFilter,
+        filter: "includes",
       },
       {
         Header: "Homology %",
@@ -48,12 +67,15 @@ function TableDisplay({ data }) {
         accessor: "misses3",
       },
       {
-        Header: "Date Submitted",
+        Header: "Date Collected",
         accessor: "date",
+        disableFilters: true,
       },
       {
         Header: "Location",
         accessor: "country_name",
+        Filter: CountryColumnFilter,
+        filter: "text",
       },
     ],
     []
@@ -74,9 +96,36 @@ function TableDisplay({ data }) {
       },
       {
         label: "Primer Match Index (Start, End)",
-        key: "primer_match_idx",
+        key: "query_match_idx",
       },
     ]
+  );
+
+  const filterTypes = React.useMemo(
+    () => ({
+      // Or, override the default text filter to use
+      // "startWith"
+      text: (rows, id, filterValue) => {
+        return rows.filter((row) => {
+          const rowValue = row.values[id];
+          return rowValue !== undefined
+            ? String(rowValue)
+                .toLowerCase()
+                .startsWith(String(filterValue).toLowerCase())
+            : true;
+        });
+      },
+    }),
+    []
+  );
+
+  const defaultColumn = React.useMemo(
+    () => ({
+      // Let's set up our default Filter UI
+      Filter: DefaultNumberRangeColumnFilter,
+      filter: "between",
+    }),
+    []
   );
 
   const {
@@ -96,15 +145,34 @@ function TableDisplay({ data }) {
     previousPage,
     setPageSize,
     state: { pageIndex, pageSize },
+
+    // filtering details
+    state,
+    // visibleColumns,
+    preGlobalFilteredRows,
+    setGlobalFilter,
   } = useTable(
-    { columns, data, initialState: { pageIndex: 0 } },
+    {
+      columns,
+      data,
+      initialState: { pageIndex: 0 },
+      defaultColumn,
+      filterTypes,
+    },
+    useFilters, // useFilters!
+    useGlobalFilter, // useGlobalFilter!
     usePagination
   );
 
   return (
     <Container>
       <h2 className="table-title">Overview of Missed Viruses</h2>
-      <Table
+      <GlobalFilter
+        preGlobalFilteredRows={preGlobalFilteredRows}
+        globalFilter={state.globalFilter}
+        setGlobalFilter={setGlobalFilter}
+      />
+      <BTable
         {...getTableProps()}
         variant="light"
         //   size="lg"
@@ -119,6 +187,7 @@ function TableDisplay({ data }) {
               {headerGroup.headers.map((column) => (
                 <th {...column.getHeaderProps()} className="table-header">
                   {column.render("Header")}
+                  <div>{column.canFilter ? column.render("Filter") : null}</div>
                 </th>
               ))}
             </tr>
@@ -130,6 +199,49 @@ function TableDisplay({ data }) {
             return (
               <tr {...row.getRowProps()}>
                 {row.cells.map((cell) => {
+                  console.log(cell);
+
+                  if (cell.column.id === "match_diag") {
+                    const display_str = cell.value
+                      .split(" ")
+                      .map((val, idx) => {
+                        return val.split("");
+                      });
+                    return (
+                      <td
+                        {...cell.getCellProps()}
+                        className="table-cell match-diag"
+                      >
+                        <div>
+                          {display_str[0].map((val, idx) => {
+                            return (
+                              <span key={idx} className={val}>
+                                {val}
+                              </span>
+                            );
+                          })}
+                        </div>
+                        <span>
+                          {display_str[1].map((val, idx) => {
+                            return (
+                              <span key={idx} className={val}>
+                                {val}
+                              </span>
+                            );
+                          })}
+                        </span>
+                        <div>
+                          {display_str[2].map((val, idx) => {
+                            return (
+                              <span key={idx} className={val}>
+                                {val}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      </td>
+                    );
+                  }
                   return (
                     <td {...cell.getCellProps()} className="table-cell">
                       {cell.render("Cell")}
@@ -140,7 +252,7 @@ function TableDisplay({ data }) {
             );
           })}
         </tbody>
-      </Table>
+      </BTable>
       <Row className="pagination">
         <Col className="page-controls" sm={12} md={4}>
           <Button

@@ -2,6 +2,35 @@
   margin-top: 50px;
 }
 
+.match-diag {
+  font-family: monospace;
+  text-align: center;
+}
+
+.match-diag span {
+  padding: 0px 5px 0px 5px;
+}
+
+.A {
+  background-color: rgb(117, 133, 252);
+}
+
+.C {
+  background-color: rgb(113, 211, 113);
+}
+
+.G {
+  background-color: lightcoral;
+}
+
+.T {
+  background-color: rgb(235, 235, 116);
+}
+
+.X {
+  background-color: red;
+}
+
 .pagination {
   margin-top: 50px;
   margin-bottom: 25px;

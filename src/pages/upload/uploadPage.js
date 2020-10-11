@@ -87,7 +87,7 @@ const UploadPage = ({ setResults }) => {
           setIsLoading(false);
           console.log("response is", response);
           console.log("data from is: ", response.data);
-          setResults(response.data);
+          setResults(response.data[0]);
           history.push("/results/Overview");
         })
         .catch((e) => console.log(e));
