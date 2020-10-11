@@ -1,5 +1,7 @@
-import subprocess
 import argparse
+import datetime
+import subprocess
+import time
 
 
 def fasta_file_cleaner(
@@ -7,9 +9,31 @@ def fasta_file_cleaner(
     to_output: bool,
     count: int,
     format_err: int,
-    input_stream,
     output_stream,
 ) -> str:
+    """
+    Checks if a given [str_processing] is clean
+
+    [str_processing] is not clean if:
+
+        - date does not contain a year, month, and day
+
+    Args:
+
+        - str_processing (str): The string to process.
+            - If the first char is ">", it is an identifier and will be checked for valid date.
+            - Identifier should resemble this format "hCoV-19/COUNTRY_NAME/VIRUS_ID/2020|ACCESSION_ID|(date in YYYY-MM-DD fmt)"
+        - to_output (bool): Indicates if [str_processing] should be written to file if it is *not* an identifier
+        - count (int): The current number of valid sequences written
+        - format_err (int): The current number of invalid sequences discarded
+        - output_stream (File Object): The stream to write the output content
+
+    Returns
+
+        - Bool: Representing whether the next line should be written to file or not
+        - int: The total number of valid sequences
+        - int: The total number of invalid sequences
+    """
     # End of file, terminate
     if str_processing == "":
         return "", count, format_err
@@ -21,6 +45,7 @@ def fasta_file_cleaner(
         date = date.rstrip().lstrip().split("-")
         # Invalid identifier, don't write sequence to output
         if len(date) != 3 or int(date[2]) == 0 or int(date[1]) == 0:
+            print(f"rejected {details}")
             return False, count, format_err + 1
         # Valid identifier, write sequence to output
         else:
@@ -37,7 +62,16 @@ def fasta_file_cleaner(
 
 def build_base_fasta_file(inp: str, out_file: str):
     """
-    Extracts first sequence in a fast file and puts it into its own file
+    Cleans the fasta file from GISAID to include only those with proper date and writes it to disk
+
+    Args:
+
+        - inp (str): Path to the input fasta file
+        - out_file (str): Path to the output fasta file
+
+    Returns:
+
+        - str: the path to the output fasta file
     """
     with open(inp, "r") as fasta:
         with open(out_file, "w") as output:
@@ -50,22 +84,27 @@ def build_base_fasta_file(inp: str, out_file: str):
                     to_output,
                     count,
                     format_errors,
-                    fasta,
                     output,
                 )
                 if to_output == "":
                     break
     print(
-        f"Processed {count} sequences, {format_errors} sequences missed, {count + format_errors} sequences in total"
+        f"Summary {datetime.datetime.now().strftime('%Y-%m-%d')}: Processed {count} sequences, {format_errors} sequences missed, {count + format_errors} sequences in total"
     )
     return out_file
 
 
 def build_gisaid_blast_db(blast_bin: str, input_file: str, target_file: str):
     """
-    Builds blast db from input file
+    Builds blast db from a fasta file
+
+    Args:
+
+        - bast_bin (str): path to the blast executables
+        - input_file (str): path to the input fasta file
+        - target_file (str): path to the blast database file
     """
-    process = subprocess.run(
+    _ = subprocess.run(
         [
             f"{blast_bin}makeblastdb",
             "-in",
@@ -80,8 +119,6 @@ def build_gisaid_blast_db(blast_bin: str, input_file: str, target_file: str):
         capture_output=True,
         universal_newlines=True,
     )
-    print(process.stdout)
-    print(process.stderr)
 
 
 def parse_args():
@@ -134,9 +171,6 @@ def parse_args():
     return parser.parse_args()
 
 
-import time
-
-
 def main():
     start = time.time()
     args = parse_args()
@@ -149,7 +183,7 @@ def main():
             args.clean_fasta_out,
         )
     build_gisaid_blast_db(args.blast_bin, fasta_output, args.blast_db_out)
-    print(f"Time: {time.time() - start:.2f}")
+    print(f"Time Taken: {time.time() - start:.2f}")
 
 
 if __name__ == "__main__":

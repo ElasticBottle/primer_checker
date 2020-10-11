@@ -4,6 +4,7 @@ import argparse
 from io import StringIO
 import subprocess
 import time
+from typing import Tuple
 from collections import OrderedDict
 
 import pandas as pd
@@ -11,7 +12,21 @@ import pandas as pd
 from country_to_alpha import CountryAlphaMap
 
 
-def get_country(virus_name: str):
+def get_country(virus_name: str) -> Tuple[str, str, str]:
+    """
+    Retrieves the country info for a given [virus_name]
+
+    Args:
+
+        - virus_name(str): Should be in the format "hCoV-19/COUNTRY_NAME/VIRUS_ID/2020"
+
+    Returns:
+
+        - Tuple[str, str, str]
+            - First string correspond to countries name
+            - Second string corresponds to the alpha 3 code for the country name
+            - Third string corresponds to the cleaned version of original country name from [virus_name]
+    """
     # TODO (elastic Bottle): make this less hacky (read manual work) and more robust
     country_rough = virus_name.split("|")[0].split("/")[1]
     country_rough_clean = country_rough.rstrip().lstrip().lower()
@@ -45,7 +60,46 @@ def match_diag(alignments: pd.Series):
     return [f"{query_seq} {match_diag} {match_seq}", misses3]
 
 
-def clean_missed_results(result: pd.DataFrame):
+def clean_missed_results(result: pd.DataFrame) -> pd.DataFrame:
+    """
+    Filers the matched data to only show missed viruses.
+
+    Args:
+
+        - result (pd.DataFrame): The dataframe of matches. DateFrame will should contain the following column
+            - "query_id",
+            - "match_id",
+            - "query_length",
+            - "abs_mismatch",
+            - "abs_match",
+            - "pct_match",
+            - "alignment_length",
+            - "query_start_idx",
+            - "query_seq",
+            - "query_end_idx",
+            - "match_start_idx",
+            - "match_seq",
+            - "match_end_idx",
+            - "expected_value",
+            - "bitscore",
+
+    Returns:
+
+        - pd.DataFrame: The result with the following headers:
+            - "virus_name"
+            - "accession_id"
+            - "date"
+            - "country_name"
+            - "ISO_A3"
+            - "orig_name"
+            - "match_diag"
+            - "misses3"
+            - "misses"
+            - "match_pct"
+            - "type"
+            - "virus_match_idx"
+            - "query_match_idx"
+    """
     result = result[result["abs_mismatch"].astype(int) >= 1]
     df_cleaned = pd.DataFrame(
         list(
@@ -96,12 +150,12 @@ def blast(
 
     Args:
 
-        - blast_bin (str): Directory of the blast Files.
-        - blast_db_loc (str): absolute path to the blast database location
-        - query_seq (str): The path to the query file path
+        - blast_bin (str): Path of the blast bin folder.
+        - blast_db_loc (str): Path to the blast database file.
+        - query_seq (str): Path to the query file
         - out_file_path(str): The output path (including filename.csv) of the results if [save_csv] is set to [True]
         - is_log (bool): Option to log error messages if they occur
-        - save_csv (bool): Option to save the results to a csv file. Use [out_file_path] to specifiy output lcoation.
+        - save_csv (bool): Option to save the results to a csv file. Use [out_file_path] to specify output location.
 
     Returns:
 
@@ -188,7 +242,7 @@ def blast(
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Blast query string with WIV04 nucleotide sequence",
+        description="Blast query string against the GISAID hCov-19 datebase",
         epilog="Any errors, please open an issue!",
     )
     base_path = "C:/Users/winst/Documents/MEGA/intern_and_work_proj/ASTAR_BII/primer_checker/primer_mutation_starter_pack/"
@@ -222,7 +276,7 @@ def parse_args():
         type=str,
         dest="blast_db",
         default="D:/Datasets/GISAID_Update_Analysis/blast/blastdb/database",
-        help="Location of the wiv04 blast database",
+        help="Location of the blast database",
     )
     parser.add_argument(
         "-l",

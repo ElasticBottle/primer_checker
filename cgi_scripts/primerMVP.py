@@ -16,7 +16,7 @@ import pandas as pd
 
 from blast import blast
 
-# Prints any error to t windows from which the script was executed from
+# Prints any error to the windows from which the script was executed from
 cgitb.enable()
 
 base_path = "/afs/bii.a-star.edu.sg/dept/mendel/METHODS/corona"
@@ -27,6 +27,7 @@ fasta_input = f"{primer_path}/fasta_inputs/"
 database_count = f"{primer_path}/support_files/database_count.json"
 output_path = f"{primer_path}/result_outputs/"
 
+# Local path used for development
 # blast_dir = "C:/Users/winst/Documents/MEGA/intern_and_work_proj/ASTAR_BII/primer_checker/primer_mutation_starter_pack/NCBI/blast-2.10.1+/bin/"
 # blast_db_loc = "D:/Datasets/GISAID_Update_Analysis/blast/blastdb/database"
 # fasta_input = "C:/Users/winst/Documents/MEGA/intern_and_work_proj/ASTAR_BII/primer_checker/cgi_scripts/fasta_input/"
@@ -59,23 +60,33 @@ We will work to get it fixed as soon as possible!"""
 
 
 def analyse_primer(
-    input_file: Dict[str, Any],
+    input_seq: Dict[str, Any],
     input_store_path: str,
     output_file_path: str,
 ):
     """
     Args:
-        input_files(Dict[str, Any]): contains keys 'invalid', 'id', and 'content'
+
+        - input_seq(Dict[str, Any]): contains keys 'invalid', 'id', and 'content'
+        - input_store_path (str): Path to the folder that [input_seq] can be written too.
+        - output_file_path (str): Path to the folder where the result csv file will be written too.
+
+    Returns:
+
+        - Tuple[str, str]:
+            - First string contains the filename of the analysed seq
+            - Second string contains the csv result.
     """
 
-    primerId = input_file.get("id", None)
-    content = input_file.get("content", None)
+    primerId = input_seq.get("id", None)
+    content = input_seq.get("content", None)
     if not primerId:
         raise Exception(f"Invalid Id given {primerId}")
 
     filename = f"{primerId}&{time.time():.0f}.fasta"
     with open(f"{input_store_path}{filename}", "w") as f:
         f.write(content)
+
     results = blast(
         blast_bin=blast_dir,
         blast_db_loc=blast_db_loc,
@@ -90,9 +101,12 @@ def analyse_primer(
 def main():
     print_headers()
     start = time.time()
+
+    # Used for local development
     # sys.stdin = StringIO(
     #     r"""{"data": [{"content": ">fwd\r\nGTGAAATGGTCATGTGTGGCGG\r\n>rev\r\nTATGCTAATAGTGTTTTTAACATTTG\r\n>prb\r\nCAGGTGGAACCTCATCAGGAGATGC", "id": "text_input_fasta", "invalid":false},{"content":">fwd\r\nGTGAAATGGTCATGTGTGGCGG\r\n>rev\r\nTATGCTAATAGTGTTTTTAACATTTG\r\n>prb\r\nCAGGTGGAACCTCATCAGGAGATGC", "id": "MHUMAN", "invalid":false},{"content": ">fwd\r\nGTGAAATGGTCATGTGTGGCGG\r\n>rev\r\nTATGCTAATAGTGTTTTTAACATTTG\r\n>prb\r\nCAGGTGGAACCTCATCAGGAGATGC", "id": "ABCD", "invalid":false},{"content": ">fwd\r\nGTGAAATGGTCATGTGTGGCGG\r\n>rev\r\nTATGCTAATAGTGTTTTTAACATTTG\r\n>prb\r\nCAGGTGGAACCTCATCAGGAGATGC", "id": "EFGH", "invalid":false},{"content": ">fwd\r\nGTGAAATGGTCATGTGTGGCGG\r\n>rev\r\nTATGCTAATAGTGTTTTTAACATTTG\r\n>prb\r\nCAGGTGGAACCTCATCAGGAGATGC", "id": "HIJK", "invalid":false} ,{"content": ">fwd\r\nGTGAAATGGTCATGTGTGGCGG\r\n>rev\r\nTATGCTAATAGTGTTTTTAACATTTG\r\n>prb\r\nCAGGTGGAACCTCATCAGGAGATGC", "id": "LMNOP", "invalid":false},{"content": ">fwd\r\nGTGAAATGGTCATGTGTGGCGG\r\n>rev\r\nTATGCTAATAGTGTTTTTAACATTTG\r\n>prb\r\nCAGGTGGAACCTCATCAGGAGATGC", "id": "QRST", "invalid":false}]}"""
     # )
+
     input_files = read_input()
 
     # No input, exiting
