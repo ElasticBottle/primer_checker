@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/4.3.1/workbox-sw.js");
 
 importScripts(
-  "https://mendel.bii.a-star.edu.sg/METHODS/corona/gamma/primer/build/precache-manifest.7326488883a9eb06e33924aa9c23100c.js"
+  "https://mendel2.bii.a-star.edu.sg/METHODS/corona/gamma/primer/build/precache-manifest.3b1afd71b76130afd9b51206d2e38696.js"
 );
 
 self.addEventListener('message', (event) => {
@@ -33,7 +33,7 @@ workbox.core.clientsClaim();
 self.__precacheManifest = [].concat(self.__precacheManifest || []);
 workbox.precaching.precacheAndRoute(self.__precacheManifest, {});
 
-workbox.routing.registerNavigationRoute(workbox.precaching.getCacheKeyForURL("https://mendel.bii.a-star.edu.sg/METHODS/corona/gamma/primer/build/index.html"), {
+workbox.routing.registerNavigationRoute(workbox.precaching.getCacheKeyForURL("https://mendel2.bii.a-star.edu.sg/METHODS/corona/gamma/primer/build/index.html"), {
   
   blacklist: [/^\/_/,/\/[^/?]+\.[^/]+$/],
 });
