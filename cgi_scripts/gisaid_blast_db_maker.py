@@ -20,7 +20,7 @@ def fasta_file_cleaner(
         virus_name = virus_name.rstrip().lstrip().replace(" ", "_")
         date = date.rstrip().lstrip().split("-")
         # Invalid identifier, don't write sequence to output
-        if len(date) != 3:
+        if len(date) != 3 or int(date[2]) == 0 or int(date[1]) == 0:
             return False, count, format_err + 1
         # Valid identifier, write sequence to output
         else:
@@ -148,7 +148,7 @@ def main():
             args.fasta_file,
             args.clean_fasta_out,
         )
-    build_gisaid_blast_db(args.blast_db, fasta_output, args.blast_db_out)
+    build_gisaid_blast_db(args.blast_bin, fasta_output, args.blast_db_out)
     print(f"Time: {time.time() - start:.2f}")
 
 
