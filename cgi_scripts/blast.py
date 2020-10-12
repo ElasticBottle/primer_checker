@@ -60,6 +60,17 @@ def match_diag(alignments: pd.Series):
     return [f"{query_seq} {match_diag} {match_seq}", misses3]
 
 
+def is_valid_sequence(sequence: str) -> Bool:
+    """
+    Checks to see if a given [sequence] is valid (only contains "ACGT")
+    """
+    valid_dna = "ACGT"
+    for nuc in sequence:
+        if nuc.upper() not in valid_dna:
+            return False
+    return True
+
+
 def clean_missed_results(result: pd.DataFrame) -> pd.DataFrame:
     """
     Filers the matched data to only show missed viruses.
@@ -101,6 +112,8 @@ def clean_missed_results(result: pd.DataFrame) -> pd.DataFrame:
             - "query_match_idx"
     """
     result = result[result["abs_mismatch"].astype(int) >= 1]
+    result = result[[is_valid_sequence(seq) for seq in result["match_seq"]]]
+
     df_cleaned = pd.DataFrame(
         list(
             map(
@@ -127,6 +140,8 @@ def clean_missed_results(result: pd.DataFrame) -> pd.DataFrame:
     df_cleaned["misses"] = result["abs_mismatch"].values
     df_cleaned["match_pct"] = result["pct_match"].values.astype(float)
     df_cleaned["type"] = result["query_id"].values
+    df_cleaned["expected_value"] = result["expected_value"].values
+    df_cleaned["bitscore"] = result["bitscore"].values
     df_cleaned["virus_match_idx"] = (
         result[["match_start_idx", "match_end_idx"]].aggregate(" ".join, axis=1).values
     )

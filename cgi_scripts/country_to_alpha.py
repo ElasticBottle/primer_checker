@@ -318,6 +318,7 @@ europe_map = {
     "latvia": "LVA",
     "lithuania": "LTU",
     "luxembourg": "LUX",
+    "malta": "MLT",
     "moldova": "MDA",
     "montenegro": "MNE",
     "netherlands": "NLD",
