@@ -9,6 +9,7 @@ import TableDisplay from "../../components/tableDisplay/tableDisplay";
 import "./resultsPage.css";
 import MutGraphs from "../../components/mutGraphs/mutGraphs";
 import ItemFilters from "../../components/ItemFilter/itemFilters";
+import MutGraphsCombined from "../../components/mutGraphs/mutGraphsCombined";
 
 const InputData = () => {
   const history = useHistory();
@@ -214,13 +215,24 @@ const ResultPage = ({ results }) => {
             columns={overviewColumns}
             isCombined={false}
           />
-          {/* <MutGraphs
+          <MutGraphs
             data={graphOverview}
             primers={
               primers.length === 0 ? Object.keys(baseData.current) : primers
             }
             dates={dateRange.current}
-          /> */}
+            setPrimers={setPrimers}
+            timeFrameBrush={timeFrameBrush}
+            setTimeFrameBrush={setTimeFrameBrush}
+            isBar={isBar}
+          />
+
+          <MutGraphsCombined
+            data={graphCombined}
+            dates={dateRange.current}
+            timeFrameBrush={timeFrameBrush}
+            setTimeFrameBrush={setTimeFrameBrush}
+          />
           <TableDisplay
             title={"Combined Missed Viruses"}
             data={tableCombined}
@@ -255,7 +267,19 @@ const dataFilter = ({
   miss = [],
   miss3 = [],
   match = [],
-}) => (value) => {
+}) => {
+  /**
+   * A filter for gisaid table data in records orientation (list of objects where column names are mapped to their value for that row)
+   * @param {Array} timeFrameBrush: the min and max timeFrame for the sequence
+   * @param {Array} primers: specific name for a particular primer
+   * @param {Array} pType: the primer type, one of ["fwd", "rev", "prb"]
+   * @param {Array} countries: the list of country that the seq must be from
+   * @param {Array} miss:  the min and max misses for the sequence
+   * @param {Array} miss3: the min and max misses in 3' end
+   * @param {Array} match: the min and max homolog %
+   * @returns {function} A function that takes a value and filter for parameters above
+   */
+  return (value) => {
   let isWithinTimeFrame = true;
   let isPrimer = true;
   let isPType = true;
@@ -277,11 +301,14 @@ const dataFilter = ({
     isPType = pType.includes(value.type);
   }
   if (countries.length !== 0) {
-    isCountry = countries.map((val) => val.label).includes(value.country_name);
+      isCountry = countries
+        .map((val) => val.label)
+        .includes(value.country_name);
   }
   if (miss.length !== 0) {
     console.log("miss :>> ", miss);
-    isMiss = value.misses >= (miss[0] || 0) && value.misses <= (miss[1] || 100);
+      isMiss =
+        value.misses >= (miss[0] || 0) && value.misses <= (miss[1] || 100);
   }
   if (miss3.length !== 0) {
     isMiss3 =
@@ -301,6 +328,7 @@ const dataFilter = ({
     isMiss3 &&
     isMatch
   );
+};
 };
 
 function parseDb(rawData, database) {
@@ -350,7 +378,6 @@ function makeIntersection(tableData) {
    * @param {Array} tableData: contains the info on the primers to display
    * @returns {Array}: List of virus that is missed by all primers
    */
-  console.log("tableData :>> ", tableData);
   const names = new Set();
   const primerDetails = tableData.reduce((primerDetails, primer) => {
     if (names.has(primer.primer)) {
@@ -364,7 +391,6 @@ function makeIntersection(tableData) {
       return primerDetails;
     }
   }, {});
-  console.log("primerDetails", primerDetails);
   let intersection = [];
   if (names.size === 1) {
     return [];
@@ -430,21 +456,20 @@ function addObject(obj1, obj2, initialSum = 0) {
   return obj1;
 }
 
-function getRangeDbCount(dbCount, lookBack) {
+function getRangeDbCount(dbCount, lookBack, dates) {
   /**
    * Calculates a rolling window for database
    * @param {Object} dbCount: Contains the virus numbers in date -> country -> count order
    * @param {Number} lookBack: the lookBack period. Only has effect if [useCum] is false
    */
   // TODO: Optimise maybe, remove repeated calculation each sliding window
-  const dates = Object.keys(dbCount);
   const dateWindowCum = {};
 
   for (const date of dates) {
     const now = new Date(date);
     const start = new Date(date);
     start.setDate(start.getDate() - lookBack);
-    let dateCumCount = {};
+    let dateCumCount = { total: 0 };
     for (let d = start; d <= now; d.setDate(d.getDate() + 1)) {
       const dateStr = d.toISOString().slice(0, 10);
       dateCumCount = addObject(dateCumCount, dbCount[dateStr] || {});
@@ -456,23 +481,36 @@ function getRangeDbCount(dbCount, lookBack) {
 }
 
 function getCountriesTotal(dbCount, countries, date) {
-  countries.reduce((prevVal, country) => {
-    prevVal += dbCount[date][country];
+  /**
+   * Retrieve the total number of submissions by [countries] on [date]
+   * @param {Object} dbCount: Maps date -> Object [country alpha 3 -> submission count]
+   * @param {Array} countries: list of countries
+   * @param {string} date: the date to obtain submission count for
+   * @returns {Number} the total number of submissions by [countries] on [date]
+   */
+  if (countries.length === 0) {
+    return dbCount[date].total;
+  }
+  const total = countries.reduce((prevVal, country) => {
+    prevVal += dbCount[date][country.value] || 0;
     return prevVal;
   }, 0);
+  return total;
 }
 
 function makeOverview(
   primerDetails,
   primerNames,
   dbCount,
+  dates,
   useCum,
   lookBack,
+  isCountryAsTotal,
   countries = []
 ) {
   /**
    * Creates  data points used to plat overview graph
-   * @param {Array} primerDetails: Contains the list of missed virus
+   * @param {Array} primerDetails: Contains the list of filtered missed virus
    * @param {Array} primerNames: Contains the list primer names
    * @param {Object} dbCount: Contains the virus numbers in date -> country -> count order
    * @param {bool} useCum: if the dbCount represents cumulated or daily values
@@ -481,10 +519,8 @@ function makeOverview(
    * @returns {Array} List of Map containing "date", "primerName", "mutation_pct", and "mutation3_pct"
    */
   const overviewData = [];
-
+  let dbRolling = useCum ? {} : getRangeDbCount(dbCount, lookBack, dates);
   for (const primerName of primerNames) {
-    const dates = Object.keys(dbCount);
-    let dbRolling = useCum ? {} : getRangeDbCount(dbCount, lookBack, countries);
     overviewData.push(
       ...dates.map((date) => {
         const mutationAbs = primerDetails.filter(
@@ -499,17 +535,25 @@ function makeOverview(
         }).length;
 
         const databaseTotal = useCum
-          ? countries.length === 0
-            ? dbCount[date].total
-            : getCountriesTotal(dbCount, countries, date)
-          : countries.length === 0
-          ? dbRolling[date].total
-          : getCountriesTotal(dbRolling, countries, date);
+          ? isCountryAsTotal
+            ? getCountriesTotal(dbCount, countries, date)
+            : dbCount[date].total
+          : isCountryAsTotal
+          ? getCountriesTotal(dbRolling, countries, date)
+          : dbRolling[date].total;
+        // console.log("date :>> ", date);
+        // console.log("mutationAbs :>> ", mutationAbs);
+        // console.log("primerName :>> ", primerName);
+        // console.log("databaseTotal :>> ", databaseTotal);
+        // console.log(
+        //   "((mutationAbs / databaseTotal) * 100).toFixed(3) :>> ",
+        //   ((mutationAbs / databaseTotal) * 100).toFixed(3)
+        // );
         return {
           date: new Date(date),
           name: primerName,
-          mutation_pct: (mutationAbs / databaseTotal) * 100,
-          mutation3_pct: (mutation3Abs / databaseTotal) * 100,
+          mutation_pct: ((mutationAbs / databaseTotal) * 100).toFixed(3),
+          mutation3_pct: ((mutation3Abs / databaseTotal) * 100).toFixed(3),
           mutation_abs: mutationAbs,
           mutation3_abs: mutation3Abs,
           submission_count: databaseTotal,

@@ -1,238 +1,204 @@
-import React, { useEffect, useState, memo } from "react";
-
-import Container from "react-bootstrap/Container";
-import vegaEmbed from "vega-embed";
-import Form from "react-bootstrap/Form";
-
+import React from "react";
+import ReactEcharts from "echarts-for-react";
 import { debounce } from "../util";
-import "./mutGraphs.css";
-
-const vl = require("vega-lite-api");
-
-function buildGraph(
-  lookBack,
-  toPlot,
-  combinedOverview,
-  horSize,
-  timeFrameBrush
-) {
-  const width = horSize * (4 / 5);
-  const total_mut_pct = "total_mut_pct";
-  const total_mut3_pct = "total_mut3_pct";
-  const total_smooth_mut = "total_smooth_mut_pct";
-  const total_smooth_mut3 = "total_smooth_mut3_pct";
-  const mutation_pct = "mutation_pct";
-  const mutation3_pct = "mutation3_pct";
-  const smooth_mut = "smooth_mutation_pct";
-  const smooth_mut3 = "smooth_mutation3_pct";
-  const brush =
-    timeFrameBrush === undefined || timeFrameBrush.length === 0
-      ? vl.selectInterval().encodings("x")
-      : vl
-          .selectInterval()
-          .encodings("x")
-          .init({ x: timeFrameBrush.map((time) => time / 1) });
-  const weightedAverageCalculation = [
-    vl
-      .window(vl.mean(total_mut_pct).as(total_smooth_mut))
-      .frame([-lookBack, 0]),
-    vl
-      .window(vl.mean(total_mut3_pct).as(total_smooth_mut3))
-      .frame([-lookBack, 0]),
-    vl.window(vl.mean(mutation_pct).as(smooth_mut)).frame([-lookBack, 0]),
-    vl.window(vl.mean(mutation3_pct).as(smooth_mut3)).frame([-lookBack, 0]),
-  ];
-
-  const x = vl.x().fieldT("date").title(null);
-  const y = vl.y();
-  const color = vl
-    .color()
-    .fieldN("name")
-    .scale({ scheme: "tableau20" })
-    .legend({ type: "symbol", orient: "top", columns: 3 });
-
-  const navChart = vl
-    .markLine()
-    .select(brush)
-    .transform(...weightedAverageCalculation)
-    .encode(x, y.fieldQ(smooth_mut), color)
-    .width(width)
-    .height(60)
-    .title("TimeFrame Selection");
-
-  const baseChart = vl
-    .markLine({ point: true })
-    .transform(...weightedAverageCalculation)
-    .encode(
-      x.scale({ domain: brush }).title("Date"),
-      y,
-      color,
-      vl.tooltip([
-        { field: "name", type: "  nominal" },
-        { field: "date", type: "temporal" },
-        { field: smooth_mut, type: "quantitative" },
-        { field: smooth_mut3, type: "quantitative" },
-        { field: mutation_pct, type: "quantitative" },
-        { field: mutation3_pct, type: "quantitative" },
-      ])
-    )
-    .width(width);
-
-  const overviewChart = baseChart.data(combinedOverview).encode(
-    vl.tooltip([
-      { field: "name", type: "  nominal" },
-      { field: "date", type: "temporal" },
-      { field: total_mut_pct, type: "quantitative" },
-      { field: total_smooth_mut, type: "quantitative" },
-      { field: total_mut3_pct, type: "quantitative" },
-      { field: total_smooth_mut3, type: "quantitative" },
-    ])
-  );
-
-  const names = toPlot.reduce((data, currData) => {
-    if (data.includes(currData.name)) {
-      return data;
-    } else {
-      data.push(currData.name);
-      return data;
-    }
-  }, []);
-  if (names.length === 1) {
-    const chartSpec = vl
-      .data(toPlot)
-      .vconcat(
-        navChart,
-        baseChart.encode(y.fieldQ(smooth_mut)).title("Mutation Percentage"),
-        baseChart
-          .encode(y.fieldQ(smooth_mut3))
-          .title("Mutation Percentage 3' end")
-      );
-    return chartSpec;
-  } else {
-    const chartSpec = vl
-      .data(toPlot)
-      .vconcat(
-        navChart,
-        vl
-          .layer(
-            overviewChart.encode(
-              y.fieldQ(total_smooth_mut),
-              vl.color({ value: "#aaee99" })
-            ),
-            overviewChart.encode(
-              y.fieldQ(total_smooth_mut3),
-              vl.color({ value: "#ff99aa" })
-            )
-          )
-          .title("Combined Mutation Percentage"),
-        baseChart.encode(y.fieldQ(smooth_mut)).title("Mutation Percentage"),
-        baseChart
-          .encode(y.fieldQ(smooth_mut3))
-          .title("Mutation Percentage 3' end")
-      );
-    return chartSpec;
-  }
-}
 
 const MutGraphs = ({
-  toDisplay,
   data,
-  combinedOverview,
-  timeFrameBrush,
+  primers,
+  dates,
+  setPrimers,
   setTimeFrameBrush,
+  timeFrameBrush,
+  isBar,
 }) => {
-  const [lookBack, setLookBack] = useState(6);
-  const parentRef = React.useRef(null);
+  function getMutationPlot(data, primers, dataPlot, xIndex, yIndex) {
+    const plots = [];
+    for (const primer of primers) {
+      plots.push({
+        name: `${primer}`,
+        type: "line",
+        hoverAnimation: false,
+        xAxisIndex: xIndex,
+        yAxisIndex: yIndex,
+        data: data
+          .filter((item) => {
+            return item.name === primer;
+          })
+          .map((item) => item[dataPlot]),
+      });
+    }
+    return plots;
+  }
+  function getDateIndex(date, dates) {
+    if (date === undefined) return undefined;
+    const index = dates.findIndex((val) => {
+      const dateString = date.toISOString().slice(0, 10);
+      return dateString === val;
+    });
+    return index;
+  }
+  const startIndex =
+    ((getDateIndex(timeFrameBrush[0], dates) || 0) * 100) / dates.length;
+  const endIndex =
+    ((getDateIndex(timeFrameBrush[1], dates) || dates.length) * 100) /
+    dates.length;
 
-  function handleChange(e) {
-    setLookBack(e.target.value);
+  const mutationPlot = getMutationPlot(data, primers, "mutation_pct", 0, 0);
+  const mutation3Plot = getMutationPlot(data, primers, "mutation3_pct", 1, 1);
+
+  console.log("mutationPlot :>> ", mutationPlot);
+  const option = isBar
+    ? {
+        title: {
+          text: "Mutation Overview",
+          subtext: "Something here",
+          left: "center",
+        },
+        tooltip: {
+          trigger: "axis",
+          axisPointer: {
+            type: "cross",
+            animation: false,
+          },
+          position: function (pos, params, el, elRect, size) {
+            var obj = { top: 10 };
+            obj[["left", "right"][+(pos[0] < size.viewSize[0] / 2)]] = 30;
+            return obj;
+          },
+        },
+      }
+    : {
+        title: {
+          text: "Mutation Overview",
+          subtext: "Something here",
+          left: "center",
+        },
+        tooltip: {
+          trigger: "axis",
+          axisPointer: {
+            type: "cross",
+            animation: false,
+          },
+          position: function (pos, params, el, elRect, size) {
+            var obj = { top: 10 };
+            obj[["left", "right"][+(pos[0] < size.viewSize[0] / 2)]] = 30;
+            return obj;
+          },
+        },
+        legend: {
+          data: primers,
+          top: 10,
+          right: 10,
+        },
+        // toolbox: {
+        //   feature: {
+        //     dataZoom: {
+        //       yAxisIndex: "none",
+        //     },
+        //     restore: {},
+        //     saveAsImage: {},
+        //   },
+        // },
+        axisPointer: {
+          link: { xAxisIndex: "all" },
+        },
+        dataZoom: [
+          {
+            type: "slider",
+            show: true,
+            realtime: true,
+            start: startIndex,
+            end: endIndex,
+            xAxisIndex: [0, 1],
+            top: "92%",
+          },
+          {
+            type: "inside",
+            realtime: true,
+            start: startIndex,
+            end: endIndex,
+            xAxisIndex: [0, 1],
+          },
+        ],
+        grid: [{ bottom: "60%" }, { top: "57%" }],
+        xAxis: [
+          {
+            name: "date",
+            gridIndex: 0,
+            type: "category",
+            data: dates,
+          },
+          {
+            name: "date",
+            gridIndex: 1,
+            type: "category",
+            data: dates,
+          },
+        ],
+        yAxis: [
+          {
+            name: "Overall Mutation (%)",
+            gridIndex: 0,
+          },
+          {
+            gridIndex: 1,
+            name: "Mutation in 3' end (%)",
+          },
+        ],
+        series: [...mutationPlot, ...mutation3Plot],
+      };
+
+  const seeEvent = (e) => {
+    console.log(e);
+  };
+
+  function legendChange({ selected }) {
+    const primers = [];
+    for (const primer of Object.keys(selected)) {
+      if (selected[primer]) {
+        primers.push(primer);
+      }
+    }
+    setPrimers(primers);
   }
 
-  const toPlot = data.filter((data) => {
-    if (toDisplay[0] !== "Overview") {
-      return toDisplay.includes(data.name);
+  const dataZoomChange = debounce((e) => {
+    let data = e;
+    if (e.batch !== undefined) {
+      data = e.batch[0];
     }
-    return data;
-  });
 
-  useEffect(() => {
-    const chartSpec = buildGraph(
-      lookBack,
-      toPlot,
-      combinedOverview,
-      parentRef.current.offsetWidth,
-      timeFrameBrush
-    );
+    const startIndex = Math.floor((dates.length * data.start) / 100);
+    const endIndex = Math.floor((dates.length * data.end) / 100);
+    const startStringDate = dates[startIndex] || dates[0];
+    const endStringDate = dates[endIndex] || dates[dates.length - 1];
+    let startDate = new Date(startStringDate);
+    let endDate = new Date(endStringDate);
+    startDate.setDate(startDate.getDate());
+    endDate.setDate(endDate.getDate());
+    console.log("startDate endDate :>> ", startDate, endDate);
+    setTimeFrameBrush([startDate, endDate]);
+  }, 800);
 
-    let intervalSignal = "";
-    vegaEmbed("#chart", chartSpec.toJSON(), {
-      patch: (spec) => {
-        console.log(spec);
-        const signals = spec.signals;
-        for (const signal of signals) {
-          if (signal.name.startsWith("sel")) {
-            intervalSignal = signal.name;
-          }
-        }
-        // spec.signals.push({
-        //   name: "barClick",
-        //   value: "datum",
-        //   on: [{ events: "*:mousedown", update: "datum" }],
-        // });
-        // spec.signals.push({
-        //   name: "hover",
-        //   on: [{ events: "*:mouseover", update: "datum" }],
-        // });
-
-        return spec;
-      },
-    })
-      .then((result) => {
-        // result.view.addSignalListener("barClick", console.log);
-        // result.view.addSignalListener("hover", console.log);
-        result.view.addSignalListener(
-          intervalSignal,
-          debounce(function (name, value) {
-            const start_end_date = value.date;
-            // console.log(name, value);
-            if (start_end_date === undefined) {
-              setTimeFrameBrush([]);
-            } else {
-              setTimeFrameBrush(start_end_date);
-            }
-          }, 200)
-        );
-
-        // let parentWidth = 120;
-        // console.log(parentWidth);
-        // if (parentRef.current) {
-        //   parentWidth = parentRef.current.offsetWidth / 2 - 100;
-        //   console.log("inside", parentWidth);
-        // }
-
-        // result.view.signal("concat_1_childWidth", parentWidth).run();
-      })
-      .catch(console.warn);
-  }, [lookBack, toPlot, combinedOverview, timeFrameBrush, setTimeFrameBrush]);
+  let onEvents = {
+    click: seeEvent,
+    legendselectchanged: legendChange,
+    dataZoom: dataZoomChange,
+  };
 
   return (
-    <>
-      <Form>
-        <Form.Group controlId="formBasicRange">
-          <Form.Label>Look back period: {lookBack}</Form.Label>
-          <Form.Control
-            type="range"
-            onChange={handleChange}
-            min={0}
-            max={30}
-            step={1}
-            value={lookBack}
-          />
-        </Form.Group>
-      </Form>
-      <Container id="chart" ref={parentRef}></Container>
-    </>
+    <ReactEcharts
+      option={option}
+      style={{ height: "450px", width: "100%" }}
+      onEvents={onEvents}
+
+      // // notMerge={true}
+      // // lazyUpdate={true}
+      // // theme={"theme_name"}
+      // // onChartReady={this.onChartReadyCallback}
+      // // opts={}
+    />
   );
 };
 
-export default memo(MutGraphs);
+export default MutGraphs;
