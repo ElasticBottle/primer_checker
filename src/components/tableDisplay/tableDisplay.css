@@ -2,13 +2,20 @@
   margin-top: 50px;
 }
 
+.general-search {
+  margin-bottom: 20px;
+}
+
 .match-diag {
   font-family: monospace;
-  text-align: center;
+  text-align: start;
 }
 
 .match-diag span {
   padding: 0px 5px 0px 5px;
+}
+.match-diag > div{
+  margin:-4px 0px -4px 0px;
 }
 
 .A {
@@ -29,6 +36,61 @@
 
 .X {
   background-color: red;
+}
+
+.table {
+  text-align: center;
+  display: block;
+}
+
+
+.thead{
+  display: block;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.table-header {
+  /* These styles are required for a scrollable body to align with the header properly */
+  /* margin:0px;
+  padding: 20px; */
+}
+.filter{
+  margin-top: 10px;
+  margin-bottom: -5px;
+}
+
+.tbody {
+  /* These styles are required for a scrollable table body */
+  overflow-y: scroll;
+  overflow-x: hidden;
+  display: block;
+  height: 700px;
+}
+
+.table-cell {
+  position: relative;
+  overflow: hidden;
+}
+
+.text-align-start {
+  text-align: start;
+}
+
+.resizer {
+  display: inline-block;
+  width: 10px;
+  height: 100%;
+  position: absolute;
+  right: 0;
+  top: 0;
+  /* transform: translateX(50%); */
+  z-index: 1;
+  touch-action:none;
+}
+
+.end-of-data {
+  font-weight: bold;
 }
 
 .pagination {

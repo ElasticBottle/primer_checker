@@ -2,8 +2,10 @@ import React from "react";
 import {
   usePagination,
   useTable,
-  useFilters,
   useGlobalFilter,
+  useFlexLayout,
+  useResizeColumns,
+  useSortBy,
 } from "react-table";
 import BTable from "react-bootstrap/Table";
 import Button from "react-bootstrap/Button";
@@ -16,90 +18,30 @@ import { CSVLink } from "react-csv";
 
 import "./tableDisplay.css";
 
-import {
-  GlobalFilter,
-  DefaultNumberRangeColumnFilter,
-  CountryColumnFilter,
-  SelectColumnFilter,
-} from "./filter.js";
+import { GlobalFilter } from "./filter";
 
-function TableDisplay({ data }) {
-  //   const memoizedData = React.useMemo(() => data);
-  const columns = React.useMemo(
-    () => [
-      {
-        Header: "Primer",
-        accessor: "primer",
-        Filter: SelectColumnFilter,
-        filter: "includes",
-      },
-      {
-        Header: "Accession ID",
-        accessor: "accession_id", // accessor is the "key" in the data
-        disableFilters: true,
-      },
-      {
-        Header: "Virus Name",
-        accessor: "virus_name",
-        disableFilters: true,
-      },
-      {
-        Header: "Diagram",
-        accessor: "match_diag",
-        disableFilters: true,
-      },
-      {
-        Header: "Primer Type",
-        accessor: "type",
-        Filter: SelectColumnFilter,
-        filter: "includes",
-      },
-      {
-        Header: "Homology %",
-        accessor: "match_pct",
-      },
-      {
-        Header: "Total Miss",
-        accessor: "misses",
-      },
-      {
-        Header: "Misses In 3' End",
-        accessor: "misses3",
-      },
-      {
-        Header: "Date Collected",
-        accessor: "date",
-        disableFilters: true,
-      },
-      {
-        Header: "Location",
-        accessor: "country_name",
-        Filter: CountryColumnFilter,
-        filter: "text",
-      },
-    ],
-    []
-  );
-
-  const headers = columns.map((header) => {
+function TableDisplay({ title, data, columns, isCombined }) {
+  const csv_headers = columns.map((header) => {
     return { label: header.Header, key: header.accessor };
   });
-  headers.push(
-    ...[
-      {
-        label: "ISO A3",
-        key: "ISO_A3",
-      },
-      {
-        label: "Virus Match Index (Start, End)",
-        key: "virus_match_idx",
-      },
-      {
-        label: "Primer Match Index (Start, End)",
-        key: "query_match_idx",
-      },
-    ]
-  );
+  if (!isCombined) {
+    csv_headers.push(
+      ...[
+        {
+          label: "ISO A3",
+          key: "ISO_A3",
+        },
+        {
+          label: "Virus Match Index (Start, End)",
+          key: "virus_match_idx",
+        },
+        {
+          label: "Primer Match Index (Start, End)",
+          key: "query_match_idx",
+        },
+      ]
+    );
+  }
 
   const filterTypes = React.useMemo(
     () => ({
@@ -121,9 +63,9 @@ function TableDisplay({ data }) {
 
   const defaultColumn = React.useMemo(
     () => ({
-      // Let's set up our default Filter UI
-      Filter: DefaultNumberRangeColumnFilter,
-      filter: "between",
+      minWidth: 80,
+      width: 160,
+      maxWidth: 600,
     }),
     []
   );
@@ -151,6 +93,8 @@ function TableDisplay({ data }) {
     // visibleColumns,
     preGlobalFilteredRows,
     setGlobalFilter,
+    // filteredRows,
+    // rows,
   } = useTable(
     {
       columns,
@@ -159,19 +103,26 @@ function TableDisplay({ data }) {
       defaultColumn,
       filterTypes,
     },
-    useFilters, // useFilters!
-    useGlobalFilter, // useGlobalFilter!
-    usePagination
+    // useFilters,
+    useGlobalFilter,
+    useSortBy,
+    usePagination,
+    useFlexLayout,
+    useResizeColumns
   );
 
   return (
     <Container>
-      <h2 className="table-title">Overview of Missed Viruses</h2>
+      <h2 className="table-title">{title}</h2>
       <GlobalFilter
         preGlobalFilteredRows={preGlobalFilteredRows}
         globalFilter={state.globalFilter}
         setGlobalFilter={setGlobalFilter}
       />
+
+      {/* <pre>
+        <code>{JSON.stringify(state, null, 2)}</code>
+      </pre> */}
       <BTable
         {...getTableProps()}
         variant="light"
@@ -181,69 +132,80 @@ function TableDisplay({ data }) {
         bordered
         hover
       >
-        <thead>
+        <thead className="thead">
           {headerGroups.map((headerGroup) => (
             <tr {...headerGroup.getHeaderGroupProps()}>
-              {headerGroup.headers.map((column) => (
-                <th {...column.getHeaderProps()} className="table-header">
-                  {column.render("Header")}
-                  <div>{column.canFilter ? column.render("Filter") : null}</div>
-                </th>
-              ))}
+              {headerGroup.headers.map((column) => {
+                return (
+                  <th {...column.getHeaderProps()} className="table-header">
+                    {column.render("Header")}
+                    <span {...column.getSortByToggleProps()}>
+                      {column.isSorted
+                        ? column.isSortedDesc
+                          ? ` ${String.fromCodePoint(parseInt("25BC", 16))}`
+                          : ` ${String.fromCodePoint(parseInt("25B2", 16))}`
+                        : ` ${String.fromCodePoint(
+                            parseInt("25BC", 16)
+                          )}${String.fromCodePoint(parseInt("25B2", 16))}`}
+                    </span>
+                    {column.canResize && (
+                      <div
+                        {...column.getResizerProps()}
+                        className={`resizer ${
+                          column.isResizing ? "isResizing" : ""
+                        }`}
+                      />
+                    )}
+                    {/* {column.canFilter ? (
+                      <div>{column.render("Filter")}</div>
+                    ) : null} */}
+                  </th>
+                );
+              })}
             </tr>
           ))}
         </thead>
-        <tbody {...getTableBodyProps()}>
+        <tbody {...getTableBodyProps()} className="tbody">
           {page.map((row) => {
             prepareRow(row);
             return (
               <tr {...row.getRowProps()}>
                 {row.cells.map((cell) => {
-                  console.log(cell);
-
                   if (cell.column.id === "match_diag") {
-                    const display_str = cell.value
-                      .split(" ")
-                      .map((val, idx) => {
-                        return val.split("");
-                      });
+                    const display_str = cell.value.split(" ").map((val) => {
+                      return val.split("");
+                    });
                     return (
                       <td
                         {...cell.getCellProps()}
                         className="table-cell match-diag"
                       >
-                        <div>
-                          {display_str[0].map((val, idx) => {
-                            return (
-                              <span key={idx} className={val}>
-                                {val}
-                              </span>
-                            );
-                          })}
-                        </div>
-                        <span>
-                          {display_str[1].map((val, idx) => {
-                            return (
-                              <span key={idx} className={val}>
-                                {val}
-                              </span>
-                            );
-                          })}
-                        </span>
-                        <div>
-                          {display_str[2].map((val, idx) => {
-                            return (
-                              <span key={idx} className={val}>
-                                {val}
-                              </span>
-                            );
-                          })}
-                        </div>
+                        {display_str.map((val, idx) => {
+                          return (
+                            <div key={idx}>
+                              {val.map((char, idx) => {
+                                return (
+                                  <span key={idx} className={char}>
+                                    {char}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          );
+                        })}
                       </td>
                     );
                   }
                   return (
-                    <td {...cell.getCellProps()} className="table-cell">
+                    <td
+                      {...cell.getCellProps()}
+                      className={`table-cell ${
+                        cell.column.id === "country_name" ||
+                        cell.column.id === "virus_name"
+                          ? "text-align-start"
+                          : ""
+                      }`}
+                    >
                       {cell.render("Cell")}
                     </td>
                   );
@@ -251,6 +213,11 @@ function TableDisplay({ data }) {
               </tr>
             );
           })}
+          {!canNextPage ? (
+            <span className="end-of-data">
+              {`---------- All ${preGlobalFilteredRows.length} data displayed ----------`}
+            </span>
+          ) : null}
         </tbody>
       </BTable>
       <Row className="pagination">
@@ -325,8 +292,8 @@ function TableDisplay({ data }) {
       <Row>
         <CSVLink
           data={data}
-          headers={headers}
-          filename={"sensitivity_miss.csv"}
+          headers={csv_headers}
+          filename={isCombined ? "combined_miss.csv" : "sensitivity_miss.csv"}
           className="btn btn-dark"
           target="_blank"
         >
