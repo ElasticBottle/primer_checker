@@ -55,10 +55,10 @@ def print_failure():
         """
         <h1>400 bad request</h1>
 
-        <p>Apologies for the invalid request! If you think this is an error, please contact and tell us:
-    - Steps for the actions taken
-    - Input files used when it happened 
-We will work to get it fixed as soon as possible!</p>"""
+        <p>Apologies for the invalid request! If you think this is an error, please contact and tell us:</p>
+        <p>- Steps for the actions taken</p>
+        <p>- Input files used when it happened</p>
+        <p>We will work to get it fixed as soon as possible!</p>"""
     )
 
 
@@ -114,6 +114,7 @@ def main():
     input_files = read_input()
     if len(input_files) == 0:
         print_failure()
+        return
 
     start = time.time()
     print_headers()

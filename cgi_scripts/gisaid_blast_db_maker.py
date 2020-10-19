@@ -10,7 +10,7 @@ def fasta_file_cleaner(
     count: int,
     format_err: int,
     output_stream,
-) -> str:
+) -> (bool, int, int):
     """
     Checks if a given [str_processing] is clean
 
@@ -30,7 +30,7 @@ def fasta_file_cleaner(
 
     Returns
 
-        - Bool: Representing whether the next line should be written to file or not
+        - bool: Representing whether the next line should be written to file or not
         - int: The total number of valid sequences
         - int: The total number of invalid sequences
     """
@@ -44,7 +44,12 @@ def fasta_file_cleaner(
         virus_name = virus_name.rstrip().lstrip().replace(" ", "_")
         date = date.rstrip().lstrip().split("-")
         # Invalid identifier, don't write sequence to output
-        if len(date) != 3 or int(date[2]) == 0 or int(date[1]) == 0:
+        if (
+            len(date) != 3
+            or int(date[2]) == 0
+            or int(date[1]) == 0
+            or int(date[0]) < 2019
+        ):
             print(f"rejected {details}")
             return False, count, format_err + 1
         # Valid identifier, write sequence to output
@@ -89,7 +94,7 @@ def build_base_fasta_file(inp: str, out_file: str):
                 if to_output == "":
                     break
     print(
-        f"Summary {datetime.datetime.now().strftime('%Y-%m-%d')}: Processed {count} sequences, {format_errors} sequences missed, {count + format_errors} sequences in total"
+        f"Summary {datetime.datetime.now().strftime('%Y-%m-%d')}: Processed {count} sequences, {format_errors} sequences rejected, {count + format_errors} sequences in total"
     )
     return out_file
 

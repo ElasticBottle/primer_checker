@@ -42,12 +42,17 @@ def get_raw_count(input_path: str) -> Dict[str, Dict[str, int]]:
             yr_month_day = date.split("-")
 
             # Ensure that date format is valid
-            if len(yr_month_day) < 3:
-                print(f"Missing info {details}")
-            elif int(yr_month_day[1]) > 12 or int(yr_month_day[1]) < 1:
-                print(f"month error {details}")
-            elif int(yr_month_day[2]) > 31 or int(yr_month_day[2]) < 1:
-                print(f"Day error {details}")
+            if (
+                len(yr_month_day) != 3
+                or int(yr_month_day[2]) == 0
+                or int(yr_month_day[2]) > 31
+                or int(yr_month_day[2]) < 1
+                or int(yr_month_day[1]) == 0
+                or int(yr_month_day[1]) > 12
+                or int(yr_month_day[1]) < 1
+                or int(yr_month_day[0]) < 2019
+            ):
+                print(f"Rejected {details}")
 
             elif len(yr_month_day) == 3:
                 _, iso_a3 = CountryAlphaMap.getCode(country)
@@ -94,7 +99,7 @@ def accumulate(raw_count: Dict[str, Dict[str, int]]) -> pd.DataFrame:
 
 
 def fill_forward(raw_count: Dict[str, Dict[str, int]]) -> pd.DataFrame:
-    df = pd.DataFrame.from_dict(raw_count, orient="records")
+    df = pd.DataFrame.from_dict(raw_count, orient="index")
     df.index = pd.to_datetime(df.index)
     df = df.groupby(df.index).sum()
     date_range = pd.date_range(df.index.min(), df.index.max())
