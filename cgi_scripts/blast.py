@@ -60,7 +60,7 @@ def match_diag(alignments: pd.Series):
     return [f"{query_seq} {match_diag} {match_seq}", misses3]
 
 
-def is_valid_sequence(sequence: str) -> Bool:
+def is_valid_sequence(sequence: str) -> bool:
     """
     Checks to see if a given [sequence] is valid (only contains "ACGT")
     """

@@ -32,8 +32,9 @@ output_path = f"{primer_path}/result_outputs/"
 # Local path used for development
 # blast_dir = "C:/Users/winst/Documents/MEGA/intern_and_work_proj/ASTAR_BII/primer_checker/primer_mutation_starter_pack/NCBI/blast-2.10.1+/bin/"
 # blast_db_loc = "D:/Datasets/GISAID_Update_Analysis/blast/blastdb/database"
-# fasta_input = "C:/Users/winst/Documents/MEGA/intern_and_work_proj/ASTAR_BII/primer_checker/cgi_scripts/fasta_input/"
-# database_count = "C:/Users/winst/Documents/MEGA/intern_and_work_proj/ASTAR_BII/primer_checker/cgi_scripts/database_count.json"
+# fasta_input_path = "C:/Users/winst/Documents/MEGA/intern_and_work_proj/ASTAR_BII/primer_checker/cgi_scripts/fasta_input/"
+# database_count_path = "C:/Users/winst/Documents/MEGA/intern_and_work_proj/ASTAR_BII/primer_checker/cgi_scripts/database_count.json"
+# database_count_daily_path = "C:/Users/winst/Documents/MEGA/intern_and_work_proj/ASTAR_BII/primer_checker/cgi_scripts/database_count_daily.json"
 # output_path = "C:/Users/winst/Documents/MEGA/intern_and_work_proj/ASTAR_BII/primer_checker/cgi_scripts/output/"
 
 
