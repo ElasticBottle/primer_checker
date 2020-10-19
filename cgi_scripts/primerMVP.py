@@ -1,4 +1,4 @@
-# !/afs/bii.a-star.edu.sg/dept/mendel/METHODS/corona/local/anaconda3/envs/primer/bin/python3.7
+#!/afs/bii.a-star.edu.sg/dept/mendel/METHODS/corona/local/anaconda3/envs/primer/bin/python3.7
 
 import cgi
 
@@ -23,8 +23,10 @@ base_path = "/afs/bii.a-star.edu.sg/dept/mendel/METHODS/corona"
 primer_path = f"{base_path}/gamma/primer"
 blast_dir = f"{base_path}/local/anaconda3/envs/blast/bin/"
 blast_db_loc = f"{primer_path}/blastdb/database"
-fasta_input = f"{primer_path}/fasta_inputs/"
-database_count = f"{primer_path}/support_files/database_count.json"
+fasta_input_path = f"{primer_path}/fasta_inputs/"
+timing_path = f"{primer_path}/support_files/"
+database_count_path = f"{primer_path}/support_files/database_count.json"
+database_count_daily_path = f"{primer_path}/support_files/database_count_daily.json"
 output_path = f"{primer_path}/result_outputs/"
 
 # Local path used for development
@@ -44,18 +46,27 @@ def print_headers():
     print()  # blank line, end of headers
 
 
+def print_failure():
+    print("Content-Type: text/html")
+    print("Status: 400 Bad Request")
+    print()  # blank line, end of headers
+    print(
+        """
+        <h1>400 bad request</h1>
+
+        <p>Apologies for the invalid request! If you think this is an error, please contact and tell us:
+    - Steps for the actions taken
+    - Input files used when it happened 
+We will work to get it fixed as soon as possible!</p>"""
+    )
+
+
 def read_input():
     input_files = sys.stdin.readlines()
     if len(input_files) != 0:
         input_files = json.loads(input_files[0])
         return input_files
     else:
-        print(
-            """Apologies for the invalid request! If this persist, please contact and tell us:
-    - Steps for the actions taken
-    - Input files used when it happened 
-We will work to get it fixed as soon as possible!"""
-        )
         return dict()
 
 
@@ -99,28 +110,26 @@ def analyse_primer(
 
 
 def main():
-    print_headers()
+    input_files = read_input()
+    if len(input_files) == 0:
+        print_failure()
+
     start = time.time()
+    print_headers()
 
     # Used for local development
     # sys.stdin = StringIO(
     #     r"""{"data": [{"content": ">fwd\r\nGTGAAATGGTCATGTGTGGCGG\r\n>rev\r\nTATGCTAATAGTGTTTTTAACATTTG\r\n>prb\r\nCAGGTGGAACCTCATCAGGAGATGC", "id": "text_input_fasta", "invalid":false},{"content":">fwd\r\nGTGAAATGGTCATGTGTGGCGG\r\n>rev\r\nTATGCTAATAGTGTTTTTAACATTTG\r\n>prb\r\nCAGGTGGAACCTCATCAGGAGATGC", "id": "MHUMAN", "invalid":false},{"content": ">fwd\r\nGTGAAATGGTCATGTGTGGCGG\r\n>rev\r\nTATGCTAATAGTGTTTTTAACATTTG\r\n>prb\r\nCAGGTGGAACCTCATCAGGAGATGC", "id": "ABCD", "invalid":false},{"content": ">fwd\r\nGTGAAATGGTCATGTGTGGCGG\r\n>rev\r\nTATGCTAATAGTGTTTTTAACATTTG\r\n>prb\r\nCAGGTGGAACCTCATCAGGAGATGC", "id": "EFGH", "invalid":false},{"content": ">fwd\r\nGTGAAATGGTCATGTGTGGCGG\r\n>rev\r\nTATGCTAATAGTGTTTTTAACATTTG\r\n>prb\r\nCAGGTGGAACCTCATCAGGAGATGC", "id": "HIJK", "invalid":false} ,{"content": ">fwd\r\nGTGAAATGGTCATGTGTGGCGG\r\n>rev\r\nTATGCTAATAGTGTTTTTAACATTTG\r\n>prb\r\nCAGGTGGAACCTCATCAGGAGATGC", "id": "LMNOP", "invalid":false},{"content": ">fwd\r\nGTGAAATGGTCATGTGTGGCGG\r\n>rev\r\nTATGCTAATAGTGTTTTTAACATTTG\r\n>prb\r\nCAGGTGGAACCTCATCAGGAGATGC", "id": "QRST", "invalid":false}]}"""
     # )
 
-    input_files = read_input()
-
-    # No input, exiting
-    if not bool(input_files):
-        return
-
     to_send = {}
     filenames = {}
 
     with concurrent.futures.ProcessPoolExecutor() as executor:
         jobs = {
-            executor.submit(analyse_primer, file, fasta_input, output_path): file.get(
-                "id", None
-            )
+            executor.submit(
+                analyse_primer, file, fasta_input_path, output_path
+            ): file.get("id", None)
             for file in input_files.get("data", [])
         }
         for future in concurrent.futures.as_completed(jobs):
@@ -129,20 +138,24 @@ def main():
             filenames[primerId] = filename
             to_send[primerId] = results.to_dict("records")
 
-    with open(database_count, "r") as f:
-        to_send["databaseCount"] = json.load(f)
+    database_counts = []
+    with open(database_count_path, "r") as f:
+        database_counts.append(json.load(f))
+    with open(database_count_daily_path, "r") as f:
+        database_counts.append(json.load(f))
 
     print(
         json.dumps(
             [
                 to_send,
+                database_counts,
                 filenames,
             ],
             separators=(",", ":"),
         )
     )
     end = time.time() - start
-    with open(f"{output_path}timing.txt", "a") as timings:
+    with open(f"{timing_path}timing.txt", "a") as timings:
         timings.write("\n")
         timings.write(f"{end:.2f} for {filenames}")
 

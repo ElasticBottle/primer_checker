@@ -137,7 +137,7 @@ def clean_missed_results(result: pd.DataFrame) -> pd.DataFrame:
             "misses3",
         ],
     )
-    df_cleaned["misses"] = result["abs_mismatch"].values
+    df_cleaned["misses"] = result["abs_mismatch"].values.astype(int)
     df_cleaned["match_pct"] = result["pct_match"].values.astype(float)
     df_cleaned["type"] = result["query_id"].values
     df_cleaned["expected_value"] = result["expected_value"].values

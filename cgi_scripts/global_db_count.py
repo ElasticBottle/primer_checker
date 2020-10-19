@@ -82,8 +82,7 @@ def accumulate(raw_count: Dict[str, Dict[str, int]]) -> pd.DataFrame:
             - Index date ranges from the earliest value in [raw_count], to the latest value in [raw_count]
             - Any missing dates in [raw_count] is filled by the closest earliest date
     """
-    to_read = StringIO(json.dumps(raw_count))
-    df = pd.read_json(to_read, orient="index")
+    df = pd.DataFrame.from_dict(raw_count, orient="index")
     df.index = pd.to_datetime(df.index)
     df = df.groupby(df.index).sum()
     date_range = pd.date_range(df.index.min(), df.index.max())
@@ -94,12 +93,23 @@ def accumulate(raw_count: Dict[str, Dict[str, int]]) -> pd.DataFrame:
     return df
 
 
-def output_to_json(to_output: pd.DataFrame, path: str):
+def fill_forward(raw_count: Dict[str, Dict[str, int]]) -> pd.DataFrame:
+    df = pd.DataFrame.from_dict(raw_count, orient="records")
+    df.index = pd.to_datetime(df.index)
+    df = df.groupby(df.index).sum()
+    date_range = pd.date_range(df.index.min(), df.index.max())
+
+    df = df.reindex(date_range)
+    df = df.fillna(method="ffill", axis=0)
+    return df
+
+
+def output_to_json(to_output: pd.DataFrame, path: str, file_name: str):
     """
     Outputs the dataframe to a json file
     """
     to_output.index = to_output.index.strftime("%Y-%m-%d")
-    to_output.to_json(f"{path}/database_count.json", orient="index")
+    to_output.to_json(f"{path}/{file_name}", orient="index")
 
 
 def parse_args():
@@ -123,6 +133,14 @@ def parse_args():
         default="./",
         help="output path for the database_count.json",
     )
+    parser.add_argument(
+        "-od",
+        "--output_path_daily",
+        type=str,
+        dest="output_path_daily",
+        default="./",
+        help="output path for the database_count_daily.json",
+    )
 
     return parser.parse_args()
 
@@ -130,8 +148,10 @@ def parse_args():
 def main():
     args = parse_args()
     raw_count = get_raw_count(args.input_fasta)
-    final_count = accumulate(raw_count)
-    output_to_json(final_count, args.output_path)
+    accumulated_count = accumulate(raw_count)
+    output_to_json(accumulated_count, args.output_path, "database_count.json")
+    daily_count = fill_forward(raw_count)
+    output_to_json(daily_count, args.output_path_daily, "database_count_daily.json")
 
 
 if __name__ == "__main__":
