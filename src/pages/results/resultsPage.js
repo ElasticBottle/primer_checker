@@ -1,15 +1,26 @@
 import React from "react";
 import Container from "react-bootstrap/Container";
 import Button from "react-bootstrap/Button";
+import Collapse from "react-bootstrap/Collapse";
+import Row from "react-bootstrap/Row";
+import Col from "react-bootstrap/Col";
 import { useParams } from "react-router-dom";
 import { useHistory } from "react-router-dom";
 
-import TableDisplay from "../../components/tableDisplay/tableDisplay";
-
 import "./resultsPage.css";
-import MutGraphs from "../../components/mutGraphs/mutGraphs";
 import ItemFilters from "../../components/ItemFilter/itemFilters";
-import MutGraphsCombined from "../../components/mutGraphs/mutGraphsCombined";
+import DataTable from "../../components/tableDisplay/tableDisplay";
+import LineGraph from "../../components/mutGraphs/lineGraph";
+import BarGraph from "../../components/mutGraphs/barGraph";
+import PrimerMap from "../../components/primerMap/primerMap";
+
+Date.prototype.sameDay = function (d) {
+  return (
+    this.getFullYear() === d.getFullYear() &&
+    this.getDate() === d.getDate() &&
+    this.getMonth() === d.getMonth()
+  );
+};
 
 const InputData = () => {
   const history = useHistory();
@@ -24,13 +35,14 @@ const InputData = () => {
 };
 
 const ResultPage = ({ results }) => {
+  // Base results from blast
   const result = React.useRef(JSON.parse(results));
   console.log("result", result);
   const baseData = React.useRef(result.current[0] || {});
   const baseTableData = React.useRef(makeTableData(baseData.current));
   const dbCountDaily = React.useRef(parseDb(result.current, 1));
   const dbCountCum = React.useRef(parseDb(result.current, 0));
-  const dateRange = React.useRef(Object.keys(dbCountCum.current));
+  const dateRange = React.useRef(Object.keys(dbCountCum.current) || []);
 
   const { display } = useParams();
   const toDisplay = display.split("&");
@@ -39,16 +51,25 @@ const ResultPage = ({ results }) => {
   const [miss, setMiss] = React.useState([]);
   const [miss3, setMiss3] = React.useState([]);
   const [match, setMatch] = React.useState([]);
-  const [timeFrameBrush, setTimeFrameBrush] = React.useState([]);
-  const [countries, setCountries] = React.useState([]);
-  const [primers, setPrimers] = React.useState([]);
+  const [timeFrameBrush, setTimeFrameBrush] = React.useState(
+    React.useMemo(() => [], [])
+  );
+  const [countries, setCountries] = React.useState(React.useMemo(() => [], []));
+  const [primers, setPrimers] = React.useState(React.useMemo(() => [], []));
   const [pType, setPType] = React.useState([]);
 
   // Filtering for graph data
   const [useCum, setUseCum] = React.useState(false);
   const [countryAsTotal, setCountryAsTotal] = React.useState(false);
   const [lookBack, setLookBack] = React.useState(6);
+  const [isBar, setIsBar] = React.useState(false);
+  const [daysBetweenComparison, setDaysBetweenComparison] = React.useState(
+    lookBack
+  );
+  const [numberOfBars, setNumberOfBars] = React.useState(1);
+  const [showAbsDiff, setShowAbsDiff] = React.useState(false);
 
+  // Misc items
   const [isProcessing, setIsProcessing] = React.useState(false);
 
   React.useEffect(() => {
@@ -146,42 +167,103 @@ const ResultPage = ({ results }) => {
     []
   );
 
-  // const filter = React.useCallback(setFilteredTableData);
-  if (result.current.length !== 0) {
-    const graphBase = baseTableData.current.filter(
-      dataFilter({
-        primers: primers,
-        pType: pType,
-        countries: countries,
-        miss: miss,
-        miss3: miss3,
-        match: match,
-      })
-    );
-    const tableData = graphBase.filter(
-      dataFilter({ timeFrameBrush: timeFrameBrush })
-    );
-    const graphOverview = makeOverview(
-      graphBase,
-      primers.length === 0 ? Object.keys(baseData.current) : primers,
-      useCum ? dbCountCum.current : dbCountDaily.current,
+  const dbActual = React.useMemo(
+    () =>
+      useCum
+        ? dbCountCum.current
+        : getRangeDbCount(dbCountDaily.current, lookBack, dateRange.current),
+    [useCum, lookBack]
+  );
+  console.log("dbActual  :>> ", dbActual);
+  const graphBase = React.useMemo(
+    () =>
+      baseTableData.current.filter(
+        dataFilter({
+          primers: primers,
+          pType: pType,
+          countries: countries,
+          miss: miss,
+          miss3: miss3,
+          match: match,
+        })
+      ),
+    [primers, pType, countries, miss, miss3, match]
+  );
+  const tableData = React.useMemo(
+    () => graphBase.filter(dataFilter({ timeFrameBrush: timeFrameBrush })),
+    [graphBase, timeFrameBrush]
+  );
+
+  const graphOverview = React.useMemo(
+    () =>
+      makeOverview(
+        graphBase,
+        primers.length === 0 ? Object.keys(baseData.current) : primers,
+        dbActual,
+        dateRange.current,
+        useCum,
+        lookBack,
+        countryAsTotal,
+        countries
+      ),
+    [graphBase, primers, dbActual, useCum, lookBack, countryAsTotal, countries]
+  );
+
+  const barData = React.useMemo(
+    () =>
+      isBar
+        ? makeBarData(
+            graphOverview,
+            dateRange.current,
+            timeFrameBrush,
+            daysBetweenComparison,
+            numberOfBars
+          )
+        : {},
+    [graphOverview, numberOfBars, daysBetweenComparison, timeFrameBrush, isBar]
+  );
+
+  const combinedBase = React.useMemo(
+    () => makeIntersection(JSON.parse(JSON.stringify(graphBase))),
+    [graphBase]
+  );
+  const graphCombined = React.useMemo(
+    () =>
+      makeOverview(
+        combinedBase,
+        primers.length === 0
+          ? [Object.keys(baseData.current).join(", ")]
+          : [primers.join(", ")],
+        dbActual,
+        dateRange.current,
+        useCum,
+        lookBack,
+        countryAsTotal,
+        countries
+      ),
+    [
+      combinedBase,
+      primers,
+      dbActual,
       useCum,
       lookBack,
-      setCountryAsTotal ? countries : []
-    );
+      countryAsTotal,
+      countries,
+    ]
+  );
+  const tableCombined = React.useMemo(
+    () => combinedBase.filter(dataFilter({ timeFrameBrush: timeFrameBrush })),
+    [combinedBase, timeFrameBrush]
+  );
 
-    const combinedBase = makeIntersection(
-      JSON.parse(JSON.stringify(graphBase))
-    );
-    const tableCombined = combinedBase.filter(
-      dataFilter({ timeFrameBrush: timeFrameBrush })
-    );
-    console.log("baseTableData :>> ", baseTableData);
-    console.log("graphBase :>> ", graphBase);
-    console.log("tableData :>> ", tableData);
+  // const mapData = makeMapData(tableCombined, tableData)
+  if (result.current.length !== 0) {
+    // console.log("baseTableData :>> ", baseTableData);
+    // console.log("graphBase :>> ", graphBase);
+    // console.log("tableData :>> ", tableData);
     console.log("graphOverview :>> ", graphOverview);
-    console.log("combinedBase :>> ", combinedBase);
-    console.log("tableCombined :>> ", tableCombined);
+    console.log("barData :>> ", barData);
+    // console.log("tableCombined :>> ", tableCombined);
 
     return (
       <div className="display-page">
@@ -208,47 +290,72 @@ const ResultPage = ({ results }) => {
             setPType={setPType}
             isProcessing={isProcessing}
             setIsProcessing={setIsProcessing}
+            isBar={isBar}
+            setIsBar={setIsBar}
+            daysBetweenComparison={daysBetweenComparison}
+            setDaysBetweenComparison={setDaysBetweenComparison}
+            numberOfBars={numberOfBars}
+            setNumberOfBars={setNumberOfBars}
+            showAbsDiff={showAbsDiff}
+            setShowAbsDiff={setShowAbsDiff}
           />
-          <TableDisplay
+          <DataTable
+            id="collapse-table"
             title={"Overview of Missed Viruses"}
             data={tableData}
             columns={overviewColumns}
             isCombined={false}
+            isCollapsable={true}
           />
-          <MutGraphs
-            data={graphOverview}
-            primers={
-              primers.length === 0 ? Object.keys(baseData.current) : primers
-            }
-            dates={dateRange.current}
-            setPrimers={setPrimers}
-            timeFrameBrush={timeFrameBrush}
-            setTimeFrameBrush={setTimeFrameBrush}
-            isBar={isBar}
-          />
-
-          <MutGraphsCombined
-            data={graphCombined}
-            dates={dateRange.current}
-            timeFrameBrush={timeFrameBrush}
-            setTimeFrameBrush={setTimeFrameBrush}
-          />
-          <TableDisplay
-            title={"Combined Missed Viruses"}
-            data={tableCombined}
-            columns={combinedCols}
-            isCombined={true}
-          />
-
-          {/* <VisualizationDisplay
-            toDisplay={toDisplay}
-            overviewData={overviewData}
-            combinedOverview={combinedOverview}
-            mapData={filteredTableData}
-            dbCount={useCum ? dbCountCum : dbCountDaily}
-            timeFrameBrush={timeFrameBrush}
-            setTimeFrameBrush={setTimeFrameBrush}
-          /> */}
+          <Row>
+            <Col xs={12} xl={6}>
+              <LineGraph
+                title={"Mutation Overview"}
+                data={graphOverview}
+                primers={
+                  primers.length === 0 ? Object.keys(baseData.current) : primers
+                }
+                dates={dateRange.current}
+                setPrimers={setPrimers}
+                timeFrameBrush={timeFrameBrush}
+                setTimeFrameBrush={setTimeFrameBrush}
+              />
+              {isBar ? (
+                <BarGraph
+                  title={"Recent Mutation Summary"}
+                  data={barData}
+                  showAbsDiff={showAbsDiff}
+                />
+              ) : null}
+            </Col>
+            <Col xs={12} xl={6}>
+              <PrimerMap />
+            </Col>
+          </Row>
+          <Collapse in={combinedBase.length !== 0}>
+            <div>
+              <LineGraph
+                title={"Combined Mutation Overview"}
+                data={graphCombined}
+                primers={
+                  primers.length === 0
+                    ? [Object.keys(baseData.current).join(", ")]
+                    : [primers.join(", ")]
+                }
+                dates={dateRange.current}
+                setPrimers={setPrimers}
+                timeFrameBrush={timeFrameBrush}
+                setTimeFrameBrush={setTimeFrameBrush}
+              />
+              <DataTable
+                title={"Combined Missed Viruses"}
+                data={tableCombined}
+                columns={combinedCols}
+                isCombined={true}
+                isCollapsable={true}
+              />
+            </div>
+          </Collapse>
         </Container>
       </div>
     );
@@ -280,55 +387,56 @@ const dataFilter = ({
    * @returns {function} A function that takes a value and filter for parameters above
    */
   return (value) => {
-  let isWithinTimeFrame = true;
-  let isPrimer = true;
-  let isPType = true;
-  let isCountry = true;
-  let isMiss = true;
-  let isMiss3 = true;
-  let isMatch = true;
+    let isWithinTimeFrame = true;
+    let isPrimer = true;
+    let isPType = true;
+    let isCountry = true;
+    let isMiss = true;
+    let isMiss3 = true;
+    let isMatch = true;
 
-  if (timeFrameBrush.length !== 0) {
-    const currDate = new Date(value.date);
-    const [startDate, endDate] = timeFrameBrush;
-    isWithinTimeFrame =
-      currDate >= new Date(startDate) && currDate <= new Date(endDate);
-  }
-  if (primers.length !== 0) {
-    isPrimer = primers.includes(value.primer);
-  }
-  if (pType.length !== 0) {
-    isPType = pType.includes(value.type);
-  }
-  if (countries.length !== 0) {
+    if (timeFrameBrush.length !== 0) {
+      const currDate = new Date(value.date);
+      const [startDate, endDate] = timeFrameBrush;
+      isWithinTimeFrame =
+        currDate.getTime() >= new Date(startDate).getTime() &&
+        currDate.getTime() <= new Date(endDate).getTime();
+    }
+    if (primers.length !== 0) {
+      isPrimer = primers.includes(value.primer);
+    }
+    if (pType.length !== 0) {
+      isPType = pType.includes(value.type);
+    }
+    if (countries.length !== 0) {
       isCountry = countries
         .map((val) => val.label)
         .includes(value.country_name);
-  }
-  if (miss.length !== 0) {
-    console.log("miss :>> ", miss);
+    }
+    if (miss.length !== 0) {
+      console.log("miss :>> ", miss);
       isMiss =
         value.misses >= (miss[0] || 0) && value.misses <= (miss[1] || 100);
-  }
-  if (miss3.length !== 0) {
-    isMiss3 =
-      value.misses3 >= (miss3[0] || 0) && value.misses3 <= (miss3[1] || 100);
-  }
-  if (match.length !== 0) {
-    isMatch =
-      value.match_pct >= (match[0] || 0) &&
-      value.match_pct <= (match[1] || 100);
-  }
-  return (
-    isWithinTimeFrame &&
-    isPrimer &&
-    isPType &&
-    isCountry &&
-    isMiss &&
-    isMiss3 &&
-    isMatch
-  );
-};
+    }
+    if (miss3.length !== 0) {
+      isMiss3 =
+        value.misses3 >= (miss3[0] || 0) && value.misses3 <= (miss3[1] || 100);
+    }
+    if (match.length !== 0) {
+      isMatch =
+        value.match_pct >= (match[0] || 0) &&
+        value.match_pct <= (match[1] || 100);
+    }
+    return (
+      isWithinTimeFrame &&
+      isPrimer &&
+      isPType &&
+      isCountry &&
+      isMiss &&
+      isMiss3 &&
+      isMatch
+    );
+  };
 };
 
 function parseDb(rawData, database) {
@@ -464,7 +572,6 @@ function getRangeDbCount(dbCount, lookBack, dates) {
    */
   // TODO: Optimise maybe, remove repeated calculation each sliding window
   const dateWindowCum = {};
-
   for (const date of dates) {
     const now = new Date(date);
     const start = new Date(date);
@@ -516,31 +623,41 @@ function makeOverview(
    * @param {bool} useCum: if the dbCount represents cumulated or daily values
    * @param {Number} lookBack: the lookBack period. Only has effect if [useCum] is false
    * @param {Array} countries: List of countries who should form the new total
-   * @returns {Array} List of Map containing "date", "primerName", "mutation_pct", and "mutation3_pct"
+   * @returns {Array} List of Map containing "date", "name", "mutation_pct", "mutation3_pct", "mutation_abs", "mutation3_abs", "submission_count", and  "countries_considered"
    */
   const overviewData = [];
-  let dbRolling = useCum ? {} : getRangeDbCount(dbCount, lookBack, dates);
+  if (primerDetails.length === 0) return overviewData;
   for (const primerName of primerNames) {
     overviewData.push(
-      ...dates.map((date) => {
-        const mutationAbs = primerDetails.filter(
-          (value) => value.date === date && value.primer === primerName
-        ).length;
+      dates.map((date) => {
+        const currDate = new Date(date);
+        const minDate = new Date(date);
+        minDate.setDate(minDate.getDate() - lookBack);
+        const mutationAbs = primerDetails.filter((value) => {
+          const primersDate = new Date(value.date);
+          return useCum
+            ? primersDate.getTime() <= currDate.getTime() &&
+                value.primer === primerName
+            : primersDate.getTime() <= currDate.getTime() &&
+                primersDate.getTime() >= minDate.getTime() &&
+                value.primer === primerName;
+        }).length;
         const mutation3Abs = primerDetails.filter((value) => {
-          return (
-            value.date === date &&
-            value.primer === primerName &&
-            parseInt(value.misses3) !== 0
-          );
+          const primersDate = new Date(value.date);
+          return useCum
+            ? primersDate.getTime() <= currDate.getTime() &&
+                value.primer === primerName &&
+                value.misses3 !== 0
+            : primersDate.getTime() <= currDate.getTime() &&
+                primersDate.getTime() >= minDate.getTime() &&
+                value.primer === primerName &&
+                value.misses3 !== 0;
         }).length;
 
-        const databaseTotal = useCum
-          ? isCountryAsTotal
-            ? getCountriesTotal(dbCount, countries, date)
-            : dbCount[date].total
-          : isCountryAsTotal
-          ? getCountriesTotal(dbRolling, countries, date)
-          : dbRolling[date].total;
+        const databaseTotal = isCountryAsTotal
+          ? getCountriesTotal(dbCount, countries, date)
+          : dbCount[date].total;
+
         // console.log("date :>> ", date);
         // console.log("mutationAbs :>> ", mutationAbs);
         // console.log("primerName :>> ", primerName);
@@ -550,14 +667,13 @@ function makeOverview(
         //   ((mutationAbs / databaseTotal) * 100).toFixed(3)
         // );
         return {
-          date: new Date(date),
+          date: date,
           name: primerName,
           mutation_pct: ((mutationAbs / databaseTotal) * 100).toFixed(3),
           mutation3_pct: ((mutation3Abs / databaseTotal) * 100).toFixed(3),
           mutation_abs: mutationAbs,
           mutation3_abs: mutation3Abs,
           submission_count: databaseTotal,
-          look_back: useCum ? null : lookBack,
           countries_considered: countries,
         };
       })
@@ -566,73 +682,44 @@ function makeOverview(
   return overviewData;
 }
 
-// function getDBAndPrimerNames(rawData) {
-//   const keys = Object.keys(rawData);
+function makeBarData(
+  graphOverview,
+  dates,
+  timeFrameBrush,
+  daysBetweenComparison,
+  numberOfBars
+) {
+  /**
+   * Makes the bar data to be used for display
+   * @param {Array} graphBase: List of List of Map containing "date", "name", "mutation_pct", "mutation3_pct", "mutation_abs", "mutation3_abs", "submission_count", and  "countries_considered". Each list correspond to a primer in primerNames of the same index
+   * @param {Array} primerNames: Contains the list primer names
+   * @param {Object} dbCount: Contains the virus numbers in date -> country -> count order
+   * @param {Array} timeFrameBrush: Contains the minimum and maximum date of interest
+   */
+  const dateDetails = [];
 
-//   const dbName = keys[keys.length - 1];
-//   const dbCount = rawData[dbName];
+  const now = timeFrameBrush[1] || new Date(dates[dates.length - 1]);
+  const start = new Date(now);
+  start.setDate(start.getDate() - daysBetweenComparison * numberOfBars);
 
-//   const primerNames = keys.slice(0, keys.length - 1);
-//   return [dbCount, primerNames];
-// }
+  while (start.getTime() < new Date(dates[0])) {
+    start.setDate(start.getDate() + daysBetweenComparison);
+  }
 
-// function makeOverview(primerDetails, dbCount) {
-//   console.log("making overview data");
-//   const overviewData = [];
+  for (
+    let d = start;
+    d <= now;
+    d.setDate(d.getDate() + daysBetweenComparison)
+  ) {
+    const primerMutations = [];
+    for (let i = 0; i < graphOverview.length; i++) {
+      const details = graphOverview[i].filter((val) =>
+        new Date(val.date).sameDay(d)
+      );
+      primerMutations.push(...details);
+    }
+    dateDetails.push(primerMutations);
+  }
 
-//   const [dbCount, primerNames] = getDBAndPrimerNames(rawData);
-
-//   for (const primerName of primerNames) {
-//     const primerDetails = rawData[primerName];
-
-//     const dates = Object.keys(dbCount);
-
-//     overviewData.push(
-//       ...dates.map((date) => {
-//         return {
-//           date: new Date(date),
-//           name: primerName,
-//           mutation_pct:
-//             (primerDetails.filter((value) => value.date === date).length /
-//               dbCount[date].total) *
-//             100,
-//           mutation3_pct:
-//             (primerDetails.filter((value) => {
-//               return value.date === date && parseInt(value.misses3) !== 0;
-//             }).length /
-//               dbCount[date].total) *
-//             100,
-//         };
-//       })
-//     );
-//   }
-
-//   return overviewData;
-// }
-
-// function makeCombinedOverview(dbCount, tableData, primerNames) {
-//   const combinedOverview = [];
-
-//   const dates = Object.keys(dbCount);
-
-//   combinedOverview.push(
-//     ...dates.map((date) => {
-//       return {
-//         date: new Date(date),
-//         name: primerNames.join(", "),
-//         total_mut_pct:
-//           (tableData.filter((value) => value.date === date).length /
-//             dbCount[date].total) *
-//           100,
-//         total_mut3_pct:
-//           (tableData.filter(
-//             (value) => value.date === date && parseInt(value.misses3) !== 0
-//           ).length /
-//             dbCount[date].total) *
-//           100,
-//       };
-//     })
-//   );
-
-//   return combinedOverview;
-// }
+  return dateDetails;
+}

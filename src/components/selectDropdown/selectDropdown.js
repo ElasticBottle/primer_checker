@@ -8,7 +8,7 @@ function SelectDropdown({
   onChange,
   options,
   placeholder,
-  // value,
+  // value = [],
   isLoading = false,
   defaultValue = [],
 }) {
@@ -16,7 +16,9 @@ function SelectDropdown({
    * @param {function} onChange: Takes in Array(Objects) of selected objects, null if nothing is selected
    * @param {Object} Options: Select Options. Should contain a "value" and "label" key
    * @param {Array} defaultValue: The list of default options
+   * @param {bool} isLoading: Indicates if loading animation shows or not
    * @param {string} placeholder: Hint text when there is nothing selected
+   * @param {Array} value: list of items that is selected
    */
   return (
     <Select

@@ -13,12 +13,58 @@ import Form from "react-bootstrap/Form";
 import InputGroup from "react-bootstrap/InputGroup";
 import Col from "react-bootstrap/Col";
 import Row from "react-bootstrap/Row";
-import Container from "react-bootstrap/Container";
+import Collapse from "react-bootstrap/Collapse";
 import { CSVLink } from "react-csv";
 
 import "./tableDisplay.css";
 
 import { GlobalFilter } from "./filter";
+
+function DataTable({ title, data, columns, isCombined, isCollapsable }) {
+  const [showTable, setShowTable] = React.useState(true);
+
+  if (isCollapsable) {
+    return (
+      <>
+        <Button
+          onClick={() => {
+            setShowTable(!showTable);
+          }}
+          className="show-table"
+          aria-controls="collapse-table"
+          aria-expanded={showTable}
+          variant="light"
+        >
+          {showTable
+            ? `${String.fromCodePoint(parseInt("25BC", 16))} Close Table`
+            : `> Show Table`}
+        </Button>
+        <Collapse in={showTable}>
+          <div>
+            <TableDisplay
+              id="collapse-table"
+              title={title}
+              data={data}
+              columns={columns}
+              isCombined={isCombined}
+            />
+          </div>
+        </Collapse>
+      </>
+    );
+  }
+  return (
+    <div>
+      <TableDisplay
+        id="collapse-table"
+        title={title}
+        data={data}
+        columns={columns}
+        isCombined={isCombined}
+      />
+    </div>
+  );
+}
 
 function TableDisplay({ title, data, columns, isCombined }) {
   const csv_headers = columns.map((header) => {
@@ -112,7 +158,7 @@ function TableDisplay({ title, data, columns, isCombined }) {
   );
 
   return (
-    <Container>
+    <div>
       <h2 className="table-title">{title}</h2>
       <GlobalFilter
         preGlobalFilteredRows={preGlobalFilteredRows}
@@ -214,9 +260,11 @@ function TableDisplay({ title, data, columns, isCombined }) {
             );
           })}
           {!canNextPage ? (
-            <span className="end-of-data">
-              {`---------- All ${preGlobalFilteredRows.length} data displayed ----------`}
-            </span>
+            <tr className="end-of-data">
+              <td>
+                {`---------- All ${preGlobalFilteredRows.length} data displayed ----------`}
+              </td>
+            </tr>
           ) : null}
         </tbody>
       </BTable>
@@ -300,7 +348,7 @@ function TableDisplay({ title, data, columns, isCombined }) {
           Download Table
         </CSVLink>
       </Row>
-    </Container>
+    </div>
   );
 }
-export default TableDisplay;
+export default DataTable;

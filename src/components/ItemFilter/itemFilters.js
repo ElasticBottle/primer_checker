@@ -2,11 +2,36 @@ import React from "react";
 import Col from "react-bootstrap/Col";
 import Row from "react-bootstrap/Row";
 import Form from "react-bootstrap/Form";
+import Collapse from "react-bootstrap/Collapse";
+import InputGroup from "react-bootstrap/InputGroup";
 import { useHistory } from "react-router-dom";
 
 import DateRangePicker from "@wojtekmaj/react-daterange-picker";
 import SelectDropdown from "../selectDropdown/selectDropdown";
 import NumberRangeFilter from "./minMaxFilter";
+
+import "./itemFilter.css";
+
+const Switch = ({
+  id,
+  className,
+  checked,
+  onChange,
+  ariaControls = "",
+  ariaExpanded = "",
+}) => {
+  return (
+    <label
+      id={id}
+      className={`switch ${className}`}
+      aria-controls={ariaControls}
+      aria-expanded={ariaExpanded}
+    >
+      <input type="checkbox" checked={checked} onChange={onChange} />
+      <span className="slider round"></span>
+    </label>
+  );
+};
 
 function getFilterName(colNames) {
   return (id) => {
@@ -32,10 +57,19 @@ const ItemFilters = ({
   countryAsTotal,
   setCountryAsTotal,
   setCountries,
+  primers,
   setPrimers,
   setPType,
   isProcessing,
   setIsProcessing,
+  isBar,
+  setIsBar,
+  daysBetweenComparison,
+  setDaysBetweenComparison,
+  numberOfBars,
+  setNumberOfBars,
+  showAbsDiff,
+  setShowAbsDiff,
 }) => {
   const history = useHistory();
   const filterHeader = {
@@ -90,13 +124,16 @@ const ItemFilters = ({
   return (
     <div>
       <Row>
-        <Col xs={12} lg={7}>
+        <Col xs={12} lg={7} className="mb-3">
           <Row>
-            <Form.Label column sm={12} lg={2}>
-              {`${getLabel(filterHeader.primers)}`}
-            </Form.Label>
-            <Col sm={12} lg={10}>
+            <Col sm={12} lg={2} className="mr-0 pr-lg-0">
+              <InputGroup.Text>
+                {`${getLabel(filterHeader.primers)}`}
+              </InputGroup.Text>
+            </Col>
+            <Col sm={12} lg={10} className="pl-lg-0">
               <SelectDropdown
+                value={primers}
                 onChange={primerChange(setPrimers)}
                 options={React.useMemo(() => {
                   return Object.keys(baseData).map((val) => {
@@ -109,12 +146,14 @@ const ItemFilters = ({
             </Col>
           </Row>
         </Col>
-        <Col xs={12} lg={5}>
+        <Col xs={12} lg={5} className="mb-3">
           <Row>
-            <Form.Label column sm={12} lg={4}>
-              {`${getLabel(filterHeader.type)}`}
-            </Form.Label>
-            <Col sm={12} lg={8}>
+            <Col sm={12} lg={4} className="mr-0 pr-lg-0">
+              <InputGroup.Text>
+                {`${getLabel(filterHeader.type)}`}
+              </InputGroup.Text>
+            </Col>
+            <Col sm={12} lg={8} className="pl-lg-0">
               <SelectDropdown
                 onChange={selectionChange(setPType)}
                 options={React.useMemo(
@@ -133,28 +172,44 @@ const ItemFilters = ({
         </Col>
       </Row>
       <Row>
-        <Col xs={12} lg={4}>
-          <Row>
-            <Form.Label column sm={12} lg={4}>
-              {`${getLabel(filterHeader.miss)}`}
-            </Form.Label>
-            <Col sm={12} lg={8}>
-              <NumberRangeFilter
-                data={baseData}
-                minVal={0}
-                maxVal={100}
-                step={1}
-                value={miss}
-                setFilter={setMiss}
-                id={filterHeader.miss}
-              />
-            </Col>
-          </Row>
+        <Col className="mb-3 pr-lg-0" xs={12} lg={4}>
+          <InputGroup size="sm">
+            <InputGroup.Prepend>
+              <InputGroup.Text>{`${getLabel(
+                filterHeader.miss
+              )}`}</InputGroup.Text>
+            </InputGroup.Prepend>
+            <NumberRangeFilter
+              data={baseData}
+              minVal={0}
+              maxVal={100}
+              step={1}
+              value={miss}
+              setFilter={setMiss}
+              id={filterHeader.miss}
+            />
+          </InputGroup>
         </Col>
-        <Col xs={12} lg={4}>
-          <Row>
+        <Col className="mb-3 pr-lg-0 pl-lg-0" xs={12} lg={4}>
+          <InputGroup size="sm">
+            <InputGroup.Prepend>
+              <InputGroup.Text>{`${getLabel(
+                filterHeader.miss3
+              )}`}</InputGroup.Text>
+            </InputGroup.Prepend>
+            <NumberRangeFilter
+              data={baseData}
+              minVal={0}
+              maxVal={100}
+              step={1}
+              value={miss3}
+              setFilter={setMiss3}
+              id={filterHeader.miss3}
+            />
+          </InputGroup>
+          {/* <Row>
             <Form.Label column sm={12} lg={5}>
-              {`${getLabel(filterHeader.miss3)}`}
+             
             </Form.Label>
             <Col sm={12} lg={7}>
               <NumberRangeFilter
@@ -167,12 +222,28 @@ const ItemFilters = ({
                 id={filterHeader.miss3}
               />
             </Col>
-          </Row>
+          </Row> */}
         </Col>
-        <Col xs={12} lg={4}>
-          <Row>
+        <Col className="mb-3 pl-lg-0" xs={12} lg={4}>
+          <InputGroup size="sm">
+            <InputGroup.Prepend>
+              <InputGroup.Text>{`${getLabel(
+                filterHeader.match
+              )}`}</InputGroup.Text>
+            </InputGroup.Prepend>
+            <NumberRangeFilter
+              data={baseData}
+              minVal={0}
+              maxVal={100}
+              step={0.01}
+              value={match}
+              setFilter={setMatch}
+              id={filterHeader.match}
+            />
+          </InputGroup>
+          {/* <Row>
             <Form.Label column sm={12} lg={5}>
-              {`${getLabel(filterHeader.match)}`}
+             
             </Form.Label>
             <Col sm={12} lg={7}>
               <NumberRangeFilter
@@ -185,68 +256,72 @@ const ItemFilters = ({
                 id={filterHeader.match}
               />
             </Col>
-          </Row>
+          </Row> */}
         </Col>
       </Row>
       <Row>
-        <Col xs={12} lg={5}>
-          <Row>
-            <Form.Label column sm={12} lg={4}>
-              Date Range
-            </Form.Label>
-            <Col sm={12} lg={8}>
-              <DateRangePicker
-                onChange={dateChange}
-                value={timeFrameBrush.length === 0 ? null : timeFrameBrush}
-              />
-            </Col>
-          </Row>
+        <Col xs={12} lg={5} className="pr-lg-0">
+          <InputGroup className="mb-3 " size="sm">
+            <InputGroup.Prepend>
+              <InputGroup.Text>Date Range</InputGroup.Text>
+            </InputGroup.Prepend>
+            <DateRangePicker
+              onChange={dateChange}
+              value={timeFrameBrush.length === 0 ? null : timeFrameBrush}
+            />
+          </InputGroup>
         </Col>
-        <Col xs={12} lg={3}>
-          <Form.Label htmlFor="cumulative">
-            Daily submissions as Total
-          </Form.Label>
-          <input
-            type="checkbox"
-            id="cumulative"
-            className="use-cumulative"
-            checked={!useCum}
-            onChange={(e) => {
-              setUseCum(!e.target.checked);
-            }}
-          />
+
+        <Col xs={12} lg={3} className="pr-lg-0 pl-lg-0">
+          <InputGroup className="mb-3" size="sm">
+            <InputGroup.Prepend>
+              <InputGroup.Text htmlFor="cumulative">
+                Daily Submissions as Total
+              </InputGroup.Text>
+            </InputGroup.Prepend>
+            <Switch
+              id="cumulative"
+              className="use-cumulative"
+              checked={!useCum}
+              onChange={(e) => {
+                setUseCum(!e.target.checked);
+              }}
+            />
+          </InputGroup>
         </Col>
-        <Col xs={12} lg={4}>
-          <Row>
-            <Form.Label column sm={12} lg={4}>
-              Look Back
-            </Form.Label>
-            <Col sm={12} lg={8}>
-              <Form.Control
-                value={lookBack.toString()}
-                as="input"
-                type="number"
-                min={0}
-                max={200}
-                step={1}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setLookBack(parseInt(val, 10) || 0);
-                }}
-                size="sm"
-              />
-            </Col>
-          </Row>
+
+        <Col xs={12} lg={4} className="pl-lg-0">
+          <InputGroup className="mb-3 " size="sm">
+            <InputGroup.Prepend>
+              <InputGroup.Text>Look Back</InputGroup.Text>
+            </InputGroup.Prepend>
+            <Form.Control
+              value={lookBack.toString()}
+              disabled={useCum}
+              as="input"
+              type="number"
+              min={0}
+              max={200}
+              step={1}
+              onChange={(e) => {
+                const val = e.target.value;
+                setLookBack(parseInt(val, 10) || 0);
+              }}
+            />
+          </InputGroup>
         </Col>
       </Row>
       <Row>
-        <Col sm={12} lg={9}>
+        <Col sm={12} lg={8} className="mb-3">
           <Row>
-            <Form.Label column sm={12} lg={2}>
-              {`${getLabel(filterHeader.country)}`}
-            </Form.Label>
-            <Col sm={12} lg={10}>
+            <Col sm={12} lg={2} className="mr-0 pr-lg-0">
+              <InputGroup.Text>{`${getLabel(
+                filterHeader.country
+              )}`}</InputGroup.Text>
+            </Col>
+            <Col sm={12} lg={10} className="pl-lg-0">
               <SelectDropdown
+                className="country-picker"
                 onChange={selectionChange(setCountries)}
                 options={React.useMemo(() => {
                   const unique = new Set();
@@ -276,17 +351,99 @@ const ItemFilters = ({
             </Col>
           </Row>
         </Col>
-        <Col sm={12} lg={3}>
-          <Form.Label htmlFor="country">Selected Countries as Total</Form.Label>
-          <input
-            type="checkbox"
-            id="country"
-            className="use-country"
-            value={countryAsTotal}
-            onChange={(e) => {
-              setCountryAsTotal(e.target.checked);
-            }}
-          />
+
+        <Col sm={12} lg={4}>
+          <InputGroup className="mb-3" size="sm">
+            <InputGroup.Prepend>
+              <InputGroup.Text htmlFor="country">
+                Selected Countries as Total
+              </InputGroup.Text>
+            </InputGroup.Prepend>
+            <Switch
+              id="country"
+              className="use-country"
+              checked={countryAsTotal}
+              onChange={(e) => {
+                setCountryAsTotal(e.target.checked);
+              }}
+            />
+          </InputGroup>
+        </Col>
+      </Row>
+      <Row>
+        <Col sm={12} lg={2.5}>
+          <InputGroup className="mb-3" size="sm">
+            <InputGroup.Prepend>
+              <InputGroup.Text>Show Bar Graph</InputGroup.Text>
+            </InputGroup.Prepend>
+            <Switch
+              type="checkbox"
+              checked={isBar}
+              onChange={() => setIsBar(!isBar)}
+              aria-controls="use-bars"
+              aria-expanded={isBar}
+            />
+          </InputGroup>
+        </Col>
+        <Col sm={12} lg={9.5}>
+          <Collapse in={isBar}>
+            <div id="use-bars">
+              <Row>
+                <Col sm={12} lg={4}>
+                  <InputGroup className="mb-3" size="sm">
+                    <InputGroup.Prepend>
+                      <InputGroup.Text>Show Absolute Diff</InputGroup.Text>
+                    </InputGroup.Prepend>
+                    <Switch
+                      type="checkbox"
+                      checked={showAbsDiff}
+                      onChange={() => setShowAbsDiff(!showAbsDiff)}
+                    />
+                  </InputGroup>
+                </Col>
+                <Col sm={12} lg={4}>
+                  <InputGroup className="mb-3" size="sm">
+                    <InputGroup.Prepend>
+                      <InputGroup.Text>Days between Comparison</InputGroup.Text>
+                    </InputGroup.Prepend>
+                    <Form.Control
+                      value={daysBetweenComparison.toString()}
+                      disabled={!isBar}
+                      as="input"
+                      type="number"
+                      min={1}
+                      max={200}
+                      step={1}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setDaysBetweenComparison(parseInt(val, 10) || 0);
+                      }}
+                    />
+                  </InputGroup>
+                </Col>
+                <Col sm={12} lg={4}>
+                  <InputGroup className="mb-3" size="sm">
+                    <InputGroup.Prepend>
+                      <InputGroup.Text>Number of bars</InputGroup.Text>
+                    </InputGroup.Prepend>
+                    <Form.Control
+                      value={numberOfBars.toString()}
+                      disabled={!isBar}
+                      as="input"
+                      type="number"
+                      min={1}
+                      max={20}
+                      step={1}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setNumberOfBars(parseInt(val, 10) || 0);
+                      }}
+                    />
+                  </InputGroup>
+                </Col>
+              </Row>
+            </div>
+          </Collapse>
         </Col>
       </Row>
     </div>

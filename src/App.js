@@ -1,23 +1,13 @@
 import React, { useState } from "react";
-
-// import Form from 'react-bootstrap/Form'
-// import Row from 'react-bootstrap/Row';
-// import Button from 'react-bootstrap/Button';
-// import Container from 'react-bootstrap/Container';
-// import Collapse from 'react-bootstrap/Collapse';
-
-// import DropZone from "./components/dropzone/dropzone";
-// import TextArea from './components/textArea/textArea';
-// import FileDisplay from './components/fileDisplay/fileDisplay';
-// import primerCheckService from './services/primerCheck';
-import UploadPage from "./pages/upload/uploadPage";
-import "./App.css";
-import "bootstrap/dist/css/bootstrap.min.css";
 import { BrowserRouter as Router, Switch, Route, Link } from "react-router-dom";
+import UploadPage from "./pages/upload/uploadPage";
 import ResultPage from "./pages/results/resultsPage";
 
+import "bootstrap/dist/css/bootstrap.min.css";
+import "./App.css";
+
 function App() {
-  const [results, setResults] = useState({});
+  const [results, setResults] = useState("[]");
   return (
     <Router basename="/METHODS/corona/gamma/primer/build">
       <Link to="/" style={{ textDecoration: "none" }}>

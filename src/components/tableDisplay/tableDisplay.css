@@ -1,7 +1,3 @@
-.table-title {
-  margin-top: 50px;
-}
-
 .general-search {
   margin-bottom: 20px;
 }
@@ -55,10 +51,6 @@
   /* margin:0px;
   padding: 20px; */
 }
-.filter{
-  margin-top: 10px;
-  margin-bottom: -5px;
-}
 
 .tbody {
   /* These styles are required for a scrollable table body */
@@ -91,6 +83,12 @@
 
 .end-of-data {
   font-weight: bold;
+  display: block;
+  text-align: center;
+}
+
+.end-of-data >td{
+  display: block;
 }
 
 .pagination {

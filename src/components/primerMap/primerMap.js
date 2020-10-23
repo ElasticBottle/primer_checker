@@ -157,22 +157,6 @@ const PrimerMap = ({
   return (
     <Container>
       <h2>Map of viruses mutations</h2>
-      <CSVLink
-        data={downloadData}
-        headers={headers}
-        filename={"geo_misses.csv"}
-        className="btn btn-dark"
-        target="_blank"
-        onClick={downloadDataClick(
-          countryMisses,
-          countryMissesPct,
-          startDate,
-          endDate,
-          data
-        )}
-      >
-        Download Map Data
-      </CSVLink>
       <ComposableMap data-tip="" projectionConfig={{ scale: 200 }}>
         <ZoomableGroup>
           <Geographies geography={geoUrl}>
@@ -231,61 +215,24 @@ const PrimerMap = ({
           </Geographies>
         </ZoomableGroup>
       </ComposableMap>
+      <CSVLink
+        data={downloadData}
+        headers={headers}
+        filename={"geo_misses.csv"}
+        className="btn btn-dark"
+        target="_blank"
+        onClick={downloadDataClick(
+          countryMisses,
+          countryMissesPct,
+          startDate,
+          endDate,
+          data
+        )}
+      >
+        Download Map Data
+      </CSVLink>
     </Container>
   );
 };
 
 export default memo(PrimerMap);
-
-// function filterData(data, timeFrameBrush, toDisplay) {
-//   const filteredTime = filterByTime(data, timeFrameBrush);
-//   const to_return = filterByPrimers(filteredTime, toDisplay);
-//   return to_return;
-// }
-// function filterByPrimers(toFilter, toDisplay) {
-//   if (toDisplay[0] !== "Overview") {
-//     const filtered = {};
-//     for (const country in toFilter) {
-//       filtered[country] = {};
-//       for (const date of Object.keys(toFilter[country])) {
-//         const primerDetails = toFilter[country][date];
-//         filtered[country][date] = Object.keys(primerDetails)
-//           .filter((primer) => {
-//             return (
-//               toDisplay.filter((display) => {
-//                 return display === primer;
-//               }).length !== 0
-//             );
-//           })
-//           .reduce((filtered, currPrimer) => {
-//             filtered[currPrimer] = primerDetails[currPrimer];
-//             return filtered;
-//           }, {});
-//       }
-//     }
-//     return filtered;
-//   }
-//   return toFilter;
-// }
-// function filterByTime(data, timeFrameBrush) {
-//   if (timeFrameBrush.length !== 0) {
-//     const filtered = {};
-//     for (const country in data) {
-//       const countryVirus = data[country];
-//       filtered[country] = Object.keys(countryVirus)
-//         .filter((date) => {
-//           const [startDate, endDate] = timeFrameBrush;
-//           const currDate = new Date(date);
-//           return (
-//             currDate >= new Date(startDate) && currDate <= new Date(endDate)
-//           );
-//         })
-//         .reduce((filtered, currDate) => {
-//           filtered[currDate] = countryVirus[currDate];
-//           return filtered;
-//         }, {});
-//     }
-//     return filtered;
-//   }
-//   return data;
-// }
