@@ -1,6 +1,6 @@
 import React from "react";
 import ReactEcharts from "echarts-for-react";
-import { debounce } from "../util";
+import { debounce } from "../../util";
 
 const MutGraphsCombined = ({
   data,
