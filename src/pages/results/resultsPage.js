@@ -12,7 +12,7 @@ import ItemFilters from "../../components/ItemFilter/itemFilters";
 import DataTable from "../../components/tableDisplay/tableDisplay";
 import LineGraph from "../../components/mutGraphs/lineGraph";
 import BarGraph from "../../components/mutGraphs/barGraph";
-import PrimerMap from "../../components/primerMap/primerMap";
+import MapWithToolTip from "../../components/primerMap/primerMap";
 
 Date.prototype.sameDay = function (d) {
   return (
@@ -69,6 +69,8 @@ const ResultPage = ({ results }) => {
   const [numberOfBars, setNumberOfBars] = React.useState(1);
   const [showAbsDiff, setShowAbsDiff] = React.useState(false);
 
+  // Map Items
+  const [showDailyGraph, setShowDailyGraph] = React.useState(false);
   // Misc items
   const [isProcessing, setIsProcessing] = React.useState(false);
 
@@ -256,7 +258,6 @@ const ResultPage = ({ results }) => {
     [combinedBase, timeFrameBrush]
   );
 
-  // const mapData = makeMapData(tableCombined, tableData)
   if (result.current.length !== 0) {
     // console.log("baseTableData :>> ", baseTableData);
     // console.log("graphBase :>> ", graphBase);
@@ -298,6 +299,8 @@ const ResultPage = ({ results }) => {
             setNumberOfBars={setNumberOfBars}
             showAbsDiff={showAbsDiff}
             setShowAbsDiff={setShowAbsDiff}
+            showDailyGraph={showDailyGraph}
+            setShowDailyGraph={setShowDailyGraph}
           />
           <DataTable
             id="collapse-table"
@@ -306,11 +309,13 @@ const ResultPage = ({ results }) => {
             columns={overviewColumns}
             isCombined={false}
             isCollapsable={true}
+            className="mb-5"
           />
-          <Row>
-            <Col xs={12} xl={6}>
+          <Row className="mb-5">
+            <Col xs={12} lg={primers.length === 1 ? 6 : 12}>
               <LineGraph
-                title={"Mutation Overview"}
+                title={"Genomes with mutation"}
+                title2={"Genomes with mutation in 3' end"}
                 data={graphOverview}
                 primers={
                   primers.length === 0 ? Object.keys(baseData.current) : primers
@@ -320,39 +325,70 @@ const ResultPage = ({ results }) => {
                 timeFrameBrush={timeFrameBrush}
                 setTimeFrameBrush={setTimeFrameBrush}
               />
-              {isBar ? (
-                <BarGraph
-                  title={"Recent Mutation Summary"}
-                  data={barData}
-                  showAbsDiff={showAbsDiff}
+            </Col>
+            {primers.length === 1 ? (
+              <Col xs={12} lg={6}>
+                <MapWithToolTip
+                  title={"Map of Virus Mutations"}
+                  data={tableData}
+                  lookBack={showDailyGraph ? lookBack : -1}
+                  db={
+                    showDailyGraph ? dbCountDaily.current : dbCountCum.current
+                  }
+                  timeFrameBrush={timeFrameBrush}
+                  setTimeFrameBrush={setTimeFrameBrush}
                 />
-              ) : null}
-            </Col>
-            <Col xs={12} xl={6}>
-              <PrimerMap />
-            </Col>
+              </Col>
+            ) : null}
           </Row>
+          {isBar ? (
+            <BarGraph
+              title={"Genomes with mutation"}
+              title2={"Percent of genomes with mutation in 3' end"}
+              data={barData}
+              showAbsDiff={showAbsDiff}
+              className="mb-5"
+            />
+          ) : null}
           <Collapse in={combinedBase.length !== 0}>
             <div>
-              <LineGraph
-                title={"Combined Mutation Overview"}
-                data={graphCombined}
-                primers={
-                  primers.length === 0
-                    ? [Object.keys(baseData.current).join(", ")]
-                    : [primers.join(", ")]
-                }
-                dates={dateRange.current}
-                setPrimers={setPrimers}
-                timeFrameBrush={timeFrameBrush}
-                setTimeFrameBrush={setTimeFrameBrush}
-              />
+              <Row className="mb-5">
+                <Col xs={12} lg={6}>
+                  <LineGraph
+                    title={"Genomes with mutation (Combined)"}
+                    title2={"Genomes with mutation in 3' end (Combined)"}
+                    data={graphCombined}
+                    primers={
+                      primers.length === 0
+                        ? [Object.keys(baseData.current).join(", ")]
+                        : [primers.join(", ")]
+                    }
+                    dates={dateRange.current}
+                    setPrimers={setPrimers}
+                    timeFrameBrush={timeFrameBrush}
+                    setTimeFrameBrush={setTimeFrameBrush}
+                  />
+                </Col>
+                <Col xs={12} lg={6}>
+                  <MapWithToolTip
+                    title={"Map of Virus Mutations (Combined)"}
+                    data={tableCombined}
+                    lookBack={showDailyGraph ? lookBack : -1}
+                    db={
+                      showDailyGraph ? dbCountDaily.current : dbCountCum.current
+                    }
+                    timeFrameBrush={timeFrameBrush}
+                    setTimeFrameBrush={setTimeFrameBrush}
+                  />
+                </Col>
+              </Row>
               <DataTable
-                title={"Combined Missed Viruses"}
+                title={"Missed Viruses (Combined)"}
                 data={tableCombined}
                 columns={combinedCols}
                 isCombined={true}
                 isCollapsable={true}
+                className="mb-5"
               />
             </div>
           </Collapse>
@@ -695,6 +731,7 @@ function makeBarData(
    * @param {Array} primerNames: Contains the list primer names
    * @param {Object} dbCount: Contains the virus numbers in date -> country -> count order
    * @param {Array} timeFrameBrush: Contains the minimum and maximum date of interest
+   * @returns {Array} Contains a List of List. Each list corresponds to a particular primer
    */
   const dateDetails = [];
 

@@ -70,6 +70,8 @@ const ItemFilters = ({
   setNumberOfBars,
   showAbsDiff,
   setShowAbsDiff,
+  showDailyGraph,
+  setShowDailyGraph,
 }) => {
   const history = useHistory();
   const filterHeader = {
@@ -207,22 +209,6 @@ const ItemFilters = ({
               id={filterHeader.miss3}
             />
           </InputGroup>
-          {/* <Row>
-            <Form.Label column sm={12} lg={5}>
-             
-            </Form.Label>
-            <Col sm={12} lg={7}>
-              <NumberRangeFilter
-                data={baseData}
-                minVal={0}
-                maxVal={100}
-                step={1}
-                value={miss3}
-                setFilter={setMiss3}
-                id={filterHeader.miss3}
-              />
-            </Col>
-          </Row> */}
         </Col>
         <Col className="mb-3 pl-lg-0" xs={12} lg={4}>
           <InputGroup size="sm">
@@ -241,22 +227,6 @@ const ItemFilters = ({
               id={filterHeader.match}
             />
           </InputGroup>
-          {/* <Row>
-            <Form.Label column sm={12} lg={5}>
-             
-            </Form.Label>
-            <Col sm={12} lg={7}>
-              <NumberRangeFilter
-                data={baseData}
-                minVal={0}
-                maxVal={100}
-                step={0.01}
-                value={match}
-                setFilter={setMatch}
-                id={filterHeader.match}
-              />
-            </Col>
-          </Row> */}
         </Col>
       </Row>
       <Row>
@@ -444,6 +414,20 @@ const ItemFilters = ({
               </Row>
             </div>
           </Collapse>
+        </Col>
+      </Row>
+      <Row>
+        <Col sm={12} lg={4}>
+          <InputGroup className="mb-3" size="sm">
+            <InputGroup.Prepend>
+              <InputGroup.Text>Use Daily Count for Map</InputGroup.Text>
+            </InputGroup.Prepend>
+            <Switch
+              type="checkbox"
+              checked={showDailyGraph}
+              onChange={() => setShowDailyGraph(!showDailyGraph)}
+            />
+          </InputGroup>
         </Col>
       </Row>
     </div>
