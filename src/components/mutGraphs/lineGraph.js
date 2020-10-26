@@ -4,6 +4,7 @@ import { debounce } from "../util";
 
 const LineGraph = ({
   title,
+  title2,
   data,
   primers,
   dates,
@@ -11,6 +12,7 @@ const LineGraph = ({
   setTimeFrameBrush,
   timeFrameBrush,
   subtitle = "",
+  subtitle2 = "",
 }) => {
   function buildDataSet(data) {
     const datasets = [];
@@ -72,11 +74,19 @@ const LineGraph = ({
   // console.log("datasets :>> ", datasets);
 
   const option = {
-    title: {
-      text: title,
-      subtext: subtitle,
-      left: "center",
-    },
+    title: [
+      {
+        text: title,
+        subtext: subtitle,
+        left: "center",
+      },
+      {
+        text: title2,
+        subtext: subtitle2,
+        left: "center",
+        top: "center",
+      },
+    ],
     tooltip: {
       trigger: "axis",
       axisPointer: {
@@ -108,8 +118,10 @@ const LineGraph = ({
     },
     legend: {
       data: primers,
-      top: 10,
-      right: 10,
+      orient: "vertical",
+      type: "scroll",
+      top: "5%",
+      right: 0,
     },
     // toolbox: {
     //   feature: {
@@ -141,7 +153,10 @@ const LineGraph = ({
         xAxisIndex: [0, 1],
       },
     ],
-    grid: [{ bottom: "60%" }, { top: "57%" }],
+    grid: [
+      { bottom: "60%", right: "15%" },
+      { top: "57%", right: "15%" },
+    ],
     xAxis: [
       {
         name: "date",
@@ -156,12 +171,16 @@ const LineGraph = ({
     ],
     yAxis: [
       {
-        name: "Overall Mutation (%)",
+        name: "Total Percentage (%)",
         gridIndex: 0,
+        nameLocation: "middle",
+        nameGap: 25,
       },
       {
+        name: "Total Percentage (%)",
         gridIndex: 1,
-        name: "Mutation in 3' end (%)",
+        nameLocation: "middle",
+        nameGap: 25,
       },
     ],
     dataset: datasets,
@@ -209,7 +228,7 @@ const LineGraph = ({
   return (
     <ReactEcharts
       option={option}
-      style={{ height: "450px", width: "100%" }}
+      style={{ height: "475px", width: "100%" }}
       onEvents={onEvents}
       notMerge={true}
     />

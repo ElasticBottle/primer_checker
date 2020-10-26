@@ -30,7 +30,7 @@ function DataTable({ title, data, columns, isCombined, isCollapsable }) {
           onClick={() => {
             setShowTable(!showTable);
           }}
-          className="show-table"
+          className="show-table mb-3 mt-3"
           aria-controls="collapse-table"
           aria-expanded={showTable}
           variant="light"
@@ -261,9 +261,7 @@ function TableDisplay({ title, data, columns, isCombined }) {
           })}
           {!canNextPage ? (
             <tr className="end-of-data">
-              <td>
-                {`---------- All ${preGlobalFilteredRows.length} data displayed ----------`}
-              </td>
+              <td>{`---------- All Data Displayed ----------`}</td>
             </tr>
           ) : null}
         </tbody>

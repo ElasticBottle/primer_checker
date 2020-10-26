@@ -1,7 +1,14 @@
 import React from "react";
 import ReactEcharts from "echarts-for-react";
 
-const BarGraph = ({ title, data, showAbsDiff, subtitle = "" }) => {
+const BarGraph = ({
+  title,
+  title2,
+  data,
+  showAbsDiff,
+  subtitle = "",
+  subtitle2 = "",
+}) => {
   function getBarLabel(data, idx, toPlot) {
     const fontSize = 9;
     return {
@@ -22,10 +29,7 @@ const BarGraph = ({ title, data, showAbsDiff, subtitle = "" }) => {
         const prevVal = data[idx - 1].filter((val) => val.name === primer)[0][
           toPlot
         ];
-        console.log("currVal :>> ", currVal);
-        console.log("prevVal :>> ", prevVal);
         const difference = currVal - prevVal;
-        console.log("difference :>> ", difference);
         let label = difference > 0 ? `{p|+` : `{n|`;
         return `${label}${difference.toFixed(2)}%}`;
       },
@@ -61,12 +65,12 @@ const BarGraph = ({ title, data, showAbsDiff, subtitle = "" }) => {
   }
 
   function buildBarPlot(data, toPlot, xAxisIndex, yAxisIndex) {
-    console.log("data :>> ", data);
     const plots = [];
     for (let i = 1; i < data.length; i++) {
       plots.push({
         name: data[i][0].date,
         type: "bar",
+        barMaxWidth: 40,
         xAxisIndex: xAxisIndex,
         yAxisIndex: yAxisIndex,
         label: getBarLabel(data, i, toPlot),
@@ -87,11 +91,19 @@ const BarGraph = ({ title, data, showAbsDiff, subtitle = "" }) => {
   console.log("mutation :>> ", mutation);
   console.log("mutation3 :>> ", mutation3);
   const option = {
-    title: {
-      text: title,
-      subtext: subtitle,
-      left: "center",
-    },
+    title: [
+      {
+        text: title,
+        subtext: subtitle,
+        left: "center",
+      },
+      {
+        text: title2,
+        subtext: subtitle2,
+        left: "center",
+        top: "middle",
+      },
+    ],
     tooltip: {
       trigger: "axis",
       axisPointer: {
@@ -122,12 +134,16 @@ const BarGraph = ({ title, data, showAbsDiff, subtitle = "" }) => {
     ],
     yAxis: [
       {
-        name: "Overall Mutation (%)",
+        name: "Total Percentage (%)",
         gridIndex: 0,
+        nameLocation: "middle",
+        nameGap: 50,
       },
       {
+        name: "Total Percentage (%)",
         gridIndex: 1,
-        name: "Mutation in 3' end (%)",
+        nameLocation: "middle",
+        nameGap: 50,
       },
     ],
     dataset: dataset,
@@ -142,7 +158,7 @@ const BarGraph = ({ title, data, showAbsDiff, subtitle = "" }) => {
   return (
     <ReactEcharts
       option={option}
-      style={{ height: "450px", width: "100%" }}
+      style={{ height: "500px", width: "100%" }}
       notMerge={true}
       onEvents={onEvents}
     />
