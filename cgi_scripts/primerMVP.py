@@ -43,13 +43,14 @@ def print_headers():
     # To be set before printing any results of the HTML body
     print("Access-Control-Allow-Origin: *")
     print("Access-Control-Allow-Headers: *")
-    print("Content-Type: applciation/json")  # HTML is going to follow in the body
+    print("Content-Type: application/json")  # HTML is going to follow in the body
     print()  # blank line, end of headers
 
 
 def print_failure():
-    print("Content-Type: text/html")
     print("Status: 400 Bad Request")
+    print("meta charset='utf-8'")
+    print("Content-Type: text/html")
     print()  # blank line, end of headers
     print(
         """
@@ -143,6 +144,7 @@ def main():
     database_counts = []
     with open(database_count_path, "r") as f:
         database_counts.append(json.load(f))
+
     with open(database_count_daily_path, "r") as f:
         database_counts.append(json.load(f))
 
