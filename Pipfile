@@ -4,17 +4,20 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
+jupyter = "*"
 pylint = "*"
 black = "*"
+notebook = "*"
+jupyter-contrib-nbextensions = "*"
 
 [packages]
 pandas = "*"
 numpy = "*"
-pycountry = "*"
-pycountry-convert = "*"
+
 
 [requires]
 python_version = "3.8"
 
 [pipenv]
 allow_prereleases = true
+
