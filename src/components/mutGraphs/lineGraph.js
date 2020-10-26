@@ -57,7 +57,7 @@ const LineGraph = ({
       const dateString = date.toISOString().slice(0, 10);
       return dateString === val;
     });
-    return index;
+    return index === -1 ? undefined : index;
   }
 
   const startIndex =
@@ -101,7 +101,7 @@ const LineGraph = ({
 
         let tooltip = `<div>Details for ${date}<br/>Total Submissions: ${submissionCount}</div><br/>`;
         for (let i = 0; i < primers.length; i++) {
-          tooltip += `<div>params[i].data.name}
+          tooltip += `<div>${params[i].data.name}
             <br/>
             <strong>Abs Mutation:</strong> ${params[i].data.mutation_abs}<br/>
             <strong>Abs Mutation in 3' end:</strong> ${params[i].data.mutation3_abs}<br/>
@@ -207,7 +207,6 @@ const LineGraph = ({
     if (e.batch !== undefined) {
       data = e.batch[0];
     }
-
     const startIndex = Math.floor((dates.length * data.start) / 100);
     const endIndex = Math.floor((dates.length * data.end) / 100);
     const startStringDate = dates[startIndex] || dates[0];

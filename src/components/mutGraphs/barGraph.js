@@ -68,7 +68,7 @@ const BarGraph = ({
     const plots = [];
     for (let i = 1; i < data.length; i++) {
       plots.push({
-        name: data[i][0].date,
+        name: (data[i][0] || {}).date,
         type: "bar",
         barMaxWidth: 40,
         xAxisIndex: xAxisIndex,

@@ -167,9 +167,19 @@ const PrimerMap = ({
   }
 
   function getDates(timeFrameBrush, db) {
-    return timeFrameBrush.length === 0
-      ? [Object.keys(db)[0], Object.keys(db)[Object.keys(db).length - 1]]
-      : [getDateString(timeFrameBrush[0]), getDateString(timeFrameBrush[1])];
+    if (timeFrameBrush.length === 0) {
+      return [Object.keys(db)[0], Object.keys(db)[Object.keys(db).length - 1]];
+    } else {
+      let startDate = getDateString(timeFrameBrush[0]);
+      let endDate = getDateString(timeFrameBrush[1]);
+      if (endDate > Object.keys(db)[Object.keys(db).length - 1]) {
+        endDate = Object.keys(db)[Object.keys(db).length - 1];
+      }
+      if (startDate < Object.keys(db)[0]) {
+        startDate = Object.keys(db)[0];
+      }
+      return [startDate, endDate];
+    }
   }
 
   function getDateString(time) {
