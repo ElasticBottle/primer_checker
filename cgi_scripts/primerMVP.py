@@ -5,6 +5,7 @@ import cgi
 # use to provide tracebacks within the cgi if something goes wrong
 import cgitb
 import concurrent.futures
+import datetime
 import json
 import subprocess
 import sys
@@ -161,7 +162,7 @@ def main():
     end = time.time() - start
     with open(f"{timing_path}timing.txt", "a") as timings:
         timings.write("\n")
-        timings.write(f"{end:.2f} for {filenames}")
+        timings.write(f"{end:.2f} for {filenames} on {datetime.datetime.today().strftime('%d-%m-%Y')}")
 
 
 if __name__ == "__main__":
