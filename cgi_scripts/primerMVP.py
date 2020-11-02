@@ -176,6 +176,17 @@ def main():
     with open(database_count_daily_path, "r") as f:
         database_counts.append(json.load(f))
 
+    print(
+        json.dumps(
+            [
+                to_send,
+                database_counts,
+                filenames,
+            ],
+            separators=(",", ":"),
+        )
+    )
+
     end = time.time() - start
     with open(f"{timing_path}timing.txt", "a") as timings:
         timings.write("\n")
