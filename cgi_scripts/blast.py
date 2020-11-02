@@ -598,13 +598,6 @@ def parse_args():
         help="Logs error output to console",
     )
     parser.add_argument(
-        "-l",
-        "--log_error",
-        dest="log",
-        action="store_true",
-        help="Logs error output to console",
-    )
-    parser.add_argument(
         "-bsd",
         "--build-sequence-dict",
         dest="build_seq_dict",
