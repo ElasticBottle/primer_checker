@@ -2,6 +2,7 @@ import argparse
 import datetime
 import subprocess
 import time
+from typing import Tuple
 
 
 def fasta_file_cleaner(
@@ -10,7 +11,7 @@ def fasta_file_cleaner(
     count: int,
     format_err: int,
     output_stream,
-) -> (bool, int, int):
+) -> Tuple[bool, int, int]:
     """
     Checks if a given [str_processing] is clean
 
@@ -162,7 +163,7 @@ def parse_args():
         "--bast_bin",
         type=str,
         dest="blast_bin",
-        default="C:/Users/winst/Documents/MEGA/intern_and_work_proj/ASTAR_BII/primer_checker/primer_mutation_starter_pack/NCBI/blast-2.10.1+/bin/",
+        default="C:/Users/Winston/Documents/Code/intern_and_work/Astar/primer_checker/primer_mutation_starter_pack/NCBI/blast-2.10.1+/bin/",
         help="Path to the Blast Bin",
     )
     parser.add_argument(

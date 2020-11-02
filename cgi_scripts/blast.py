@@ -1,15 +1,42 @@
-# !/afs/bii.a-star.edu.sg/dept/mendel/METHODS/corona/local/anaconda3/envs/primer/bin/python3.7
+#!/afs/bii.a-star.edu.sg/dept/mendel/METHODS/corona/local/anaconda3/envs/primer/bin/python3.7
 
 import argparse
 from io import StringIO
+import json
 import subprocess
 import time
-from typing import Tuple
+from typing import Tuple, Dict, Callable
 from collections import OrderedDict
 
 import pandas as pd
 
 from country_to_alpha import CountryAlphaMap
+
+
+def build_seq_dict(clean_fasta_file_path: str, fasta_dict_output_path: str):
+    """
+    Builds a dictionary mapping identifiers to their sequence and outputs it.
+
+    - Args
+
+        - clean_fasta_file_path (str): The path to the fasta file used
+            to build the blast database.
+        - fasta_dict_output_path (str): Path to store the converted dictionary
+            of the cleaned fasta file
+
+    """
+    seq_dict = {}
+    curr_seq = ""
+    with open(clean_fasta_file_path, "r") as f:
+        for line in f.readlines():
+            if line.startswith(">"):
+                seq_dict[line[1:].strip()] = ""
+                curr_seq = line[1:].strip()
+            else:
+                seq_dict[curr_seq] = seq_dict[curr_seq] + line.strip()
+    with open(fasta_dict_output_path, "w") as f:
+        json.dump(seq_dict, f, indent=None, separators=(",", ":"))
+    return seq_dict
 
 
 def get_country(virus_name: str) -> Tuple[str, str, str]:
@@ -34,30 +61,26 @@ def get_country(virus_name: str) -> Tuple[str, str, str]:
     return [country, iso_a3, country_rough_clean]
 
 
-def match_diag(alignments: pd.Series):
-    """ "
-    Generate the match diagrams based on two sequences
-
-    Args
-
-        - alignments (pd.Series): Pandas series contianing two indices:
-            - "match_seq" the sequence matched
-            - "query_seq" the sequence used for querying
+def find_matches(query_seq, match_seq: str) -> str:
     """
+    Finds the match between [query_seq] and [match_seq]
 
-    def find_matches(query_query_seq, match_seq: str) -> str:
-        to_return = ""
-        for i in range(len(query_seq)):
-            if query_seq[i] == match_seq[i]:
-                to_return += "|"
-            else:
-                to_return += "X"
-        return to_return
+    Args:
 
-    match_seq, query_seq = alignments["match_seq"], alignments["query_seq"]
-    match_diag = find_matches(query_seq, match_seq)
-    misses3 = match_diag[-5:].count("X")
-    return [f"{query_seq} {match_diag} {match_seq}", misses3]
+        - "match_seq" the sequence matched
+        - "query_seq" the sequence used for querying
+
+    Returns:
+
+        - str: indicating if the particular index has a match "|" or a miss "X"
+    """
+    to_return = ""
+    for i in range(len(query_seq)):
+        if query_seq[i] == match_seq[i]:
+            to_return += "|"
+        else:
+            to_return += "X"
+    return to_return
 
 
 def is_valid_sequence(sequence: str) -> bool:
@@ -71,13 +94,188 @@ def is_valid_sequence(sequence: str) -> bool:
     return True
 
 
-def clean_missed_results(result: pd.DataFrame) -> pd.DataFrame:
+def recalculate_values(actual_seq: str, primer: str):
+    # print(actual_seq, primer)
+    try:
+        assert len(actual_seq) == len(primer)
+    except:
+        print("actual: ", actual_seq, "query: ", primer)
+        raise Exception()
+    primer_length = len(primer)
+    match_diag = find_matches(primer, actual_seq)
+    misses = match_diag.count("X")
+    misses3 = match_diag[-5:].count("X")
+    abs_match = primer_length - misses
+    pct_match = (abs_match / primer_length) * 100
+    return (
+        actual_seq,
+        f"{primer} {match_diag} {actual_seq}",
+        misses3,
+        misses,
+        pct_match,
+    )
+
+
+def match_partial_seq(
+    fasta_seq_dict: Dict[str, str], primers: Dict[str, str]
+) -> Callable:
+    """
+    Extends sequence that does not match the full query sequence length
+
+    Args:
+
+        - fasta_seq_dict (Dict[str, str]): Mapping Sequence identifier to
+            their sequence.
+        -primers (Dict[str, str]): Contains the "fwd", "rev" and "prb"
+            primers
+
+    Returns:
+
+        - Callback: A function to be used for row-wise application to dataframe, takes
+                - "query_id",
+                - "match_id",
+                - "match_seq"
+                - "abs_mismatch",
+                - "pct_match",
+                - "query_length",
+                - "query_start_idx",
+                - "query_end_idx",
+                - "match_start_idx",
+                - "match_end_idx",
+    """
+
+    def inner(
+        query_id: str,
+        virus_id: str,
+        match_seq: str,
+        misses: int,
+        pct_match: float,
+        query_length: int,
+        query_start_idx: int,
+        query_end_idx: int,
+        match_start_idx: int,
+        match_end_idx: int,
+    ) -> Tuple[str, str, str, int, float, str, str, str, str, str, str, str, str]:
+        primer = primers[query_id]
+        seq = fasta_seq_dict[virus_id]
+        actual_seq = ""
+        country, iso_a3, original_country_name = get_country(virus_name=virus_id)
+
+        if virus_id == "hCoV-19/Japan/P5-3/2020|EPI_ISL_419311|2020-03-13":
+            print(
+                virus_id,
+                query_id,
+                misses,
+                query_length,
+                query_start_idx,
+                query_end_idx,
+                match_start_idx,
+                match_end_idx,
+            )
+        # Magic numbers to account for the fact that blast outputs are 1 indexed.
+        # Front and back mismatched
+        if query_start_idx != 1 and query_end_idx != query_length:
+            if match_end_idx < match_start_idx:
+                match_start_idx = match_start_idx + (query_start_idx - 1)
+                match_end_idx = match_end_idx - (query_length - query_end_idx)
+                actual_seq = seq[match_start_idx + 1 : match_end_idx : -1].upper()
+            else:
+                match_start_idx = match_start_idx - (query_start_idx - 1)
+                match_end_idx = match_end_idx + (query_length - query_end_idx)
+                actual_seq = seq[match_start_idx - 1 : match_end_idx].upper()
+
+        # Missing front details
+        elif query_start_idx != 1:
+            if match_end_idx < match_start_idx:
+                match_start_idx = match_start_idx + (query_start_idx - 1)
+                actual_seq = seq[match_start_idx + 1 : match_end_idx + 1 : -1].upper()
+            else:
+                match_start_idx = match_start_idx - (query_start_idx - 1)
+                actual_seq = seq[match_start_idx - 1 : match_end_idx].upper()
+
+        # Missing back details
+        elif query_end_idx != query_length:
+            if match_end_idx < match_start_idx:
+                match_end_idx = match_end_idx - (query_length - query_end_idx)
+                actual_seq = seq[match_start_idx + 1 : match_end_idx : -1].upper()
+            else:
+                match_end_idx = match_end_idx + (query_length - query_end_idx)
+                actual_seq = seq[match_start_idx - 1 : match_end_idx].upper()
+
+        # No Mismatches
+        else:
+            match_diag = find_matches(primer, match_seq)
+            return (
+                match_seq,
+                f"{primer} {match_diag} {match_seq}",
+                match_diag[-5:].count("X"),
+                misses,
+                pct_match,
+                query_id,
+                f"{match_start_idx}",
+                f"{match_end_idx}",
+                "1",
+                f"{query_length}",
+                country,
+                iso_a3,
+                original_country_name,
+            )
+
+        if len(actual_seq) <= len(match_seq):
+            return (
+                match_seq + "--",
+                "",
+                0,
+                misses,
+                pct_match,
+                query_id,
+                f"{match_start_idx}",
+                f"{match_end_idx}",
+                "1",
+                f"{query_length}",
+                country,
+                iso_a3,
+                original_country_name,
+            )
+        try:
+            return recalculate_values(actual_seq, primer) + (
+                query_id,
+                f"{match_start_idx}",
+                f"{match_end_idx}",
+                "1",
+                f"{query_length}",
+                country,
+                iso_a3,
+                original_country_name,
+            )
+        except:
+            print(
+                query_id,
+                virus_id,
+                match_seq,
+                misses,
+                pct_match,
+                query_length,
+                query_start_idx,
+                query_end_idx,
+                match_start_idx,
+                match_end_idx,
+            )
+            raise Exception("Sequences length does not match")
+
+    return inner
+
+
+def clean_missed_results(
+    result: pd.DataFrame, fasta_seq_dict: Dict[str, str], primers: Dict[str, str]
+) -> pd.DataFrame:
     """
     Filers the matched data to only show missed viruses.
 
     Args:
 
-        - result (pd.DataFrame): The dataframe of matches. DateFrame will should contain the following column
+        - result (pd.DataFrame): The dataframe of matches. DateFrame
+            will should contain the following column
             - "query_id",
             - "match_id",
             - "query_length",
@@ -93,7 +291,10 @@ def clean_missed_results(result: pd.DataFrame) -> pd.DataFrame:
             - "match_end_idx",
             - "expected_value",
             - "bitscore",
-
+        - fasta_seq_dict (Dict[str, str]): Mapping Sequence identifier to
+            their sequence.
+        -primers (Dict[str, str]): Contains the "fwd", "rev" and "prb"
+            primers
     Returns:
 
         - pd.DataFrame: The result with the following headers:
@@ -111,22 +312,77 @@ def clean_missed_results(result: pd.DataFrame) -> pd.DataFrame:
             - "virus_match_idx"
             - "query_match_idx"
     """
-    result = result[result["abs_mismatch"].astype(int) >= 1]
-    result = result[[is_valid_sequence(seq) for seq in result["match_seq"]]]
+    # ToDo (EB): Consider dropping columns directly from blast to reduce memory consumption
+    result = result.drop(
+        ["expected_value", "bitscore", "alignment_length"],
+        axis=1,
+    )
+    result = result[
+        (result["abs_mismatch"] >= 1) | (result["abs_match"] != result["query_length"])
+    ]
 
+    # Checking the virus is globally aligned to query sequence
     df_cleaned = pd.DataFrame(
         list(
             map(
-                lambda x, y, z: x + y + z,
-                result["match_id"]
-                .str.split("|", expand=True)
-                .iloc[:, :3]
-                .values.tolist(),
-                result["match_id"].map(get_country).values.tolist(),
-                result[["match_seq", "query_seq"]].apply(match_diag, axis=1),
+                match_partial_seq(fasta_seq_dict, primers),
+                result["query_id"],
+                result["match_id"],
+                result["match_seq"],
+                result["abs_mismatch"],
+                result["pct_match"],
+                result["query_length"],
+                result["query_start_idx"],
+                result["query_end_idx"],
+                result["match_start_idx"],
+                result["match_end_idx"],
             )
         ),
         columns=[
+            "match_seq",
+            "match_diag",
+            "misses3",
+            "misses",
+            "match_pct",
+            "type",
+            "m_start",
+            "m_end",
+            "q_start",
+            "q_end",
+            "country_name",
+            "ISO_A3",
+            "orig_name",
+        ],
+        index=result.index,
+    )
+
+    # Parses out the virus_name, accession_id, and date from virus identifier
+    df_temp = result["match_id"].str.split("|", expand=True).iloc[:, :3]
+    df_temp.columns = [
+        "virus_name",
+        "accession_id",
+        "date",
+    ]
+
+    # Merges the globally aligned dataframe with the parsed data frame
+    df_cleaned = pd.merge(
+        left=df_temp, right=df_cleaned, how="inner", left_index=True, right_index=True
+    )
+
+    # Removes sequences with weird nucleotide characters
+    df_cleaned = df_cleaned[[is_valid_sequence(seq) for seq in df_cleaned["match_seq"]]]
+
+    # Merging the index of alignment for sequence and virus.
+    df_cleaned["virus_match_idx"] = df_cleaned["m_start"].str.cat(
+        df_cleaned["m_end"], sep=" "
+    )
+    df_cleaned["query_match_idx"] = df_cleaned["q_start"].str.cat(
+        df_cleaned["q_end"], sep=" "
+    )
+
+    # reordering data columns to be returned
+    df_cleaned = df_cleaned[
+        [
             "virus_name",
             "accession_id",
             "date",
@@ -135,20 +391,13 @@ def clean_missed_results(result: pd.DataFrame) -> pd.DataFrame:
             "orig_name",
             "match_diag",
             "misses3",
-        ],
-    )
-    df_cleaned["misses"] = result["abs_mismatch"].values.astype(int)
-    df_cleaned["match_pct"] = result["pct_match"].values.astype(float)
-    df_cleaned["type"] = result["query_id"].values
-    df_cleaned["expected_value"] = result["expected_value"].values
-    df_cleaned["bitscore"] = result["bitscore"].values
-    df_cleaned["virus_match_idx"] = (
-        result[["match_start_idx", "match_end_idx"]].aggregate(" ".join, axis=1).values
-    )
-    df_cleaned["query_match_idx"] = (
-        result[["query_start_idx", "query_end_idx"]].aggregate(" ".join, axis=1).values
-    )
-
+            "misses",
+            "match_pct",
+            "type",
+            "virus_match_idx",
+            "query_match_idx",
+        ]
+    ]
     return df_cleaned
 
 
@@ -156,6 +405,8 @@ def blast(
     blast_bin: str,
     blast_db_loc: str,
     query_seq: str,
+    fasta_seq_dict: Dict[str, str],
+    primers: Dict[str, str] = None,
     out_file_path: str = "./out.csv",
     is_log: bool = False,
     save_csv: bool = False,
@@ -168,6 +419,10 @@ def blast(
         - blast_bin (str): Path of the blast bin folder.
         - blast_db_loc (str): Path to the blast database file.
         - query_seq (str): Path to the query file
+        - fasta_seq_dict (Dict[str, str]): Mapping Sequence identifier to
+            their sequence.
+        -primers (Dict[str, str]): Contains the "fwd", "rev" and "prb"
+            primers
         - out_file_path(str): The output path (including filename.csv) of the results if [save_csv] is set to [True]
         - is_log (bool): Option to log error messages if they occur
         - save_csv (bool): Option to save the results to a csv file. Use [out_file_path] to specify output location.
@@ -247,10 +502,37 @@ def blast(
 
     result = process.stdout
     data = StringIO(result)
-    df = pd.read_csv(data, dtype=str)
+    df = pd.read_csv(
+        data,
+        dtype={
+            "qaccver": "string",
+            "saccver": "string",
+            "qlen": "int",
+            "mismatch": "int",
+            "nident": "int",
+            "pident": "float",
+            "length": "int",
+            "qstart": "int",
+            "qseq": "string",
+            "qend": "int",
+            "sstart": "int",
+            "sseq": "string",
+            "send": "int",
+            "evalue": "int",
+            "bitscore": "float",
+        },
+    )
     df.columns = list(blast_headers.values())
-    results = clean_missed_results(df)
+
+    if primers is None:
+        with open(query_seq) as f:
+            content = f.readlines().split()
+            _, fwd, _, rev, _, prb = content.split()
+            primers = {"fwd": fwd, "rev": rev, "prb": prb}
+
+    results = clean_missed_results(df, fasta_seq_dict, primers)
     if save_csv:
+        # df.to_csv(f"{out_file_path}_temp.csv", index=False, chunksize=50000)
         results.to_csv(f"{out_file_path}", index=False, chunksize=50000)
     return results
 
@@ -260,14 +542,29 @@ def parse_args():
         description="Blast query string against the GISAID hCov-19 datebase",
         epilog="Any errors, please open an issue!",
     )
-    base_path = "C:/Users/winst/Documents/MEGA/intern_and_work_proj/ASTAR_BII/primer_checker/primer_mutation_starter_pack/"
     parser.add_argument(
         "-qf",
         "--query_file",
         type=str,
         dest="query_file",
-        default=f"{base_path}US-CDC-N2",
+        default="",
         help=" location for the input fasta file to be used for query",
+    )
+    parser.add_argument(
+        "-fsd",
+        "--fasta-seq-dict",
+        type=str,
+        dest="fasta_seq_dict",
+        default="D:/Datasets/GISAID_Update_Analysis/blast/fasta-seq-dict.json",
+        help="Path to the json file mapping identifies to sequences used to build the Blast database",
+    )
+    parser.add_argument(
+        "-fsdi",
+        "--fasta-seq-dict-input",
+        type=str,
+        dest="fasta_seq_dict_input",
+        default="D:/Datasets/GISAID_Update_Analysis/blast/corona2020_export.fasta.clean",
+        help="Path to the fasta file used to build the Blast database",
     )
     parser.add_argument(
         "-o",
@@ -278,7 +575,7 @@ def parse_args():
         help="Location for the output blast file",
     )
     parser.add_argument(
-        "-b",
+        "-bb",
         "--bast_bin",
         type=str,
         dest="blast_bin",
@@ -300,14 +597,52 @@ def parse_args():
         action="store_true",
         help="Logs error output to console",
     )
+    parser.add_argument(
+        "-l",
+        "--log_error",
+        dest="log",
+        action="store_true",
+        help="Logs error output to console",
+    )
+    parser.add_argument(
+        "-bsd",
+        "--build-sequence-dict",
+        dest="build_seq_dict",
+        action="store_true",
+        help="Flag to enable building of sequence dictionary",
+    )
+    parser.add_argument(
+        "-ib",
+        "--is-blast",
+        dest="is_blast",
+        action="store_true",
+        help="Flag to enable blast query",
+    )
     return parser.parse_args()
 
 
 def main():
     start = time.time()
     args = parse_args()
-    blast(args.blast_bin, args.blast_db, args.query_file, args.output, args.log)
-    print(f"time taken: {time.time() - start:.2f} seconds")
+
+    if args.is_blast:
+        with open(args.fasta_seq_dict, "r") as f:
+            seq_dict = json.load(f)
+        blast(
+            args.blast_bin,
+            args.blast_db,
+            args.query_file,
+            seq_dict,
+            args.output,
+            args.log,
+        )
+        print(f"time taken: {time.time() - start:.2f} seconds")
+
+    if args.build_seq_dict:
+        build_seq_dict(
+            args.fasta_seq_dict_input,
+            args.fasta_seq_dict,
+        )
 
 
 if __name__ == "__main__":

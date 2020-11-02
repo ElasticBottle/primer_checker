@@ -88,7 +88,7 @@ def accumulate(raw_count: Dict[str, Dict[str, int]]) -> pd.DataFrame:
             - Any missing dates in [raw_count] is filled by the closest earliest date
     """
     df = pd.DataFrame.from_dict(raw_count, orient="index")
-    df.index = pd.to_datetime(df.index)
+    df.index = pd.to_datetime(df.index, format="%Y-%m-%d")
     df = df.groupby(df.index).sum()
     date_range = pd.date_range(df.index.min(), df.index.max())
 

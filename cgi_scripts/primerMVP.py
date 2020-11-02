@@ -29,14 +29,20 @@ timing_path = f"{primer_path}/support_files/"
 database_count_path = f"{primer_path}/support_files/database_count.json"
 database_count_daily_path = f"{primer_path}/support_files/database_count_daily.json"
 output_path = f"{primer_path}/result_outputs/"
+fasta_seq_dict_path = f"{primer_path}/support_files/seq_dict.json"
+# TODO(EB): put proper fasta_seq_dict_path
 
 # Local path used for development
-# blast_dir = "C:/Users/winst/Documents/MEGA/intern_and_work_proj/ASTAR_BII/primer_checker/primer_mutation_starter_pack/NCBI/blast-2.10.1+/bin/"
+# blast_dir = "C:/Users/Winston/Documents/Code/intern_and_work/Astar/primer_checker/primer_mutation_starter_pack/NCBI/blast-2.10.1+/bin/"
 # blast_db_loc = "D:/Datasets/GISAID_Update_Analysis/blast/blastdb/database"
-# fasta_input_path = "C:/Users/winst/Documents/MEGA/intern_and_work_proj/ASTAR_BII/primer_checker/cgi_scripts/fasta_input/"
-# database_count_path = "C:/Users/winst/Documents/MEGA/intern_and_work_proj/ASTAR_BII/primer_checker/cgi_scripts/database_count.json"
-# database_count_daily_path = "C:/Users/winst/Documents/MEGA/intern_and_work_proj/ASTAR_BII/primer_checker/cgi_scripts/database_count_daily.json"
-# output_path = "C:/Users/winst/Documents/MEGA/intern_and_work_proj/ASTAR_BII/primer_checker/cgi_scripts/output/"
+# fasta_input_path = "C:/Users/Winston/Documents/Code/intern_and_work/Astar/primer_checker/cgi_scripts/fasta_input/"
+# timing_path = (
+#     "C:/Users/Winston/Documents/Code/intern_and_work/Astar/primer_checker/cgi_scripts/"
+# )
+# database_count_path = "C:/Users/Winston/Documents/Code/intern_and_work/Astar/primer_checker/backend/models/databaseCum.json"
+# database_count_daily_path = "C:/Users/Winston/Documents/Code/intern_and_work/Astar/primer_checker/backend/models/database_count.json"
+# output_path = "C:/Users/Winston/Documents/Code/intern_and_work/Astar/primer_checker/cgi_scripts/output/"
+# fasta_seq_dict_path = "C:/Users/Winston/Documents/Code/intern_and_work/Astar/primer_checker/backend/models/seq_dict.json"
 
 
 def print_headers():
@@ -77,13 +83,17 @@ def analyse_primer(
     input_seq: Dict[str, Any],
     input_store_path: str,
     output_file_path: str,
+    fasta_seq_dict: Dict[str, str],
 ):
     """
     Args:
 
         - input_seq(Dict[str, Any]): contains keys 'invalid', 'id', and 'content'
         - input_store_path (str): Path to the folder that [input_seq] can be written too.
-        - output_file_path (str): Path to the folder where the result csv file will be written too.
+        - output_file_path (str): Path to the folder where the result csv file will
+            be written too.
+        - fasta_seq_dict (Dict[str, str]): Mapping Sequence identifier to
+            their sequence.
 
     Returns:
 
@@ -94,6 +104,9 @@ def analyse_primer(
 
     primerId = input_seq.get("id", None)
     content = input_seq.get("content", None)
+    _, fwd, _, rev, _, prb = content.split()
+    primers = {"fwd": fwd, "rev": rev, "prb": prb}
+
     if not primerId:
         raise Exception(f"Invalid Id given {primerId}")
 
@@ -105,14 +118,25 @@ def analyse_primer(
         blast_bin=blast_dir,
         blast_db_loc=blast_db_loc,
         query_seq=f"{input_store_path}{filename}",
+        fasta_seq_dict=fasta_seq_dict,
+        primers=primers,
         is_log=True,
         save_csv=True,
-        out_file_path=f"{output_path}{filename}.csv",
+        out_file_path=f"{output_file_path}{filename}.csv",
     )
     return (filename, results)
 
 
 def main():
+    # Problem names s US CDC N2
+    # hCoV-19/Portugal/PT0253/2020|
+    # hCoV-19/Portugal/PT0735/2020
+
+    # Used for local development
+    # sys.stdin = StringIO(
+    #     r"""{"data": [{"content":">fwd\r\nTTACAAACATTGGCCGCAAA\r\n>rev\r\nTTCTTCGGAATGTCGCGC\r\n>prb\r\nACAATTTGCCCCCAGCGCTTCAG\r\n", "id": "US-CDC-N2", "invalid": false}]}"""
+    # )
+
     input_files = read_input()
     if len(input_files) == 0:
         print_failure()
@@ -121,18 +145,21 @@ def main():
     start = time.time()
     print_headers()
 
-    # Used for local development
-    # sys.stdin = StringIO(
-    #     r"""{"data": [{"content": ">fwd\r\nGTGAAATGGTCATGTGTGGCGG\r\n>rev\r\nTATGCTAATAGTGTTTTTAACATTTG\r\n>prb\r\nCAGGTGGAACCTCATCAGGAGATGC", "id": "text_input_fasta", "invalid":false},{"content":">fwd\r\nGTGAAATGGTCATGTGTGGCGG\r\n>rev\r\nTATGCTAATAGTGTTTTTAACATTTG\r\n>prb\r\nCAGGTGGAACCTCATCAGGAGATGC", "id": "MHUMAN", "invalid":false},{"content": ">fwd\r\nGTGAAATGGTCATGTGTGGCGG\r\n>rev\r\nTATGCTAATAGTGTTTTTAACATTTG\r\n>prb\r\nCAGGTGGAACCTCATCAGGAGATGC", "id": "ABCD", "invalid":false},{"content": ">fwd\r\nGTGAAATGGTCATGTGTGGCGG\r\n>rev\r\nTATGCTAATAGTGTTTTTAACATTTG\r\n>prb\r\nCAGGTGGAACCTCATCAGGAGATGC", "id": "EFGH", "invalid":false},{"content": ">fwd\r\nGTGAAATGGTCATGTGTGGCGG\r\n>rev\r\nTATGCTAATAGTGTTTTTAACATTTG\r\n>prb\r\nCAGGTGGAACCTCATCAGGAGATGC", "id": "HIJK", "invalid":false} ,{"content": ">fwd\r\nGTGAAATGGTCATGTGTGGCGG\r\n>rev\r\nTATGCTAATAGTGTTTTTAACATTTG\r\n>prb\r\nCAGGTGGAACCTCATCAGGAGATGC", "id": "LMNOP", "invalid":false},{"content": ">fwd\r\nGTGAAATGGTCATGTGTGGCGG\r\n>rev\r\nTATGCTAATAGTGTTTTTAACATTTG\r\n>prb\r\nCAGGTGGAACCTCATCAGGAGATGC", "id": "QRST", "invalid":false}]}"""
-    # )
-
     to_send = {}
     filenames = {}
+    fasta_seq_dict = {}
+
+    with open(fasta_seq_dict_path, "r") as f:
+        fasta_seq_dict = json.load(f)
 
     with concurrent.futures.ProcessPoolExecutor() as executor:
         jobs = {
             executor.submit(
-                analyse_primer, file, fasta_input_path, output_path
+                analyse_primer,
+                file,
+                fasta_input_path,
+                output_path,
+                fasta_seq_dict,
             ): file.get("id", None)
             for file in input_files.get("data", [])
         }
@@ -149,20 +176,12 @@ def main():
     with open(database_count_daily_path, "r") as f:
         database_counts.append(json.load(f))
 
-    print(
-        json.dumps(
-            [
-                to_send,
-                database_counts,
-                filenames,
-            ],
-            separators=(",", ":"),
-        )
-    )
     end = time.time() - start
     with open(f"{timing_path}timing.txt", "a") as timings:
         timings.write("\n")
-        timings.write(f"{end:.2f} for {filenames} on {datetime.datetime.today().strftime('%d-%m-%Y')}")
+        timings.write(
+            f"{end:.2f} for {filenames} on {datetime.datetime.today().strftime('%d-%m-%Y')}"
+        )
 
 
 if __name__ == "__main__":
