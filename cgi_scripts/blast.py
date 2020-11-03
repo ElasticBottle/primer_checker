@@ -161,17 +161,6 @@ def match_partial_seq(
         actual_seq = ""
         country, iso_a3, original_country_name = get_country(virus_name=virus_id)
 
-        if virus_id == "hCoV-19/Japan/P5-3/2020|EPI_ISL_419311|2020-03-13":
-            print(
-                virus_id,
-                query_id,
-                misses,
-                query_length,
-                query_start_idx,
-                query_end_idx,
-                match_start_idx,
-                match_end_idx,
-            )
         # Magic numbers to account for the fact that blast outputs are 1 indexed.
         # Front and back mismatched
         if query_start_idx != 1 and query_end_idx != query_length:
@@ -221,6 +210,7 @@ def match_partial_seq(
                 original_country_name,
             )
 
+        # Have mismatch, but at the end of the genome
         if len(actual_seq) <= len(match_seq):
             return (
                 match_seq + "--",
