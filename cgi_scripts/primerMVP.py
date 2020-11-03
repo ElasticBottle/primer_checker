@@ -1,4 +1,4 @@
-#!/afs/bii.a-star.edu.sg/dept/mendel/METHODS/corona/local/anaconda3/envs/primer/bin/python3.7
+#!/afs/bii.a-star.edu.sg/dept/mendel/METHODS/corona/local/anaconda3/envs/primer/bin/python
 
 import cgi
 
@@ -56,9 +56,12 @@ def print_headers():
 
 def print_failure():
     print("Status: 400 Bad Request")
-    print("meta charset='utf-8'")
+    print("charset=utf-8")
     print("Content-Type: text/html")
     print()  # blank line, end of headers
+    print("<head>")
+    print("<meta charset='utf-8' http-equiv='Content-Type' />")
+    print("</head>")
     print(
         """
         <h1>400 bad request</h1>
