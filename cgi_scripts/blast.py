@@ -3,6 +3,7 @@
 import argparse
 from io import StringIO
 import json
+from sqlite3.dbapi2 import Connection
 import subprocess
 import time
 from typing import Tuple, Dict, Callable
@@ -11,32 +12,6 @@ from collections import OrderedDict
 import pandas as pd
 
 from country_to_alpha import CountryAlphaMap
-
-
-def build_seq_dict(clean_fasta_file_path: str, fasta_dict_output_path: str):
-    """
-    Builds a dictionary mapping identifiers to their sequence and outputs it.
-
-    - Args
-
-        - clean_fasta_file_path (str): The path to the fasta file used
-            to build the blast database.
-        - fasta_dict_output_path (str): Path to store the converted dictionary
-            of the cleaned fasta file
-
-    """
-    seq_dict = {}
-    curr_seq = ""
-    with open(clean_fasta_file_path, "r") as f:
-        for line in f.readlines():
-            if line.startswith(">"):
-                seq_dict[line[1:].strip()] = ""
-                curr_seq = line[1:].strip()
-            else:
-                seq_dict[curr_seq] = seq_dict[curr_seq] + line.strip()
-    with open(fasta_dict_output_path, "w") as f:
-        json.dump(seq_dict, f, indent=None, separators=(",", ":"))
-    return seq_dict
 
 
 def get_country(virus_name: str) -> Tuple[str, str, str]:
@@ -116,16 +91,20 @@ def recalculate_values(actual_seq: str, primer: str):
     )
 
 
-def match_partial_seq(
-    fasta_seq_dict: Dict[str, str], primers: Dict[str, str]
-) -> Callable:
+def get_sequence(fasta_db: Connection, virus_id: str) -> str:
+    cursor = fasta_db.cursor()
+    cursor.execute("SELECT sequence FROM Sequences WHERE identifier = ?", (virus_id,))
+    result = cursor.fetchall()
+    return result[0][0]
+
+
+def match_partial_seq(fasta_db: Connection, primers: Dict[str, str]) -> Callable:
     """
     Extends sequence that does not match the full query sequence length
 
     Args:
 
-        - fasta_seq_dict (Dict[str, str]): Mapping Sequence identifier to
-            their sequence.
+        - fasta_db (Connection): A Sqlite3 database for retrieval for sequence.
         -primers (Dict[str, str]): Contains the "fwd", "rev" and "prb"
             primers
 
@@ -157,7 +136,7 @@ def match_partial_seq(
         match_end_idx: int,
     ) -> Tuple[str, str, str, int, float, str, str, str, str, str, str, str, str]:
         primer = primers[query_id]
-        seq = fasta_seq_dict[virus_id]
+        seq = get_sequence(fasta_db, virus_id)
         actual_seq = ""
         country, iso_a3, original_country_name = get_country(virus_name=virus_id)
 
@@ -257,7 +236,7 @@ def match_partial_seq(
 
 
 def clean_missed_results(
-    result: pd.DataFrame, fasta_seq_dict: Dict[str, str], primers: Dict[str, str]
+    result: pd.DataFrame, fasta_db: Connection, primers: Dict[str, str]
 ) -> pd.DataFrame:
     """
     Filers the matched data to only show missed viruses.
@@ -281,7 +260,7 @@ def clean_missed_results(
             - "match_end_idx",
             - "expected_value",
             - "bitscore",
-        - fasta_seq_dict (Dict[str, str]): Mapping Sequence identifier to
+        - fasta_db (Connection): Mapping Sequence identifier to
             their sequence.
         -primers (Dict[str, str]): Contains the "fwd", "rev" and "prb"
             primers
@@ -315,7 +294,7 @@ def clean_missed_results(
     df_cleaned = pd.DataFrame(
         list(
             map(
-                match_partial_seq(fasta_seq_dict, primers),
+                match_partial_seq(fasta_db, primers),
                 result["query_id"],
                 result["match_id"],
                 result["match_seq"],
@@ -395,7 +374,7 @@ def blast(
     blast_bin: str,
     blast_db_loc: str,
     query_seq: str,
-    fasta_seq_dict: Dict[str, str],
+    fasta_db: Connection,
     primers: Dict[str, str] = None,
     out_file_path: str = "./out.csv",
     is_log: bool = False,
@@ -409,7 +388,7 @@ def blast(
         - blast_bin (str): Path of the blast bin folder.
         - blast_db_loc (str): Path to the blast database file.
         - query_seq (str): Path to the query file
-        - fasta_seq_dict (Dict[str, str]): Mapping Sequence identifier to
+        - fasta_db (Connection): Database connection containing Sequence identifier and
             their sequence.
         -primers (Dict[str, str]): Contains the "fwd", "rev" and "prb"
             primers
@@ -520,7 +499,7 @@ def blast(
             _, fwd, _, rev, _, prb = content.split()
             primers = {"fwd": fwd, "rev": rev, "prb": prb}
 
-    results = clean_missed_results(df, fasta_seq_dict, primers)
+    results = clean_missed_results(df, fasta_db, primers)
     if save_csv:
         # df.to_csv(f"{out_file_path}_temp.csv", index=False, chunksize=50000)
         results.to_csv(f"{out_file_path}", index=False, chunksize=50000)
@@ -540,22 +519,7 @@ def parse_args():
         default="",
         help=" location for the input fasta file to be used for query",
     )
-    parser.add_argument(
-        "-fsd",
-        "--fasta-seq-dict",
-        type=str,
-        dest="fasta_seq_dict",
-        default="D:/Datasets/GISAID_Update_Analysis/blast/fasta-seq-dict.json",
-        help="Path to the json file mapping identifies to sequences used to build the Blast database",
-    )
-    parser.add_argument(
-        "-fsdi",
-        "--fasta-seq-dict-input",
-        type=str,
-        dest="fasta_seq_dict_input",
-        default="D:/Datasets/GISAID_Update_Analysis/blast/corona2020_export.fasta.clean",
-        help="Path to the fasta file used to build the Blast database",
-    )
+
     parser.add_argument(
         "-o",
         "--output",
@@ -587,13 +551,7 @@ def parse_args():
         action="store_true",
         help="Logs error output to console",
     )
-    parser.add_argument(
-        "-bsd",
-        "--build-sequence-dict",
-        dest="build_seq_dict",
-        action="store_true",
-        help="Flag to enable building of sequence dictionary",
-    )
+
     parser.add_argument(
         "-ib",
         "--is-blast",
@@ -620,12 +578,6 @@ def main():
             args.log,
         )
         print(f"time taken: {time.time() - start:.2f} seconds")
-
-    if args.build_seq_dict:
-        build_seq_dict(
-            args.fasta_seq_dict_input,
-            args.fasta_seq_dict,
-        )
 
 
 if __name__ == "__main__":

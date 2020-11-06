@@ -7,6 +7,8 @@ import cgitb
 import concurrent.futures
 import datetime
 import json
+import sqlite3
+from sqlite3.dbapi2 import Connection
 import subprocess
 import sys
 import time
@@ -29,8 +31,7 @@ timing_path = f"{primer_path}/support_files/"
 database_count_path = f"{primer_path}/support_files/database_count.json"
 database_count_daily_path = f"{primer_path}/support_files/database_count_daily.json"
 output_path = f"{primer_path}/result_outputs/"
-fasta_seq_dict_path = f"{primer_path}/support_files/seq_dict.json"
-# TODO(EB): put proper fasta_seq_dict_path
+fasta_db_path = f"{primer_path}/support_files/sequences_db.db"
 
 # Local path used for development
 # blast_dir = "C:/Users/Winston/Documents/Code/intern_and_work/Astar/primer_checker/primer_mutation_starter_pack/NCBI/blast-2.10.1+/bin/"
@@ -43,6 +44,7 @@ fasta_seq_dict_path = f"{primer_path}/support_files/seq_dict.json"
 # database_count_daily_path = "C:/Users/Winston/Documents/Code/intern_and_work/Astar/primer_checker/backend/models/database_count.json"
 # output_path = "C:/Users/Winston/Documents/Code/intern_and_work/Astar/primer_checker/cgi_scripts/output/"
 # fasta_seq_dict_path = "C:/Users/Winston/Documents/Code/intern_and_work/Astar/primer_checker/backend/models/seq_dict.json"
+# TODO(Update fasta seq dict)
 
 
 def print_headers():
@@ -56,7 +58,6 @@ def print_headers():
 
 def print_failure():
     print("Status: 400 Bad Request")
-    print("charset=utf-8")
     print("Content-Type: text/html")
     print()  # blank line, end of headers
     print("<head>")
@@ -86,7 +87,7 @@ def analyse_primer(
     input_seq: Dict[str, Any],
     input_store_path: str,
     output_file_path: str,
-    fasta_seq_dict: Dict[str, str],
+    fasta_db: Connection,
 ):
     """
     Args:
@@ -95,7 +96,7 @@ def analyse_primer(
         - input_store_path (str): Path to the folder that [input_seq] can be written too.
         - output_file_path (str): Path to the folder where the result csv file will
             be written too.
-        - fasta_seq_dict (Dict[str, str]): Mapping Sequence identifier to
+        - fasta_db (Connection): Mapping Sequence identifier to
             their sequence.
 
     Returns:
@@ -121,7 +122,7 @@ def analyse_primer(
         blast_bin=blast_dir,
         blast_db_loc=blast_db_loc,
         query_seq=f"{input_store_path}{filename}",
-        fasta_seq_dict=fasta_seq_dict,
+        fasta_db=fasta_db,
         primers=primers,
         is_log=True,
         save_csv=True,
@@ -152,8 +153,7 @@ def main():
     filenames = {}
     fasta_seq_dict = {}
 
-    with open(fasta_seq_dict_path, "r") as f:
-        fasta_seq_dict = json.load(f)
+    fasta_db = sqlite3.connect(fasta_db_path)
 
     with concurrent.futures.ProcessPoolExecutor() as executor:
         jobs = {
@@ -162,7 +162,7 @@ def main():
                 file,
                 fasta_input_path,
                 output_path,
-                fasta_seq_dict,
+                fasta_db,
             ): file.get("id", None)
             for file in input_files.get("data", [])
         }
