@@ -3,6 +3,7 @@
 import argparse
 from io import StringIO
 import json
+import sqlite3
 from sqlite3.dbapi2 import Connection
 import subprocess
 import time
@@ -374,7 +375,7 @@ def blast(
     blast_bin: str,
     blast_db_loc: str,
     query_seq: str,
-    fasta_db: Connection,
+    fasta_db_path: str,
     primers: Dict[str, str] = None,
     out_file_path: str = "./out.csv",
     is_log: bool = False,
@@ -499,7 +500,7 @@ def blast(
             _, fwd, _, rev, _, prb = content.split()
             primers = {"fwd": fwd, "rev": rev, "prb": prb}
 
-    results = clean_missed_results(df, fasta_db, primers)
+    results = clean_missed_results(df, sqlite3.connect(fasta_db_path), primers)
     if save_csv:
         # df.to_csv(f"{out_file_path}_temp.csv", index=False, chunksize=50000)
         results.to_csv(f"{out_file_path}", index=False, chunksize=50000)
@@ -519,7 +520,13 @@ def parse_args():
         default="",
         help=" location for the input fasta file to be used for query",
     )
-
+    parser.add_argument(
+        "-fdbp",
+        "--fasta-database-path",
+        dest="fasta_db_path",
+        type=str,
+        help="path to the fasta sequence database",
+    )
     parser.add_argument(
         "-o",
         "--output",
@@ -567,13 +574,11 @@ def main():
     args = parse_args()
 
     if args.is_blast:
-        with open(args.fasta_seq_dict, "r") as f:
-            seq_dict = json.load(f)
         blast(
             args.blast_bin,
             args.blast_db,
             args.query_file,
-            seq_dict,
+            args.fasta_db_path,
             args.output,
             args.log,
         )

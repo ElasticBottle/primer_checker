@@ -7,13 +7,11 @@ import cgitb
 import concurrent.futures
 import datetime
 import json
-import sqlite3
 import subprocess
 import sys
 import time
 from functools import partial
 from io import StringIO
-from sqlite3.dbapi2 import Connection
 from typing import Any, Dict, List, Tuple
 
 import pandas as pd
@@ -88,7 +86,7 @@ def analyse_primer(
     input_seq: Dict[str, Any],
     input_store_path: str,
     output_file_path: str,
-    fasta_db: Connection,
+    fasta_db_path: str,
 ):
     """
     Args:
@@ -97,7 +95,7 @@ def analyse_primer(
         - input_store_path (str): Path to the folder that [input_seq] can be written too.
         - output_file_path (str): Path to the folder where the result csv file will
             be written too.
-        - fasta_db (Connection): Mapping Sequence identifier to
+        - fasta_db_path (str): Mapping Sequence identifier to
             their sequence.
 
     Returns:
@@ -123,7 +121,7 @@ def analyse_primer(
         blast_bin=blast_dir,
         blast_db_loc=blast_db_loc,
         query_seq=f"{input_store_path}{filename}",
-        fasta_db=fasta_db,
+        fasta_db_path=fasta_db_path,
         primers=primers,
         is_log=True,
         save_csv=True,
@@ -152,9 +150,6 @@ def main():
 
     to_send = {}
     filenames = {}
-    fasta_seq_dict = {}
-
-    fasta_db = sqlite3.connect(fasta_db_path)
 
     with concurrent.futures.ProcessPoolExecutor() as executor:
         jobs = {
@@ -163,7 +158,7 @@ def main():
                     analyse_primer,
                     input_store_path=fasta_input_path,
                     output_file_path=output_path,
-                    fasta_db=fasta_db,
+                    fasta_db_path=fasta_db_path,
                 ),
                 file,
             ): file.get("id", None)
