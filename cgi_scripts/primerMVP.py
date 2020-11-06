@@ -8,11 +8,12 @@ import concurrent.futures
 import datetime
 import json
 import sqlite3
-from sqlite3.dbapi2 import Connection
 import subprocess
 import sys
 import time
+from functools import partial
 from io import StringIO
+from sqlite3.dbapi2 import Connection
 from typing import Any, Dict, List, Tuple
 
 import pandas as pd
@@ -158,11 +159,13 @@ def main():
     with concurrent.futures.ProcessPoolExecutor() as executor:
         jobs = {
             executor.submit(
-                analyse_primer,
+                partial(
+                    analyse_primer,
+                    input_store_path=fasta_input_path,
+                    output_file_path=output_path,
+                    fasta_db=fasta_db,
+                ),
                 file,
-                fasta_input_path,
-                output_path,
-                fasta_db,
             ): file.get("id", None)
             for file in input_files.get("data", [])
         }
