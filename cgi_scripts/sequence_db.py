@@ -2,6 +2,7 @@
 
 import argparse
 import sqlite3
+from sqlite3.dbapi2 import Connection
 import time
 
 
@@ -49,22 +50,14 @@ def build_seq_dict(clean_fasta_file_path: str, fasta_dict_output_path: str):
                                 );"""
         connection.execute(sequence_table)
 
-    seq_dict = read_fasta(clean_fasta_file_path)
-
     with connection:
         sql = "DELETE FROM Sequences"
         connection.execute(sql)
 
-    try:
-        with connection:
-            sql = """INSERT INTO Sequences(identifier,sequence)
-              VALUES(?,?)"""
-            connection.executemany(sql, seq_dict.items())
-    except (sqlite3.OperationalError, sqlite3.IntegrityError) as e:
-        print("Operation failed", e)
+    insert_database_from(clean_fasta_file_path, connection=connection)
 
 
-def read_fasta(clean_fasta_file_path: str):
+def insert_database_from(clean_fasta_file_path: str, connection: Connection):
     """
     Builds a dictionary mapping identifiers to their sequence and outputs it.
 
@@ -72,20 +65,28 @@ def read_fasta(clean_fasta_file_path: str):
 
         - clean_fasta_file_path (str): The path to the fasta file used
             to build the blast database.
-        - fasta_dict_output_path (str): Path to store the converted dictionary
-            of the cleaned fasta file
-
+        - connection (Connection): Connection to database to insert sequence
     """
-    seq_dict = {}
-    curr_seq = ""
+    current_seq = ""
+    identifier = ""
     with open(clean_fasta_file_path, "r") as f:
         for line in f.readlines():
             if line.startswith(">"):
-                seq_dict[line[1:].strip()] = ""
-                curr_seq = line[1:].strip()
+                insert_db(connection=connection, identifier=identifier, seq=current_seq)
+                identifier = line[1:].strip()
             else:
-                seq_dict[curr_seq] = seq_dict[curr_seq] + line.strip()
-    return seq_dict
+                current_seq += line.strip()
+    insert_db(connection=connection, identifier=identifier, seq=current_seq)
+
+
+def insert_db(connection, identifier: str, seq: str):
+    try:
+        with connection:
+            sql = """INSERT INTO Sequences(identifier,sequence)
+            VALUES(?,?)"""
+            connection.execute(sql, (identifier, seq))
+    except (sqlite3.OperationalError, sqlite3.IntegrityError) as e:
+        print("Operation failed", e)
 
 
 def parse_args():
