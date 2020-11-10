@@ -495,16 +495,17 @@ def blast(
     df.columns = list(blast_headers.values())
 
     if primers is None:
-        with open(query_seq) as f:
-            content = f.readlines().split()
-            _, fwd, _, rev, _, prb = content.split()
+        with open(query_seq, "r") as f:
+            content = [item.strip() for item in f.readlines()]
+            _, fwd, _, rev, _, prb = content
             primers = {"fwd": fwd, "rev": rev, "prb": prb}
-
-    results = clean_missed_results(df, sqlite3.connect(fasta_db_path), primers)
+    connection = sqlite3.connect(fasta_db_path)
+    results = clean_missed_results(df, connection, primers)
+    connection.close()
     if save_csv:
         # df.to_csv(f"{out_file_path}_temp.csv", index=False, chunksize=50000)
         results.to_csv(f"{out_file_path}", index=False, chunksize=50000)
-    return results
+    # return results
 
 
 def parse_args():
@@ -532,7 +533,7 @@ def parse_args():
         "--output",
         type=str,
         dest="output",
-        default=f"./cgi/test.csv",
+        default=f"./cgi_scripts/test.csv",
         help="Location for the output blast file",
     )
     parser.add_argument(
@@ -540,7 +541,7 @@ def parse_args():
         "--bast_bin",
         type=str,
         dest="blast_bin",
-        default="C:/Users/winst/Documents/MEGA/intern_and_work_proj/ASTAR_BII/primer_checker/primer_mutation_starter_pack/NCBI/blast-2.10.1+/bin/",
+        default="C:/Users/Winston/Documents/Code/intern_and_work/Astar/primer_checker/primer_mutation_starter_pack/NCBI/blast-2.10.1+/bin/",
         help="Location for Blast bin",
     )
     parser.add_argument(
@@ -558,7 +559,13 @@ def parse_args():
         action="store_true",
         help="Logs error output to console",
     )
-
+    parser.add_argument(
+        "-sc",
+        "--save-csv",
+        dest="save_csv",
+        action="store_true",
+        help="Saves output to csv",
+    )
     parser.add_argument(
         "-ib",
         "--is-blast",
@@ -572,17 +579,18 @@ def parse_args():
 def main():
     start = time.time()
     args = parse_args()
-
     if args.is_blast:
         blast(
-            args.blast_bin,
-            args.blast_db,
-            args.query_file,
-            args.fasta_db_path,
-            args.output,
-            args.log,
+            blast_bin=args.blast_bin,
+            blast_db_loc=args.blast_db,
+            query_seq=args.query_file,
+            fasta_db_path=args.fasta_db_path,
+            primers=None,
+            out_file_path=args.output,
+            is_log=args.log,
+            save_csv=args.save_csv,
         )
-        print(f"time taken: {time.time() - start:.2f} seconds")
+    print(f"time taken: {time.time() - start:.2f} seconds")
 
 
 if __name__ == "__main__":

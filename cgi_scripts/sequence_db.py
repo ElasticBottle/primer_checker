@@ -67,24 +67,35 @@ def insert_database_from(clean_fasta_file_path: str, connection: Connection):
             to build the blast database.
         - connection (Connection): Connection to database to insert sequence
     """
-    current_seq = ""
     identifier = ""
+    batch_seq_dict = {}
+    batch_num = 0
     with open(clean_fasta_file_path, "r") as f:
+        f.readline()
         for line in f.readlines():
             if line.startswith(">"):
-                insert_db(connection=connection, identifier=identifier, seq=current_seq)
+                batch_num += 1
+                if batch_num % 10000 == 0:
+                    insert_db(connection=connection, sequences=batch_seq_dict)
+                    batch_seq_dict.clear()
                 identifier = line[1:].strip()
+                batch_seq_dict[identifier] = ""
             else:
-                current_seq += line.strip()
-    insert_db(connection=connection, identifier=identifier, seq=current_seq)
+                try:
+                    batch_seq_dict[identifier] += line.strip()
+                except:
+                    print(identifier, line)
+                    print(batch_num)
+                    raise Exception("keyError")
+    insert_db(connection=connection, sequences=batch_seq_dict)
 
 
-def insert_db(connection, identifier: str, seq: str):
+def insert_db(connection: Connection, sequences: str):
     try:
         with connection:
             sql = """INSERT INTO Sequences(identifier,sequence)
             VALUES(?,?)"""
-            connection.execute(sql, (identifier, seq))
+            connection.executemany(sql, sequences.items())
     except (sqlite3.OperationalError, sqlite3.IntegrityError) as e:
         print("Operation failed", e)
 
