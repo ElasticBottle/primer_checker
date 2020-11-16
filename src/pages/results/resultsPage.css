@@ -5,3 +5,8 @@
 .show-table {
     margin: 40px 0px 40px 0px;
 }
+
+.modal-90w{
+    width: 90% !important;
+    max-width: 100% !important;
+}

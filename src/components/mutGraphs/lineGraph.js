@@ -8,9 +8,10 @@ const LineGraph = ({
   data,
   primers,
   dates,
-  setPrimers,
   setTimeFrameBrush,
   timeFrameBrush,
+  showModal,
+  setModalInfo,
   subtitle = "",
   subtitle2 = "",
 }) => {
@@ -59,11 +60,20 @@ const LineGraph = ({
     });
     return index === -1 ? undefined : index;
   }
+  function getStartDate(dates, date, lookBack) {
+    const initDate = new Date(dates[0]);
+    let startDate = new Date(date);
+    startDate.setDate(startDate.getDate() - lookBack);
+    if (startDate < initDate) {
+      startDate = initDate;
+    }
+    return startDate.toISOString().slice(0, 10);
+  }
 
   const startIndex =
     ((getDateIndex(timeFrameBrush[0], dates) || 0) * 100) / dates.length;
   const endIndex =
-    ((getDateIndex(timeFrameBrush[1], dates) || dates.length) * 100) /
+    ((getDateIndex(timeFrameBrush[1], dates) + 1 || dates.length) * 100) /
     dates.length;
 
   const mutationPlot = getMutationPlot(primers, "mutation_pct", 0, 0);
@@ -97,21 +107,37 @@ const LineGraph = ({
       formatter: function (params) {
         let baseDetails = params[0].data;
         let date = baseDetails.date;
+        let startDate =
+          baseDetails.lookBack === -1
+            ? dates[0]
+            : getStartDate(dates, date, baseDetails.lookBack);
         let submissionCount = baseDetails.submission_count;
+        let countries =
+          baseDetails.countries_considered.length === 0
+            ? "all available Countries"
+            : `${baseDetails.countries_considered.length} countries`;
 
-        let tooltip = `<div>Details for ${date}<br/>Total Submissions: ${submissionCount}</div><br/>`;
-        for (let i = 0; i < primers.length; i++) {
+        let tooltip = `<div>Details from ${startDate} to ${date}<br/>Total Submissions: ${submissionCount} from ${countries}</div><br/>`;
+
+        for (let i = 0; i < params.length / 2; i++) {
           tooltip += `<div>${params[i].data.name}
             <br/>
             <strong>Abs Mutation:</strong> ${params[i].data.mutation_abs}<br/>
-            <strong>Abs Mutation in 3' end:</strong> ${params[i].data.mutation3_abs}<br/>
-            <strong>Mutation %:</strong> ${params[i].data.mutation_pct}<br/>
-            <strong>Mutation % in 3' end:</strong> ${params[i].data.mutation3_pct}</div><br/>`;
+            <strong>Abs Mutation in 3' end:</strong> ${
+              params[i].data.mutation3_abs
+            }%<br/>
+            <strong>Mutation %:</strong> ${params[i].data.mutation_pct.toFixed(
+              3
+            )}<br/>
+            <strong>Mutation % in 3' end:</strong> ${params[
+              i
+            ].data.mutation3_pct.toFixed(3)}%</div><br/>`;
         }
         return tooltip;
       },
       position: function (pos, params, el, elRect, size) {
-        var obj = { top: 10 };
+        let obj = {};
+        obj[["top", "bottom"][+(pos[1] < size.viewSize[1] / 2)]] = 10;
         obj[["left", "right"][+(pos[0] < size.viewSize[0] / 2)]] = 30;
         return obj;
       },
@@ -143,7 +169,7 @@ const LineGraph = ({
         start: startIndex,
         end: endIndex,
         xAxisIndex: [0, 1],
-        top: "92%",
+        top: "95%",
       },
       {
         type: "inside",
@@ -160,11 +186,24 @@ const LineGraph = ({
     xAxis: [
       {
         name: "date",
+        nameLocation: "middle",
+        nameTextStyle: {
+          align: "center",
+          verticalAlign: "top",
+          padding: [6, 0, 0, 0],
+        },
         gridIndex: 0,
         type: "category",
       },
       {
         name: "date",
+        nameLocation: "middle",
+        nameTextStyle: {
+          align: "center",
+          verticalAlign: "top",
+          padding: [6, 0, 0, 0],
+        },
+
         gridIndex: 1,
         type: "category",
       },
@@ -189,6 +228,16 @@ const LineGraph = ({
 
   const seeEvent = (e) => {
     console.log(e);
+    setModalInfo((prev) => {
+      return {
+        ...prev,
+        date: e.data.date,
+        lookBack: e.data.lookBack,
+        primer: e.data.name,
+        country: null,
+      };
+    });
+    showModal();
   };
 
   function legendChange({ selected }) {
@@ -215,7 +264,6 @@ const LineGraph = ({
     let endDate = new Date(endStringDate);
     startDate.setDate(startDate.getDate());
     endDate.setDate(endDate.getDate());
-    console.log("startDate endDate :>> ", startDate, endDate);
     setTimeFrameBrush([startDate, endDate]);
   }, 800);
 

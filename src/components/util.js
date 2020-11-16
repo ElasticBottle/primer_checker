@@ -30,3 +30,15 @@ export function debounce(func, wait, immediate) {
     if (callNow) func.apply(context, args);
   };
 }
+
+export function addName(primer) {
+  /**
+   * An annealing function that takes an object and adds [primer] to it with key under "primer"
+   * @param {string} primer: value to be added
+   * @returns {function} a function that takes in [value] and returns it after adding [primer] to it.
+   */
+  return (value) => {
+    value.primer = primer;
+    return value;
+  };
+}
