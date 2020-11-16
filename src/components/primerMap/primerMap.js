@@ -8,36 +8,8 @@ import {
   Geography,
 } from "react-simple-maps";
 import Container from "react-bootstrap/Container";
-import ReactTooltip from "react-tooltip";
 import { CSVLink } from "react-csv";
 
-import "./primerMap.css";
-
-const MapWithToolTip = ({
-  title,
-  data,
-  lookBack,
-  db,
-  timeFrameBrush,
-  setTimeFrameBrush,
-}) => {
-  const [tooltipContent, setTooltipContent] = React.useState("");
-
-  return (
-    <>
-      <PrimerMap
-        title={title}
-        setTooltipContent={setTooltipContent}
-        data={data}
-        lookBack={lookBack}
-        db={db}
-        timeFrameBrush={timeFrameBrush}
-        setTimeFrameBrush={setTimeFrameBrush}
-      />
-      <ReactTooltip html={true}>{tooltipContent}</ReactTooltip>
-    </>
-  );
-};
 const geoUrl =
   "https://raw.githubusercontent.com/zcreativelabs/react-simple-maps/master/topojson-maps/world-110m.json";
 
@@ -51,6 +23,9 @@ const PrimerMap = ({
   db,
   timeFrameBrush,
   setTimeFrameBrush,
+  showModal,
+  setModalInfo,
+  subtitle = "",
 }) => {
   const [downloadData, setDownloadData] = React.useState([]);
   const headers = [
@@ -85,33 +60,27 @@ const PrimerMap = ({
     },
   ];
 
-  function handleClick(countryISO3, data, lookBack) {
-    if (lookBack === -1) {
-      const timeFrame = extent(
-        data.reduce((dates, data) => {
-          if (data.ISO_A3 === countryISO3) {
-            dates.push(new Date(data.date));
-            return dates;
-          } else {
-            return dates;
-          }
-        }, [])
-      );
-      if (timeFrame[0] === undefined) {
-        return;
-      }
-
-      // If on a single day, expand the time frame +- 1 day
-      if (timeFrame[0] === timeFrame[1]) {
-        const nextDay = new Date(timeFrame[1]);
-        const prevDay = new Date(timeFrame[1]);
-        nextDay.setHours(nextDay.getHours() + 23);
-        prevDay.setHours(prevDay.getHours() - 23);
-        setTimeFrameBrush([prevDay, nextDay]);
-      } else {
-        setTimeFrameBrush(timeFrame);
-      }
-    }
+  function handleClick(countryISO3, endDate, lookBack) {
+    const timeFrame = extent(
+      data.reduce((dates, data) => {
+        if (data.ISO_A3 === countryISO3) {
+          dates.push(new Date(data.date));
+          return dates;
+        } else {
+          return dates;
+        }
+      }, [])
+    );
+    showModal();
+    setModalInfo((prev) => {
+      return {
+        ...prev,
+        primer: null,
+        country: countryISO3,
+        lookBack: lookBack,
+        date: endDate,
+      };
+    });
   }
 
   function downloadDataClick(
@@ -146,7 +115,7 @@ const PrimerMap = ({
      * @returns {Map} Containing the number of misses per country.
      */
     let currData = data;
-    if (lookBack > 0) {
+    if (lookBack >= 0) {
       const endDate = new Date(date);
       const startDate = new Date(date);
       startDate.setDate(startDate.getDate() - lookBack);
@@ -203,14 +172,15 @@ const PrimerMap = ({
     new Map()
   );
 
-  console.log("countryMisses :>> ", countryMisses);
-  console.log("startDate, endDate :>> ", startDate, endDate);
-  console.log("countryMissesPct :>> ", countryMissesPct);
+  // console.log("countryMisses :>> ", countryMisses);
+  // console.log("startDate, endDate :>> ", startDate, endDate);
+  // console.log("countryMissesPct :>> ", countryMissesPct);
   const maxPctMiss = Math.max(...Array.from(countryMissesPct.values()));
-  console.log("maxPctMiss :>> ", maxPctMiss);
+  // console.log("maxPctMiss :>> ", maxPctMiss);
   return (
     <Container>
       <h2 className="map-title">{title}</h2>
+      <h3 className="map-title map-subtitle">{subtitle}</h3>
       <ComposableMap data-tip="" projectionConfig={{ scale: 200 }}>
         <ZoomableGroup>
           <Geographies geography={geoUrl}>
@@ -227,19 +197,19 @@ const PrimerMap = ({
                       const { NAME } = geo.properties;
                       setTooltipContent(
                         `${NAME}: <br/> 
-                        ${
-                          db[endDate][geo.properties.ISO_A3] || 0
-                        } submissions <br/>
-                        ${missCount} Absolute Misses.<br/> 
-                        ${pctMiss}% Miss <br/>
-                        `
+                          ${
+                            db[endDate][geo.properties.ISO_A3] || 0
+                          } submissions <br/>
+                          ${missCount} Absolute Misses.<br/> 
+                          ${pctMiss}% Miss <br/>
+                          `
                       );
                     }}
                     onMouseLeave={() => {
                       setTooltipContent("");
                     }}
                     onClick={() => {
-                      handleClick(geo.properties.ISO_A3, data, lookBack);
+                      handleClick(geo.properties.ISO_A3, endDate, lookBack);
                     }}
                     style={{
                       default: {
@@ -281,5 +251,4 @@ const PrimerMap = ({
     </Container>
   );
 };
-
-export default MapWithToolTip;
+export default React.memo(PrimerMap);
