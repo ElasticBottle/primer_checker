@@ -28,13 +28,14 @@ def get_raw_count(input_path: str) -> Dict[str, Dict[str, int]]:
     with open(input_path, "r") as fasta:
         while True:
             info = fasta.readline()
+            # End of File
             if not info:
                 break
+            # Not an identifier so moving on
             if info[0] != ">":
                 continue
 
             details = info.rstrip().split("|")
-
             country = (
                 details[0].split("/")[1].lstrip().rstrip().replace(" ", "_").lower()
             )
@@ -54,6 +55,7 @@ def get_raw_count(input_path: str) -> Dict[str, Dict[str, int]]:
             ):
                 print(f"Rejected {details}")
 
+            # Format is valid
             elif len(yr_month_day) == 3:
                 _, iso_a3 = CountryAlphaMap.getCode(country)
 

@@ -1,21 +1,18 @@
 #!/afs/bii.a-star.edu.sg/dept/mendel/METHODS/corona/local/anaconda3/envs/primer/bin/python
 
-import cgi
-
 # use to provide tracebacks within the cgi if something goes wrong
 import cgitb
 import concurrent.futures
 import datetime
 import json
-import subprocess
 import sys
+
 import time
 from functools import partial
 from io import StringIO
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict
 
 import pandas as pd
-
 from blast import blast
 
 # Prints any error to the windows from which the script was executed from
@@ -25,11 +22,11 @@ base_path = "/afs/bii.a-star.edu.sg/dept/mendel/METHODS/corona"
 primer_path = f"{base_path}/gamma/primer"
 blast_dir = f"{base_path}/local/anaconda3/envs/blast/bin/"
 blast_db_loc = f"{primer_path}/blastdb/database"
-fasta_input_path = f"{primer_path}/fasta_inputs/"
+fasta_input_path = f"{base_path}/current/tmp/"
 timing_path = f"{primer_path}/support_files/"
 database_count_path = f"{primer_path}/support_files/database_count.json"
 database_count_daily_path = f"{primer_path}/support_files/database_count_daily.json"
-output_path = f"{primer_path}/result_outputs/"
+output_path = f"{base_path}/current/tmp/"
 fasta_db_path = f"{primer_path}/support_files/sequences_db.db"
 
 # Local path used for development
@@ -56,20 +53,27 @@ def print_headers():
 
 
 def print_failure():
-    print("Status: 400 Bad Request")
-    print("Content-Type: text/html")
-    print()  # blank line, end of headers
-    print("<head>")
-    print("<meta charset='utf-8' http-equiv='Content-Type' />")
-    print("</head>")
-    print(
-        """
-        <h1>400 bad request</h1>
+    # print("Status: 400 Bad Request")
+    # print("Content-Type: text/html")
+    # print()  # blank line, end of headers
+    # print("<head>")
+    # print("<meta charset='utf-8' http-equiv='Content-Type' />")
+    # print("</head>")
+    # print(
+    #     """
+    #     <h1>400 bad request</h1>
 
-        <p>Apologies for the invalid request! If you think this is an error, please contact and tell us:</p>
-        <p>- Steps for the actions taken</p>
-        <p>- Input files used when it happened</p>
-        <p>We will work to get it fixed as soon as possible!</p>"""
+    #     <p>Apologies for the invalid request! If you think this is an error, please contact and tell us:</p>
+    #     <p>- Steps for the actions taken</p>
+    #     <p>- Input files used when it happened</p>
+    #     <p>We will work to get it fixed as soon as possible!</p>"""
+    # )
+    print(
+        json.dumps(
+            {
+                "query": "invalid, try again or contact us with the steps of what you were doing when this error occurred!"
+            }
+        )
     )
 
 
@@ -140,13 +144,13 @@ def main():
     #     r"""{"data": [{"content":">fwd\r\nTTACAAACATTGGCCGCAAA\r\n>rev\r\nTTCTTCGGAATGTCGCGC\r\n>prb\r\nACAATTTGCCCCCAGCGCTTCAG\r\n", "id": "US-CDC-N2", "invalid": false}]}"""
     # )
 
+    print_headers()
     input_files = read_input()
     if len(input_files) == 0:
         print_failure()
         return
 
     start = time.time()
-    print_headers()
 
     to_send = {}
     filenames = {}
