@@ -35,7 +35,7 @@ function NumberRangeFilter({
   return (
     <Form className="filter">
       <Form.Row>
-        <Col>
+        <Col className="pr-md-0" sm={12} md={6} lg={12}>
           <Form.Control
             as="input"
             value={value[0] || ""}
@@ -53,7 +53,7 @@ function NumberRangeFilter({
             step={step}
           />
         </Col>
-        <Col>
+        <Col className="pr-md-0" sm={12} md={6} lg={12}>
           <Form.Control
             value={value[1] || ""}
             type="number"

@@ -2,16 +2,40 @@ import React from "react";
 import Col from "react-bootstrap/Col";
 import Row from "react-bootstrap/Row";
 import Form from "react-bootstrap/Form";
-import Collapse from "react-bootstrap/Collapse";
 import InputGroup from "react-bootstrap/InputGroup";
+import ReactTooltip from "react-tooltip";
 import { useHistory } from "react-router-dom";
-
+import { AiOutlineQuestionCircle, AiTwotoneCalendar } from "react-icons/ai";
 import DateRangePicker from "@wojtekmaj/react-daterange-picker";
 import SelectDropdown from "../selectDropdown/selectDropdown";
 import NumberRangeFilter from "./minMaxFilter";
 
 import FilterGroup from "./filterGroup";
 import "./itemFilter.css";
+
+const help = {
+  miss:
+    "Sets the min and max number of misses in the virus sequence to be consider a miss",
+  miss3:
+    "Sets the min and max number of misses in the 3' end (last 5 nucleotides) of the virus sequence to be considered a miss",
+  match:
+    "Sets the min and max percentage of match for a virus sequence to be considered a miss",
+  primer: "Select the primers to display",
+  pType: "Select which part of the primer to display",
+  country:
+    "Selects the countries to display. Total will be over selected countries then. To change, check extra settings",
+  absDiff:
+    "Show the difference from the current bar and the previous bar if enable (The last bar will be compared against another bar off charts)",
+  daysBetweenCompare: "Sets the number of days between comparison",
+  numBars: "Sets the number of bars to be displayed",
+  countryTotal:
+    "Sets whether selected country will be used as total or all submission within said time frame will be used as total",
+  cumulative:
+    "Divides daily mutation count by total number of submissions thus far",
+  lookBack:
+    "Sets the number of days to be used when aggregating the number of submissions and mutations",
+  date: "Selects the dates of interest.",
+};
 
 const Switch = ({
   id,
@@ -48,17 +72,16 @@ const MissDefinition = ({
   setMiss3,
   match,
   setMatch,
-  filterHeader,
-  getLabel,
 }) => {
   return (
     <Row>
-      <Col className="mb-3 pr-lg-0" xs={12} lg={4}>
-        <InputGroup size="sm">
+      <Col className="mb-3 pr-lg-0 " xs={12} lg={4}>
+        <InputGroup size="sm" className="">
           <InputGroup.Prepend>
-            <InputGroup.Text>{`${getLabel(
-              filterHeader.miss
-            )}`}</InputGroup.Text>
+            <InputGroup.Text>
+              Total Misses
+              <AiOutlineQuestionCircle className="pl-1" data-tip={help.miss} />
+            </InputGroup.Text>
           </InputGroup.Prepend>
           <NumberRangeFilter
             data={baseData}
@@ -67,16 +90,18 @@ const MissDefinition = ({
             step={1}
             value={miss}
             setFilter={setMiss}
-            id={filterHeader.miss}
+            id="misses"
           />
         </InputGroup>
       </Col>
+
       <Col className="mb-3 pr-lg-0 pl-lg-0" xs={12} lg={4}>
         <InputGroup size="sm">
           <InputGroup.Prepend>
-            <InputGroup.Text>{`${getLabel(
-              filterHeader.miss3
-            )}`}</InputGroup.Text>
+            <InputGroup.Text>
+              Misses in 3' End
+              <AiOutlineQuestionCircle className="pl-1" data-tip={help.miss3} />
+            </InputGroup.Text>
           </InputGroup.Prepend>
           <NumberRangeFilter
             data={baseData}
@@ -85,16 +110,17 @@ const MissDefinition = ({
             step={1}
             value={miss3}
             setFilter={setMiss3}
-            id={filterHeader.miss3}
+            id="misses3"
           />
         </InputGroup>
       </Col>
-      <Col className="mb-3 pl-lg-0" xs={12} lg={4}>
+      <Col className="mb-3 pl-lg-0 pr-lg-0" xs={12} lg={4}>
         <InputGroup size="sm">
           <InputGroup.Prepend>
-            <InputGroup.Text>{`${getLabel(
-              filterHeader.match
-            )}`}</InputGroup.Text>
+            <InputGroup.Text>
+              Homology %
+              <AiOutlineQuestionCircle className="pl-1" data-tip={help.match} />
+            </InputGroup.Text>
           </InputGroup.Prepend>
           <NumberRangeFilter
             data={baseData}
@@ -103,7 +129,7 @@ const MissDefinition = ({
             step={0.01}
             value={match}
             setFilter={setMatch}
-            id={filterHeader.match}
+            id="match_pct"
           />
         </InputGroup>
       </Col>
@@ -140,7 +166,13 @@ const BarGraphSettings = ({
       <Col sm={12} lg={3}>
         <InputGroup className="mb-3" size="sm">
           <InputGroup.Prepend>
-            <InputGroup.Text>Absolute Diff</InputGroup.Text>
+            <InputGroup.Text>
+              Absolute Diff
+              <AiOutlineQuestionCircle
+                className="pl-1"
+                data-tip={help.absDiff}
+              />
+            </InputGroup.Text>
           </InputGroup.Prepend>
           <Switch
             type="checkbox"
@@ -153,7 +185,13 @@ const BarGraphSettings = ({
       <Col sm={12} lg={4}>
         <InputGroup className="mb-3" size="sm">
           <InputGroup.Prepend>
-            <InputGroup.Text>Days between Comparison</InputGroup.Text>
+            <InputGroup.Text>
+              Days between Comparison
+              <AiOutlineQuestionCircle
+                className="pl-1"
+                data-tip={help.daysBetweenCompare}
+              />
+            </InputGroup.Text>
           </InputGroup.Prepend>
           <Form.Control
             value={daysBetweenComparison.toString()}
@@ -173,7 +211,13 @@ const BarGraphSettings = ({
       <Col sm={12} lg={3}>
         <InputGroup className="mb-3" size="sm">
           <InputGroup.Prepend>
-            <InputGroup.Text>Number of bars</InputGroup.Text>
+            <InputGroup.Text>
+              Number of bars
+              <AiOutlineQuestionCircle
+                className="pl-1"
+                data-tip={help.numBars}
+              />
+            </InputGroup.Text>
           </InputGroup.Prepend>
           <Form.Control
             value={numberOfBars.toString()}
@@ -200,6 +244,10 @@ const LineGraphSettings = ({ countryAsTotal, setCountryAsTotal }) => {
       <InputGroup.Prepend>
         <InputGroup.Text htmlFor="country">
           Selected Countries as Total
+          <AiOutlineQuestionCircle
+            className="pl-1"
+            data-tip={help.countryTotal}
+          />
         </InputGroup.Text>
       </InputGroup.Prepend>
       <Switch
@@ -226,6 +274,7 @@ const GraphMapSetting = ({
   setCountryAsTotal,
   setTimeFrameBrush,
   timeFrameBrush,
+  dateRange,
   lookBack,
   setLookBack,
   useCum,
@@ -234,7 +283,7 @@ const GraphMapSetting = ({
 }) => {
   const dateChange = (e) => {
     console.log("e :>> ", e);
-    setTimeFrameBrush(e || []);
+    setTimeFrameBrush((e || []).map((value) => new Date(value)) || []);
   };
 
   return (
@@ -243,9 +292,18 @@ const GraphMapSetting = ({
         <Col xs={12} lg={5} className="pr-lg-0">
           <InputGroup className="mb-3 " size="sm">
             <InputGroup.Prepend>
-              <InputGroup.Text>Date Range</InputGroup.Text>
+              <InputGroup.Text>
+                Date Range
+                <AiOutlineQuestionCircle
+                  className="pl-1"
+                  data-tip={help.date}
+                />
+              </InputGroup.Text>
             </InputGroup.Prepend>
             <DateRangePicker
+              maxDate={new Date(dateRange[dateRange.length - 1])}
+              minDate={new Date(dateRange[0])}
+              calendarIcon={<AiTwotoneCalendar />}
               onChange={dateChange}
               value={timeFrameBrush.length === 0 ? null : timeFrameBrush}
             />
@@ -255,7 +313,13 @@ const GraphMapSetting = ({
         <Col xs={12} lg={3} className="pr-lg-0 pl-lg-0">
           <InputGroup className="mb-3" size="sm">
             <InputGroup.Prepend>
-              <InputGroup.Text htmlFor="cumulative">Cumulative</InputGroup.Text>
+              <InputGroup.Text htmlFor="cumulative">
+                Cumulative
+                <AiOutlineQuestionCircle
+                  className="pl-1"
+                  data-tip={help.cumulative}
+                />
+              </InputGroup.Text>
             </InputGroup.Prepend>
             <Switch
               id="cumulative"
@@ -271,7 +335,13 @@ const GraphMapSetting = ({
         <Col xs={12} lg={4} className="pl-lg-0">
           <InputGroup className="mb-3 " size="sm">
             <InputGroup.Prepend>
-              <InputGroup.Text>Look Back</InputGroup.Text>
+              <InputGroup.Text>
+                Look Back
+                <AiOutlineQuestionCircle
+                  className="pl-1"
+                  data-tip={help.lookBack}
+                />
+              </InputGroup.Text>
             </InputGroup.Prepend>
             <Form.Control
               value={lookBack.toString()}
@@ -323,10 +393,7 @@ const GraphMapSetting = ({
 
 const AdvanceFilters = ({
   baseData,
-  filterHeader,
-  getLabel,
-  isProcessing,
-  selectionChange,
+  dateRange,
   timeFrameBrush,
   setTimeFrameBrush,
   lookBack,
@@ -341,7 +408,6 @@ const AdvanceFilters = ({
   setMatch,
   countryAsTotal,
   setCountryAsTotal,
-  setPType,
   isBar,
   setIsBar,
   daysBetweenComparison,
@@ -351,7 +417,7 @@ const AdvanceFilters = ({
   showAbsDiff,
   setShowAbsDiff,
 }) => {
-  const variant = "primary";
+  const variant = "light";
   return (
     <FilterGroup
       variant={variant}
@@ -362,43 +428,10 @@ const AdvanceFilters = ({
           <Row>
             <FilterGroup
               variant={variant}
-              groupId={"filter-primers"}
-              buttonText={"Filter Primer Types"}
-              component={
-                <Row className="mb-3">
-                  <Col sm={12} lg={4} className="mr-0 pr-lg-0">
-                    <InputGroup.Text>
-                      {`${getLabel(filterHeader.type)}`}
-                    </InputGroup.Text>
-                  </Col>
-                  <Col sm={12} lg={8} className="pl-lg-0">
-                    <SelectDropdown
-                      onChange={selectionChange(setPType)}
-                      options={React.useMemo(
-                        () => [
-                          { label: "fwd", value: "fwd" },
-                          { label: "rev", value: "rev" },
-                          { label: "prb", value: "prb" },
-                        ],
-                        []
-                      )}
-                      placeholder={"Specify Type"}
-                      isLoading={isProcessing}
-                    />
-                  </Col>
-                </Row>
-              }
-            />
-          </Row>
-          <Row>
-            <FilterGroup
-              variant={variant}
               buttonText={"Adjust Miss Definition"}
               groupId={"miss-definitions"}
               component={
                 <MissDefinition
-                  getLabel={getLabel}
-                  filterHeader={filterHeader}
                   baseData={baseData}
                   miss={miss}
                   setMiss={setMiss}
@@ -417,6 +450,14 @@ const AdvanceFilters = ({
               groupId={"graph-map-setting"}
               component={
                 <GraphMapSetting
+                  variant={variant}
+                  setTimeFrameBrush={setTimeFrameBrush}
+                  timeFrameBrush={timeFrameBrush}
+                  dateRange={dateRange}
+                  lookBack={lookBack}
+                  setLookBack={setLookBack}
+                  useCum={useCum}
+                  setUseCum={setUseCum}
                   isBar={isBar}
                   setIsBar={setIsBar}
                   daysBetweenComparison={daysBetweenComparison}
@@ -427,13 +468,6 @@ const AdvanceFilters = ({
                   setShowAbsDiff={setShowAbsDiff}
                   countryAsTotal={countryAsTotal}
                   setCountryAsTotal={setCountryAsTotal}
-                  setTimeFrameBrush={setTimeFrameBrush}
-                  timeFrameBrush={timeFrameBrush}
-                  lookBack={lookBack}
-                  setLookBack={setLookBack}
-                  useCum={useCum}
-                  setUseCum={setUseCum}
-                  variant={variant}
                 />
               }
             />
@@ -444,55 +478,16 @@ const AdvanceFilters = ({
   );
 };
 
-function getFilterName(colNames) {
-  return (id) => {
-    const result = colNames.filter((val) => val.accessor === id);
-    return result[0].Header;
-  };
-}
-const ItemFilters = ({
+function BasicFilters({
   baseData,
-  colNames,
-  timeFrameBrush,
-  setTimeFrameBrush,
-  lookBack,
-  setLookBack,
-  useCum,
-  setUseCum,
-  miss,
-  setMiss,
-  miss3,
-  setMiss3,
-  match,
-  setMatch,
-  countryAsTotal,
-  setCountryAsTotal,
+  setIsProcessing,
+  isProcessing,
   setCountries,
   primers,
   setPrimers,
   setPType,
-  isProcessing,
-  setIsProcessing,
-  isBar,
-  setIsBar,
-  daysBetweenComparison,
-  setDaysBetweenComparison,
-  numberOfBars,
-  setNumberOfBars,
-  showAbsDiff,
-  setShowAbsDiff,
-}) => {
+}) {
   const history = useHistory();
-  const filterHeader = {
-    primers: "primer",
-    type: "type",
-    miss: "misses",
-    miss3: "misses3",
-    match: "match_pct",
-    country: "country_name",
-    iso: "ISO_A3",
-  };
-  const getLabel = getFilterName(colNames);
 
   function primerChange(setSelectedPrimers) {
     return (selection) => {
@@ -513,7 +508,6 @@ const ItemFilters = ({
     return (selection) => {
       setIsProcessing(true);
       const toFilter = selection || [];
-      console.log(selection);
       if (toFilter.length === 0) {
         setSelection(toFilter);
       } else {
@@ -521,43 +515,83 @@ const ItemFilters = ({
           if (val.value === val.label) return val.value;
           return val;
         });
-        console.log(selection);
         setSelection(selection);
       }
     };
   }
-
   return (
-    <div>
-      <Row>
-        <Col xs={12} lg={6} className="mb-3">
-          <Row>
-            <Col sm={12} lg={2} className="mr-0 pr-lg-0">
-              <InputGroup.Text>
-                {`${getLabel(filterHeader.primers)}`}
-              </InputGroup.Text>
+    <FilterGroup
+      isOpen={true}
+      variant="light"
+      buttonText={"Basic Filters"}
+      groupId="basic-settings"
+      component={
+        <>
+          <Row className="mb-3">
+            <Col xs={12} lg={7} className="mb-3">
+              <Row>
+                <Col sm={12} lg={3} className="mr-0 pr-lg-0">
+                  <InputGroup.Text>
+                    Primers
+                    <AiOutlineQuestionCircle
+                      className="pl-1"
+                      data-tip={help.primer}
+                    />
+                  </InputGroup.Text>
+                </Col>
+                <Col sm={12} lg={9} className="pl-lg-0">
+                  <SelectDropdown
+                    value={primers}
+                    onChange={primerChange(setPrimers)}
+                    options={React.useMemo(() => {
+                      return Object.keys(baseData).map((val) => {
+                        return { label: val, value: val };
+                      });
+                    }, [baseData])}
+                    placeholder={"Select Primers to Display"}
+                    isLoading={isProcessing}
+                  />
+                </Col>
+              </Row>
             </Col>
-            <Col sm={12} lg={10} className="pl-lg-0">
-              <SelectDropdown
-                value={primers}
-                onChange={primerChange(setPrimers)}
-                options={React.useMemo(() => {
-                  return Object.keys(baseData).map((val) => {
-                    return { label: val, value: val };
-                  });
-                }, [baseData])}
-                placeholder={"Select Primer to Display"}
-                isLoading={isProcessing}
-              />
+            <Col xs={12} lg={5} className="mb-3">
+              <Row>
+                <Col sm={12} lg={5} className="mr-0 pr-lg-0">
+                  <InputGroup.Text>
+                    Primer Type
+                    <AiOutlineQuestionCircle
+                      className="pl-1"
+                      data-tip={help.pType}
+                    />
+                  </InputGroup.Text>
+                </Col>
+                <Col sm={12} lg={7} className="pl-lg-0">
+                  <SelectDropdown
+                    onChange={selectionChange(setPType)}
+                    options={React.useMemo(
+                      () => [
+                        { label: "fwd", value: "fwd" },
+                        { label: "rev", value: "rev" },
+                        { label: "prb", value: "prb" },
+                      ],
+                      []
+                    )}
+                    placeholder={"Specify Type"}
+                    isLoading={isProcessing}
+                  />
+                </Col>
+              </Row>
             </Col>
           </Row>
-        </Col>
-        <Col sm={12} lg={6} className="mb-3">
-          <Row>
+          <Row className="mb-3">
             <Col sm={12} lg={2} className="mr-0 pr-lg-0">
-              <InputGroup.Text>{`${getLabel(
-                filterHeader.country
-              )}`}</InputGroup.Text>
+              <InputGroup.Text>
+                Counties
+                <AiOutlineQuestionCircle
+                  className="pl-1"
+                  data-tip={help.country}
+                />
+              </InputGroup.Text>
             </Col>
             <Col sm={12} lg={10} className="pl-lg-0">
               <SelectDropdown
@@ -590,15 +624,61 @@ const ItemFilters = ({
               />
             </Col>
           </Row>
-        </Col>
+        </>
+      }
+    />
+  );
+}
+
+const ItemFilters = ({
+  baseData,
+  dateRange,
+  timeFrameBrush,
+  setTimeFrameBrush,
+  lookBack,
+  setLookBack,
+  useCum,
+  setUseCum,
+  miss,
+  setMiss,
+  miss3,
+  setMiss3,
+  match,
+  setMatch,
+  countryAsTotal,
+  setCountryAsTotal,
+  setCountries,
+  primers,
+  setPrimers,
+  setPType,
+  isProcessing,
+  setIsProcessing,
+  isBar,
+  setIsBar,
+  daysBetweenComparison,
+  setDaysBetweenComparison,
+  numberOfBars,
+  setNumberOfBars,
+  showAbsDiff,
+  setShowAbsDiff,
+}) => {
+  return (
+    <div>
+      <Row>
+        <BasicFilters
+          baseData={baseData}
+          isProcessing={isProcessing}
+          setIsProcessing={setIsProcessing}
+          setCountries={setCountries}
+          primers={primers}
+          setPrimers={setPrimers}
+          setPType={setPType}
+        />
       </Row>
       <Row>
         <AdvanceFilters
           baseData={baseData}
-          filterHeader={filterHeader}
-          getLabel={getLabel}
-          isProcessing={isProcessing}
-          selectionChange={selectionChange}
+          dateRange={dateRange}
           timeFrameBrush={timeFrameBrush}
           setTimeFrameBrush={setTimeFrameBrush}
           lookBack={lookBack}
@@ -624,6 +704,7 @@ const ItemFilters = ({
           setShowAbsDiff={setShowAbsDiff}
         />
       </Row>
+      <ReactTooltip html={true}></ReactTooltip>
     </div>
   );
 };

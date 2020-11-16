@@ -14,6 +14,8 @@ import InputGroup from "react-bootstrap/InputGroup";
 import Col from "react-bootstrap/Col";
 import Row from "react-bootstrap/Row";
 import Collapse from "react-bootstrap/Collapse";
+import { AiFillCaretDown, AiFillCaretRight } from "react-icons/ai";
+import { FaSort, FaSortDown, FaSortUp } from "react-icons/fa";
 import { CSVLink } from "react-csv";
 
 import "./tableDisplay.css";
@@ -35,9 +37,8 @@ function DataTable({ title, data, columns, isCombined, isCollapsable }) {
           aria-expanded={showTable}
           variant="light"
         >
-          {showTable
-            ? `${String.fromCodePoint(parseInt("25BC", 16))} Close Table`
-            : `> Show Table`}
+          {showTable ? <AiFillCaretDown /> : <AiFillCaretRight />}
+          {showTable ? `Close Table` : `Show Table`}
         </Button>
         <Collapse in={showTable}>
           <div>
@@ -186,13 +187,15 @@ function TableDisplay({ title, data, columns, isCombined }) {
                   <th {...column.getHeaderProps()} className="table-header">
                     {column.render("Header")}
                     <span {...column.getSortByToggleProps()}>
-                      {column.isSorted
-                        ? column.isSortedDesc
-                          ? ` ${String.fromCodePoint(parseInt("25BC", 16))}`
-                          : ` ${String.fromCodePoint(parseInt("25B2", 16))}`
-                        : ` ${String.fromCodePoint(
-                            parseInt("25BC", 16)
-                          )}${String.fromCodePoint(parseInt("25B2", 16))}`}
+                      {column.isSorted ? (
+                        column.isSortedDesc ? (
+                          <FaSortDown className="pl-1" />
+                        ) : (
+                          <FaSortUp className="pl-1" />
+                        )
+                      ) : (
+                        <FaSort className="pl-1" />
+                      )}
                     </span>
                     {column.canResize && (
                       <div

@@ -2,7 +2,7 @@ import React from "react";
 import Button from "react-bootstrap/Button";
 import Collapse from "react-bootstrap/Collapse";
 import Col from "react-bootstrap/Col";
-
+import { AiFillCaretDown, AiFillCaretRight } from "react-icons/ai";
 function FilterGroup({
   title,
   groupId,
@@ -10,6 +10,7 @@ function FilterGroup({
   component,
   variant = "light",
   isOpen = false,
+  size = "sm",
 }) {
   const [show, setShow] = React.useState(isOpen);
   return (
@@ -22,10 +23,10 @@ function FilterGroup({
         aria-controls={groupId}
         aria-expanded={show}
         variant={variant}
+        size={size}
       >
-        {show
-          ? `${String.fromCodePoint(parseInt("25BC", 16))} ${buttonText}`
-          : `> ${buttonText}`}
+        {show ? <AiFillCaretDown /> : <AiFillCaretRight />}
+        {show ? `${buttonText}` : `${buttonText}`}
       </Button>
       <Collapse in={show}>
         <div>{component}</div>
