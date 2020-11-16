@@ -1,25 +1,27 @@
 {
   "files": {
-    "main.css": "https://mendel2.bii.a-star.edu.sg/METHODS/corona/gamma/primer/build/static/css/main.747f0f1c.chunk.css",
-    "main.js": "https://mendel2.bii.a-star.edu.sg/METHODS/corona/gamma/primer/build/static/js/main.06672e50.chunk.js",
-    "main.js.map": "https://mendel2.bii.a-star.edu.sg/METHODS/corona/gamma/primer/build/static/js/main.06672e50.chunk.js.map",
-    "runtime-main.js": "https://mendel2.bii.a-star.edu.sg/METHODS/corona/gamma/primer/build/static/js/runtime-main.e724584a.js",
-    "runtime-main.js.map": "https://mendel2.bii.a-star.edu.sg/METHODS/corona/gamma/primer/build/static/js/runtime-main.e724584a.js.map",
-    "static/css/2.35d896b9.chunk.css": "https://mendel2.bii.a-star.edu.sg/METHODS/corona/gamma/primer/build/static/css/2.35d896b9.chunk.css",
-    "static/js/2.2a364dbe.chunk.js": "https://mendel2.bii.a-star.edu.sg/METHODS/corona/gamma/primer/build/static/js/2.2a364dbe.chunk.js",
-    "static/js/2.2a364dbe.chunk.js.map": "https://mendel2.bii.a-star.edu.sg/METHODS/corona/gamma/primer/build/static/js/2.2a364dbe.chunk.js.map",
-    "index.html": "https://mendel2.bii.a-star.edu.sg/METHODS/corona/gamma/primer/build/index.html",
-    "precache-manifest.30964adfdad2f5e678ceab43e2530c4a.js": "https://mendel2.bii.a-star.edu.sg/METHODS/corona/gamma/primer/build/precache-manifest.30964adfdad2f5e678ceab43e2530c4a.js",
-    "service-worker.js": "https://mendel2.bii.a-star.edu.sg/METHODS/corona/gamma/primer/build/service-worker.js",
-    "static/css/2.35d896b9.chunk.css.map": "https://mendel2.bii.a-star.edu.sg/METHODS/corona/gamma/primer/build/static/css/2.35d896b9.chunk.css.map",
-    "static/css/main.747f0f1c.chunk.css.map": "https://mendel2.bii.a-star.edu.sg/METHODS/corona/gamma/primer/build/static/css/main.747f0f1c.chunk.css.map",
-    "static/js/2.2a364dbe.chunk.js.LICENSE.txt": "https://mendel2.bii.a-star.edu.sg/METHODS/corona/gamma/primer/build/static/js/2.2a364dbe.chunk.js.LICENSE.txt"
+    "main.css": "https://mendel3.bii.a-star.edu.sg/METHODS/corona/gamma/primer/build/static/css/main.747f0f1c.chunk.css",
+    "main.js": "https://mendel3.bii.a-star.edu.sg/METHODS/corona/gamma/primer/build/static/js/main.003e8ab9.chunk.js",
+    "main.js.map": "https://mendel3.bii.a-star.edu.sg/METHODS/corona/gamma/primer/build/static/js/main.003e8ab9.chunk.js.map",
+    "runtime-main.js": "https://mendel3.bii.a-star.edu.sg/METHODS/corona/gamma/primer/build/static/js/runtime-main.37e72e75.js",
+    "runtime-main.js.map": "https://mendel3.bii.a-star.edu.sg/METHODS/corona/gamma/primer/build/static/js/runtime-main.37e72e75.js.map",
+    "static/css/2.35d896b9.chunk.css": "https://mendel3.bii.a-star.edu.sg/METHODS/corona/gamma/primer/build/static/css/2.35d896b9.chunk.css",
+    "static/js/2.4682fd5e.chunk.js": "https://mendel3.bii.a-star.edu.sg/METHODS/corona/gamma/primer/build/static/js/2.4682fd5e.chunk.js",
+    "static/js/2.4682fd5e.chunk.js.map": "https://mendel3.bii.a-star.edu.sg/METHODS/corona/gamma/primer/build/static/js/2.4682fd5e.chunk.js.map",
+    "5997616f0bb2b4346dd6.worker.js": "https://mendel3.bii.a-star.edu.sg/METHODS/corona/gamma/primer/build/5997616f0bb2b4346dd6.worker.js",
+    "5997616f0bb2b4346dd6.worker.js.map": "https://mendel3.bii.a-star.edu.sg/METHODS/corona/gamma/primer/build/5997616f0bb2b4346dd6.worker.js.map",
+    "index.html": "https://mendel3.bii.a-star.edu.sg/METHODS/corona/gamma/primer/build/index.html",
+    "precache-manifest.c88c56a2e42f70fc81eb51ba9700528b.js": "https://mendel3.bii.a-star.edu.sg/METHODS/corona/gamma/primer/build/precache-manifest.c88c56a2e42f70fc81eb51ba9700528b.js",
+    "service-worker.js": "https://mendel3.bii.a-star.edu.sg/METHODS/corona/gamma/primer/build/service-worker.js",
+    "static/css/2.35d896b9.chunk.css.map": "https://mendel3.bii.a-star.edu.sg/METHODS/corona/gamma/primer/build/static/css/2.35d896b9.chunk.css.map",
+    "static/css/main.747f0f1c.chunk.css.map": "https://mendel3.bii.a-star.edu.sg/METHODS/corona/gamma/primer/build/static/css/main.747f0f1c.chunk.css.map",
+    "static/js/2.4682fd5e.chunk.js.LICENSE.txt": "https://mendel3.bii.a-star.edu.sg/METHODS/corona/gamma/primer/build/static/js/2.4682fd5e.chunk.js.LICENSE.txt"
   },
   "entrypoints": [
-    "static/js/runtime-main.e724584a.js",
+    "static/js/runtime-main.37e72e75.js",
     "static/css/2.35d896b9.chunk.css",
-    "static/js/2.2a364dbe.chunk.js",
+    "static/js/2.4682fd5e.chunk.js",
     "static/css/main.747f0f1c.chunk.css",
-    "static/js/main.06672e50.chunk.js"
+    "static/js/main.003e8ab9.chunk.js"
   ]
 }
