@@ -97,6 +97,9 @@ const UploadPage = ({ setResults }) => {
       <Collapse id={openId} in={open}>
         <div className="collapse-container">
           <Container>
+            <Button onClick={() => history.push("/manualUpload")}>
+              Manual Upload
+            </Button>
             <Form noValidate>
               <TextArea setTextFieldFasta={setTextFieldFasta} />
               <p className="alternative-upload">OR</p>

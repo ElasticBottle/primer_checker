@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { BrowserRouter as Router, Switch, Route, Link } from "react-router-dom";
+import ManualPage from "./pages/manual/manualPage";
 import UploadPage from "./pages/upload/uploadPage";
 import ResultPage from "./pages/results/resultsPage";
 
@@ -17,6 +18,9 @@ function App() {
       <Switch>
         <Route exact={true} path="/">
           <UploadPage setResults={setResults} />
+        </Route>
+        <Route exact={true} path="/manualUpload">
+          <ManualPage setResults={setResults} />
         </Route>
         <Route exact={true} path="/results/:display">
           <ResultPage results={results} />
