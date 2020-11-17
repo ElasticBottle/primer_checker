@@ -21,12 +21,14 @@ cgitb.enable()
 base_path = "/afs/bii.a-star.edu.sg/dept/mendel/METHODS/corona"
 primer_path = f"{base_path}/gamma/primer"
 blast_dir = f"{base_path}/local/anaconda3/envs/blast/bin/"
-blast_db_loc = f"{primer_path}/blastdb/database"
+blast_db_loc = (
+    f"{base_path}/current/tmp/database{datetime.datetime.now().strftime('%Y-%m-%d')}"
+)
 fasta_input_path = f"{base_path}/current/tmp/"
+output_path = f"{base_path}/current/tmp/"
 timing_path = f"{primer_path}/support_files/"
 database_count_path = f"{primer_path}/support_files/database_count.json"
 database_count_daily_path = f"{primer_path}/support_files/database_count_daily.json"
-output_path = f"{base_path}/current/tmp/"
 fasta_db_path = f"{primer_path}/support_files/sequences_db.db"
 
 # Local path used for development
