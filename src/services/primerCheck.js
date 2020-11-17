@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const baseURL =
-  "https://mendel2.bii.a-star.edu.sg/METHODS/corona/gamma/cgi-bin/cgi_scripts/primerMVP.py";
+  "https://mendel3.bii.a-star.edu.sg/METHODS/corona/gamma/cgi-bin/cgi_scripts/primerMVP.py";
 // const baseURL = "http://localhost:3001";
 
 const checkFile = (file) => {

@@ -16,7 +16,7 @@ import FileDisplay from "../../components/fileDisplay/fileDisplay";
 import primerCheckService from "../..//services/primerCheck";
 import "./uploadPage.css";
 
-const UploadPage = ({ setResults }) => {
+const UploadPage = ({ setResults, setError }) => {
   const [showSubmit, setShowSubmit] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [displayedFiles, setDisplayedFiles] = useState([]);
@@ -89,7 +89,11 @@ const UploadPage = ({ setResults }) => {
           setResults(JSON.stringify(response.data));
           history.push("/results/Overview");
         })
-        .catch((e) => console.log(e));
+        .catch((e) => {
+          console.log(e);
+          setError(JSON.stringify(e.data));
+          history.push("/error");
+        });
     }, 500);
   };
   return (

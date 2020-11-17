@@ -455,7 +455,7 @@ def blast(
             f"-reward",
             "2",
             f"-num_threads",
-            "3",
+            "4",
             f"-outfmt",
             f"10 {' '.join(blast_headers.keys())}",
             "-out",
@@ -494,7 +494,7 @@ def blast(
         with open(out_file_path) as f:
             print(f.readlines())
         print(query_seq)
-        raise Exception("Soemthing went wrong")
+        raise Exception("Something went wrong")
     df.columns = list(blast_headers.values())
 
     if primers is None:

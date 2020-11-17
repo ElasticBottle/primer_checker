@@ -133,7 +133,6 @@ const ResultPage = ({ results }) => {
                 lookBack: lookBack,
               })
               .then((result) => {
-                console.log("lineData :>> ", result);
                 console.log(
                   `Time taken for line graph data: ${(
                     performance.now() - start
@@ -259,6 +258,8 @@ const ResultPage = ({ results }) => {
         useCum,
         lookBack
       ) => {
+        let start = performance.now();
+
         instance.current
           .getCombinedLineData(
             makeBaseGraphData({ [combinedName]: combinedBase }),
@@ -275,10 +276,16 @@ const ResultPage = ({ results }) => {
           )
           .then((result) => {
             setLineCombinedData(result);
+            console.log(
+              `Time taken for creating combined line data: ${(
+                performance.now() - start
+              ).toFixed(5)} milliseconds`
+            );
           });
       },
-      []
-    )
+      500
+    ),
+    []
   );
 
   React.useEffect(() => {
@@ -519,7 +526,6 @@ const ResultPage = ({ results }) => {
           timeFrameBrush: timeFrameBrush,
         })
         .then((result) => {
-          console.log("tableCombined :>> ", result);
           setTableCombined(result);
         });
     }
