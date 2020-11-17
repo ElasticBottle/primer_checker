@@ -157,7 +157,7 @@ def match_partial_seq(fasta_db: Connection, primers: Dict[str, str]) -> Callable
         elif query_start_idx != 1:
             if match_end_idx < match_start_idx:
                 match_start_idx = match_start_idx + (query_start_idx - 1)
-                actual_seq = seq[match_start_idx + 1 : match_end_idx + 1 : -1].upper()
+                actual_seq = seq[match_start_idx - 1 : match_end_idx - 2 : -1].upper()
             else:
                 match_start_idx = match_start_idx - (query_start_idx - 1)
                 actual_seq = seq[match_start_idx - 1 : match_end_idx].upper()
@@ -455,7 +455,7 @@ def blast(
             f"-reward",
             "2",
             f"-num_threads",
-            "5",
+            "3",
             f"-outfmt",
             f"10 {' '.join(blast_headers.keys())}",
             # "-out",
@@ -505,7 +505,7 @@ def blast(
     if save_csv:
         # df.to_csv(f"{out_file_path}_temp.csv", index=False, chunksize=50000)
         results.to_csv(f"{out_file_path}", index=False, chunksize=50000)
-    # return results
+    return results
 
 
 def parse_args():
