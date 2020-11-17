@@ -458,8 +458,8 @@ def blast(
             "3",
             f"-outfmt",
             f"10 {' '.join(blast_headers.keys())}",
-            # "-out",
-            # f"{out_file_path}",
+            "-out",
+            f"{out_file_path}",
         ],
         capture_output=True,
         universal_newlines=True,
@@ -469,29 +469,32 @@ def blast(
         if is_log:
             print(process.stderr)
         raise Exception(f"An error occurred")
-
-    result = process.stdout
-    data = StringIO(result)
-    df = pd.read_csv(
-        data,
-        dtype={
-            "qaccver": "string",
-            "saccver": "string",
-            "qlen": "int",
-            "mismatch": "int",
-            "nident": "int",
-            "pident": "float",
-            "length": "int",
-            "qstart": "int",
-            "qseq": "string",
-            "qend": "int",
-            "sstart": "int",
-            "sseq": "string",
-            "send": "int",
-            "evalue": "int",
-            "bitscore": "float",
-        },
-    )
+    try:
+        df = pd.read_csv(
+            out_file_path,
+            dtype={
+                "qaccver": "string",
+                "saccver": "string",
+                "qlen": "int",
+                "mismatch": "int",
+                "nident": "int",
+                "pident": "float",
+                "length": "int",
+                "qstart": "int",
+                "qseq": "string",
+                "qend": "int",
+                "sstart": "int",
+                "sseq": "string",
+                "send": "int",
+                "evalue": "int",
+                "bitscore": "float",
+            },
+        )
+    except:
+        with open(out_file_path) as f:
+            print(f.readlines())
+        print(query_seq)
+        raise Exception("Soemthing went wrong")
     df.columns = list(blast_headers.values())
 
     if primers is None:
