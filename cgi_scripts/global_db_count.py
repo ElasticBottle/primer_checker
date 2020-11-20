@@ -156,9 +156,17 @@ def main():
     args = parse_args()
     raw_count = get_raw_count(args.input_fasta)
     accumulated_count = accumulate(raw_count)
-    output_to_json(accumulated_count, args.output_path, "database_count.json")
+    output_to_json(
+        accumulated_count,
+        args.output_path,
+        f"database_count{datetime.datetime.now().strftime('%Y-%m-%d')}.json",
+    )
     daily_count = fill_forward(raw_count)
-    output_to_json(daily_count, args.output_path_daily, "database_count_daily.json")
+    output_to_json(
+        daily_count,
+        args.output_path_daily,
+        f"database_count_daily{datetime.datetime.now().strftime('%Y-%m-%d')}.json",
+    )
 
 
 if __name__ == "__main__":

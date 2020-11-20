@@ -19,17 +19,18 @@ from blast import blast
 cgitb.enable()
 
 base_path = "/afs/bii.a-star.edu.sg/dept/mendel/METHODS/corona"
+support_files_path = f"{base_path}/current/tmp"
 primer_path = f"{base_path}/gamma/primer"
 blast_dir = f"{base_path}/local/anaconda3/envs/blast/bin/"
 blast_db_loc = (
-    f"{base_path}/current/tmp/database{datetime.datetime.now().strftime('%Y-%m-%d')}"
+    f"{support_files_path}/database{datetime.datetime.now().strftime('%Y-%m-%d')}"
 )
-fasta_input_path = f"{base_path}/current/tmp/"
-output_path = f"{base_path}/current/tmp/"
+fasta_input_path = f"{support_files_path}/"
+output_path = f"{support_files_path}/"
 timing_path = f"{primer_path}/support_files/"
-database_count_path = f"{primer_path}/support_files/database_count.json"
-database_count_daily_path = f"{primer_path}/support_files/database_count_daily.json"
-fasta_db_path = f"{primer_path}/support_files/sequences_db.db"
+database_count_path = f"{support_files_path}/database_count{datetime.datetime.now().strftime('%Y-%m-%d')}.json"
+database_count_daily_path = f"{support_files_path}/database_count_daily{datetime.datetime.now().strftime('%Y-%m-%d')}.json"
+fasta_db_path = f"{support_files_path}/sequences_db{datetime.datetime.now().strftime('%Y-%m-%d')}.db"
 
 # Local path used for development
 # blast_dir = "C:/Users/Winston/Documents/Code/intern_and_work/Astar/primer_checker/primer_mutation_starter_pack/NCBI/blast-2.10.1+/bin/"
@@ -157,7 +158,7 @@ def main():
     to_send = {}
     filenames = {}
 
-    with concurrent.futures.ProcessPoolExecutor() as executor:
+    with concurrent.futures.ProcessPoolExecutor(max_workers=2) as executor:
         jobs = {
             executor.submit(
                 partial(
