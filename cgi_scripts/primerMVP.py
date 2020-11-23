@@ -19,18 +19,17 @@ from blast import blast
 cgitb.enable()
 
 base_path = "/afs/bii.a-star.edu.sg/dept/mendel/METHODS/corona"
-support_files_path = f"{base_path}/current/tmp"
+support_files_path = f"{base_path}/gamma/primer/files"
+tmp_path = f"{base_path}/current/tmp"
 primer_path = f"{base_path}/gamma/primer"
 blast_dir = f"{base_path}/local/anaconda3/envs/blast/bin/"
-blast_db_loc = (
-    f"{support_files_path}/database{datetime.datetime.now().strftime('%Y-%m-%d')}"
-)
-fasta_input_path = f"{support_files_path}/"
-output_path = f"{support_files_path}/"
+blast_db_loc = f"{support_files_path}/database{(datetime.datetime.now()- datetime.timedelta(minutes=30)).strftime('%Y-%m-%d')}"
+fasta_input_path = f"{tmp_path}/"
+output_path = f"{tmp_path}/"
 timing_path = f"{primer_path}/support_files/"
-database_count_path = f"{support_files_path}/database_count{datetime.datetime.now().strftime('%Y-%m-%d')}.json"
-database_count_daily_path = f"{support_files_path}/database_count_daily{datetime.datetime.now().strftime('%Y-%m-%d')}.json"
-fasta_db_path = f"{support_files_path}/sequences_db{datetime.datetime.now().strftime('%Y-%m-%d')}.db"
+database_count_path = f"{support_files_path}/database_count{(datetime.datetime.now()- datetime.timedelta(minutes=30)).strftime('%Y-%m-%d')}.json"
+database_count_daily_path = f"{support_files_path}/database_count_daily{(datetime.datetime.now()- datetime.timedelta(minutes=30)).strftime('%Y-%m-%d')}.json"
+fasta_db_path = f"{support_files_path}/sequences_db{(datetime.datetime.now()- datetime.timedelta(minutes=30)).strftime('%Y-%m-%d')}.db"
 
 # Local path used for development
 # blast_dir = "C:/Users/Winston/Documents/Code/intern_and_work/Astar/primer_checker/primer_mutation_starter_pack/NCBI/blast-2.10.1+/bin/"
