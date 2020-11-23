@@ -31,7 +31,7 @@ function App() {
           <ResultPage results={results} />
         </Route>
         <Route path="/error" exact={true}>
-          <div>{ReactHtmlParser(error)}</div>
+          <div>{error}</div>
         </Route>
         <Route path="/">
           <div>404: Page not found</div>

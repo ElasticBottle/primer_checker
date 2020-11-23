@@ -22,7 +22,6 @@ const PrimerMap = ({
   lookBack,
   db,
   timeFrameBrush,
-  setTimeFrameBrush,
   showModal,
   setModalInfo,
   subtitle = "",
@@ -61,16 +60,16 @@ const PrimerMap = ({
   ];
 
   function handleClick(countryISO3, endDate, lookBack) {
-    const timeFrame = extent(
-      data.reduce((dates, data) => {
-        if (data.ISO_A3 === countryISO3) {
-          dates.push(new Date(data.date));
-          return dates;
-        } else {
-          return dates;
-        }
-      }, [])
-    );
+    // const timeFrame = extent(
+    //   data.reduce((dates, data) => {
+    //     if (data.ISO_A3 === countryISO3) {
+    //       dates.push(new Date(data.date));
+    //       return dates;
+    //     } else {
+    //       return dates;
+    //     }
+    //   }, [])
+    // );
     showModal();
     setModalInfo((prev) => {
       return {
@@ -155,9 +154,9 @@ const PrimerMap = ({
     var date = new Date(time);
     return date.toISOString().slice(0, 10);
   }
-
+  console.log("db :>> ", db);
   const [startDate, endDate] = getDates(timeFrameBrush, db);
-  const countryMisses = getCountryMissCounts(data, lookBack, endDate);
+  const countryMisses = getCountryMissCounts(data, -1, endDate);
   const countryMissesPct = Array.from(countryMisses.keys()).reduce(
     (accumulated, country) => {
       accumulated.set(

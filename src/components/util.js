@@ -42,3 +42,25 @@ export function addName(primer) {
     return value;
   };
 }
+
+export function makeBaseGraphData(baseData) {
+  /**
+   * Converts the incoming {primerName: Missed virus} to
+   * {primerName: Date: Missed Virus}
+   *
+   * @param {Object} baseData: contains the primerDetails
+   * @returns {Object}: Mapping from {primerName: Date: Missed Virus}
+   */
+
+  const toReturn = {};
+  for (const primerName of Object.keys(baseData)) {
+    const result = {};
+    for (const details of baseData[primerName]) {
+      const toAdd = result[details.date] || [];
+      toAdd.push(addName(primerName)(details));
+      result[details.date] = toAdd;
+    }
+    toReturn[primerName] = result;
+  }
+  return toReturn;
+}

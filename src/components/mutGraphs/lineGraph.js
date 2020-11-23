@@ -113,7 +113,7 @@ const LineGraph = ({
             : getStartDate(dates, date, baseDetails.lookBack);
         let submissionCount = baseDetails.submission_count;
         let countries =
-          baseDetails.countries_considered.length === 0
+          (baseDetails.countries_considered || []).length === 0
             ? "all available Countries"
             : `${baseDetails.countries_considered.length} countries`;
 
@@ -214,12 +214,20 @@ const LineGraph = ({
         gridIndex: 0,
         nameLocation: "middle",
         nameGap: 25,
+        offset: -2,
+        nameTextStyle: {
+          padding: [0, 0, 15, 0],
+        },
       },
       {
         name: "Total Percentage (%)",
         gridIndex: 1,
         nameLocation: "middle",
+        offset: -2,
         nameGap: 25,
+        nameTextStyle: {
+          padding: [0, 0, 15, 0],
+        },
       },
     ],
     dataset: datasets,
@@ -277,7 +285,7 @@ const LineGraph = ({
       option={option}
       style={{ height: "475px", width: "100%" }}
       onEvents={onEvents}
-      notMerge={true}
+      notMerge={false}
     />
   );
 };

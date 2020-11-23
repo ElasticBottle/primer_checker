@@ -22,7 +22,7 @@ import "./tableDisplay.css";
 
 import { GlobalFilter } from "./filter";
 
-function DataTable({ title, data, columns, isCombined, isCollapsable }) {
+function DataTable({ title, data, columns, isCollapsable, downloadFileName }) {
   const [showTable, setShowTable] = React.useState(true);
 
   if (isCollapsable) {
@@ -47,7 +47,7 @@ function DataTable({ title, data, columns, isCombined, isCollapsable }) {
               title={title}
               data={data}
               columns={columns}
-              isCombined={isCombined}
+              isCombined={downloadFileName}
             />
           </div>
         </Collapse>
@@ -61,35 +61,16 @@ function DataTable({ title, data, columns, isCombined, isCollapsable }) {
         title={title}
         data={data}
         columns={columns}
-        isCombined={isCombined}
+        downloadFileName={downloadFileName}
       />
     </div>
   );
 }
 
-function TableDisplay({ title, data, columns, isCombined }) {
+function TableDisplay({ title, data, columns, downloadFileName }) {
   const csv_headers = columns.map((header) => {
     return { label: header.Header, key: header.accessor };
   });
-  if (!isCombined) {
-    csv_headers.push(
-      ...[
-        {
-          label: "ISO A3",
-          key: "ISO_A3",
-        },
-        {
-          label: "Virus Match Index (Start, End)",
-          key: "virus_match_idx",
-        },
-        {
-          label: "Primer Match Index (Start, End)",
-          key: "query_match_idx",
-        },
-      ]
-    );
-  }
-
   const filterTypes = React.useMemo(
     () => ({
       // Or, override the default text filter to use
@@ -146,7 +127,10 @@ function TableDisplay({ title, data, columns, isCombined }) {
     {
       columns,
       data,
-      initialState: { pageIndex: 0 },
+      initialState: {
+        pageIndex: 0,
+        hiddenColumns: ["ISO_A3", "virus_match_idx", "query_match_idx"],
+      },
       defaultColumn,
       filterTypes,
     },
@@ -342,7 +326,7 @@ function TableDisplay({ title, data, columns, isCombined }) {
         <CSVLink
           data={data}
           headers={csv_headers}
-          filename={isCombined ? "combined_miss.csv" : "sensitivity_miss.csv"}
+          filename={downloadFileName}
           className="btn btn-dark"
           target="_blank"
         >

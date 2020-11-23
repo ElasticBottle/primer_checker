@@ -11,13 +11,14 @@ import { useHistory } from "react-router-dom";
 import "./resultsPage.css";
 import ItemFilters from "../../components/ItemFilter/itemFilters";
 import DataTable from "../../components/tableDisplay/tableDisplay";
-import LineGraph from "../../components/mutGraphs/lineGraph";
-import BarGraph from "../../components/mutGraphs/barGraph";
+import CombinedLineGraph from "../../components/mutGraphs/combinedLineGraph";
+import BarGraphWrapper from "../../components/mutGraphs/barGraphWrapper";
+import InLineGraph from "../../components/mutGraphs/inLineGraph";
 import MapWithToolTip from "../../components/primerMap/mapWithToolTip";
 
 import worker from "workerize-loader!./dataFilter"; // eslint-disable-line import/no-webpack-loader-syntax
 
-import { debounce, addName } from "../../components/util";
+import { debounce, addName, makeBaseGraphData } from "../../components/util";
 
 const InputData = () => {
   const history = useHistory();
@@ -48,24 +49,23 @@ const ResultPage = ({ results }) => {
 
   // Data to display
   const [dbActual, setDbActual] = React.useState([]);
+  const [mapDb, setMapDb] = React.useState([]);
   const [tableDataset, setTableDataset] = React.useState([]);
-  const [lineData, setLineData] = React.useState([]);
-  const [barData, setBarData] = React.useState([]);
   const [combinedBase, setCombinedBase] = React.useState([]);
   const [combinedName, setCombinedName] = React.useState([]);
-  const [lineCombinedData, setLineCombinedData] = React.useState([]);
   const [tableCombined, setTableCombined] = React.useState([]);
 
   // Filtering for table and graph data
-  const [miss, setMiss] = React.useState([]);
-  const [miss3, setMiss3] = React.useState([]);
-  const [match, setMatch] = React.useState([]);
+  const [miss, setMiss] = React.useState(React.useMemo(() => [], []));
+  const [miss3, setMiss3] = React.useState(React.useMemo(() => [], []));
+  const [match, setMatch] = React.useState(React.useMemo(() => [], []));
   const [timeFrameBrush, setTimeFrameBrush] = React.useState(
     React.useMemo(() => [], [])
   );
+  const setTimeFrameCb = React.useCallback(setTimeFrameBrush, []);
   const [countries, setCountries] = React.useState(React.useMemo(() => [], []));
   const [primers, setPrimers] = React.useState(React.useMemo(() => [], []));
-  const [pType, setPType] = React.useState([]);
+  const [pType, setPType] = React.useState(React.useMemo(() => [], []));
 
   // Filtering for graph data
   const [useCum, setUseCum] = React.useState(false);
@@ -92,87 +92,7 @@ const ResultPage = ({ results }) => {
   // Misc items
   const [isProcessing, setIsProcessing] = React.useState(false);
   const [isProcessingGraphs, setIsProcessingGraphs] = React.useState(false);
-  const updateLineData = React.useCallback(
-    debounce(
-      ({
-        primers,
-        pType,
-        countries,
-        miss,
-        miss3,
-        match,
-        useCum,
-        countryAsTotal,
-        lookBack,
-      }) => {
-        let start = performance.now();
-        instance.current
-          .getTotalSubmission({
-            dbCum: dbCountCum.current,
-            dbDaily: dbCountDaily.current,
-            dateRange: dateRange.current,
-            countries: countries,
-            countryAsTotal: countryAsTotal,
-            useCum: useCum,
-            lookBack: lookBack,
-          })
-          .then((totalSubmission) => {
-            setDbActual(totalSubmission);
-            instance.current
-              .getLineGraphData({
-                baseData: baseGraphData.current,
-                dateRange: dateRange.current,
-                primers: primers,
-                pType: pType,
-                countries: countries,
-                miss: miss,
-                miss3: miss3,
-                match: match,
-                totalSubmission: totalSubmission,
-                useCum: useCum,
-                lookBack: lookBack,
-              })
-              .then((result) => {
-                console.log(
-                  `Time taken for line graph data: ${(
-                    performance.now() - start
-                  ).toFixed(5)} milliseconds`
-                );
-                setLineData(result);
-              });
-          });
-      },
-      500
-    ),
-    []
-  );
-  const updateBarData = React.useCallback(
-    debounce(
-      (lineData, timeFrameBrush, daysBetweenComparison, numberOfBars) => {
-        let start = performance.now();
-        instance.current
-          .makeBarData({
-            graphOverview: lineData,
-            dates: dateRange.current,
-            timeFrameBrush: timeFrameBrush,
-            daysBetweenComparison: daysBetweenComparison,
-            numberOfBars: numberOfBars,
-          })
-          .then((result) => {
-            setBarData(result);
-            console.log("barData :>> ", result);
-            console.log(
-              `Time taken for bar graph data: ${(
-                performance.now() - start
-              ).toFixed(5)} milliseconds`
-            );
-            setIsProcessingGraphs(false);
-          });
-      },
-      500
-    ),
-    []
-  );
+  const setIsProcessingGraphCb = React.useCallback(setIsProcessingGraphs, []);
   const updateTableData = React.useCallback(
     debounce(
       (primers, pType, countries, miss, miss3, match, timeFrameBrush) => {
@@ -227,7 +147,7 @@ const ResultPage = ({ results }) => {
             instance.current
               .makeIntersection(
                 JSON.parse(JSON.stringify(result)),
-                primers.length === 0 ? Object.keys(baseData) : primers
+                primers.length === 0 ? Object.keys(baseData.current) : primers
               )
               .then((result) => {
                 console.log(
@@ -244,49 +164,53 @@ const ResultPage = ({ results }) => {
     ),
     []
   );
-  const updateCombinedLine = React.useCallback(
-    debounce(
-      (
-        combinedBase,
-        combinedName,
-        pType,
-        countries,
-        miss,
-        miss3,
-        match,
-        dbActual,
-        useCum,
-        lookBack
-      ) => {
-        let start = performance.now();
 
+  React.useEffect(() => {
+    if (Object.keys(dbCountCum.current).length !== 0)
+      instance.current
+        .getTotalSubmission({
+          dbCum: dbCountCum.current,
+          dbDaily: dbCountDaily.current,
+          dateRange: dateRange.current,
+          countries: countries,
+          countryAsTotal: countryAsTotal,
+          useCum: useCum,
+          lookBack: lookBack,
+        })
+        .then((totalSubmission) => {
+          setDbActual(totalSubmission);
+        });
+  }, [countries, countryAsTotal, lookBack, useCum]);
+  React.useEffect(() => {
+    if (Object.keys(dbCountCum.current).length !== 0) {
+      if (!useCum) {
+        let date1 = new Date(timeFrameBrush[0] || dateRange.current[0]);
+        let date2 = new Date(
+          timeFrameBrush[1] || dateRange.current[dateRange.current.length - 1]
+        );
+
+        // To calculate the time difference of two dates
+        let Difference_In_Time = date2.getTime() - date1.getTime();
+
+        // To calculate the no. of days between two dates
+        let Difference_In_Days = Difference_In_Time / (1000 * 3600 * 24);
         instance.current
-          .getCombinedLineData(
-            makeBaseGraphData({ [combinedName]: combinedBase }),
-            [combinedName] || [],
-            dateRange.current,
-            pType,
-            countries,
-            miss,
-            miss3,
-            match,
-            dbActual,
-            useCum,
-            lookBack
-          )
-          .then((result) => {
-            setLineCombinedData(result);
-            console.log(
-              `Time taken for creating combined line data: ${(
-                performance.now() - start
-              ).toFixed(5)} milliseconds`
-            );
+          .getTotalSubmission({
+            dbCum: dbCountCum.current,
+            dbDaily: dbCountDaily.current,
+            dateRange: dateRange.current,
+            countries: countries,
+            countryAsTotal: countryAsTotal,
+            useCum: useCum,
+            lookBack: Difference_In_Days,
+            separate: true,
+          })
+          .then((totalSubmission) => {
+            setMapDb(totalSubmission);
           });
-      },
-      500
-    ),
-    []
-  );
+      }
+    }
+  }, [countries, countryAsTotal, lookBack, useCum]);
 
   React.useEffect(() => {
     setDaysBetweenComparison(lookBack === 0 ? 1 : lookBack);
@@ -405,61 +329,17 @@ const ResultPage = ({ results }) => {
     timeFrameBrush,
   ]);
 
-  React.useEffect(() => {
-    if (result.current.length !== 0) {
-      setIsProcessingGraphs(true);
-      updateLineData({
-        primers: primers,
-        pType: pType,
-        countries: countries,
-        miss: miss,
-        miss3: miss3,
-        match: match,
-        useCum: useCum,
-        countryAsTotal: countryAsTotal,
-        lookBack: lookBack,
-      });
-    }
-  }, [
-    updateLineData,
-    primers,
-    pType,
-    countries,
-    miss,
-    miss3,
-    match,
-    useCum,
-    countryAsTotal,
-    lookBack,
-  ]);
-
-  React.useEffect(() => {
-    if (result.current.length !== 0) {
-      updateBarData(
-        lineData,
-        timeFrameBrush,
-        daysBetweenComparison,
-        numberOfBars
-      );
-    }
-  }, [
-    updateBarData,
-    lineData,
-    timeFrameBrush,
-    daysBetweenComparison,
-    numberOfBars,
-  ]);
-
-  const modalData = React.useMemo(
-    () =>
-      showModal
+  const modalData = React.useMemo(() => {
+    if (showModal) {
+      console.log("modalInfo :>> ", modalInfo);
+      return combinedBase.length === 0
         ? tableDataset.filter((value) => {
             let isSameDate = true;
             let isWithinFrame = true;
             let isPrimer = true;
             let isCountry = true;
             if (modalInfo["date"] !== null) {
-              isSameDate = value.date === modalInfo[0];
+              isSameDate = value.date === modalInfo["date"];
             }
             if (
               modalInfo["lookBack"] !== null ||
@@ -480,9 +360,37 @@ const ResultPage = ({ results }) => {
             }
             return (isSameDate || isWithinFrame) && isPrimer && isCountry;
           })
-        : [],
-    [showModal, tableDataset, modalInfo]
-  );
+        : combinedBase.filter((value) => {
+            let isSameDate = true;
+            let isWithinFrame = true;
+            let isPrimer = true;
+            let isCountry = true;
+            if (modalInfo["date"] !== null) {
+              isSameDate = value.date === modalInfo["date"];
+            }
+            if (
+              modalInfo["lookBack"] !== null ||
+              modalInfo["lookBack"] !== -1
+            ) {
+              const selectedDate = new Date(modalInfo["date"]);
+              const startDate = new Date(selectedDate);
+              startDate.setDate(startDate.getDate() - modalInfo["lookBack"]);
+              isWithinFrame =
+                value.date >= startDate.toISOString().slice(0, 10) &&
+                value.date <= modalInfo["date"];
+            }
+            if (modalInfo["primer"] !== null) {
+              isPrimer = value.primer === modalInfo["primer"][0];
+            }
+            if (modalInfo["country"] !== null) {
+              isCountry = value.ISO_A3 === modalInfo["country"];
+            }
+            return (isSameDate || isWithinFrame) && isPrimer && isCountry;
+          });
+    } else {
+      return [];
+    }
+  }, [showModal, combinedBase, tableDataset, modalInfo]);
 
   React.useEffect(() => {
     if (baseTableData.current.length !== 0) {
@@ -490,34 +398,6 @@ const ResultPage = ({ results }) => {
     }
   }, [updateCombinedData, primers, pType, countries, miss, miss3, match]);
 
-  React.useEffect(() => {
-    if (combinedBase.length !== 0) {
-      updateCombinedLine(
-        combinedBase,
-        combinedName,
-        pType,
-        countries,
-        miss,
-        miss3,
-        match,
-        dbActual,
-        useCum,
-        lookBack
-      );
-    }
-  }, [
-    updateCombinedLine,
-    combinedBase,
-    combinedName,
-    pType,
-    countries,
-    miss,
-    miss3,
-    match,
-    dbActual,
-    useCum,
-    lookBack,
-  ]);
   React.useEffect(() => {
     if (combinedBase.length !== 0) {
       instance.current
@@ -535,10 +415,12 @@ const ResultPage = ({ results }) => {
     const endDate = new Date(
       timeFrameBrush[1] || dateRange.current[dateRange.current.length - 1]
     );
-    const startDate = new Date(
-      timeFrameBrush[1] || dateRange.current[dateRange.current.length - 1]
-    );
-    startDate.setDate(startDate.getDate() - lookBack);
+    const startDate = new Date(timeFrameBrush[0] || dateRange.current[0]);
+    // To calculate the time difference of two dates
+    let Difference_In_Time = endDate.getTime() - startDate.getTime();
+
+    // To calculate the no. of days between two dates
+    let Difference_In_Days = Difference_In_Time / (1000 * 3600 * 24);
     return (
       <div className="display-page">
         <Container>
@@ -574,13 +456,13 @@ const ResultPage = ({ results }) => {
             setShowAbsDiff={setShowAbsDiff}
           />
           <DataTable
+            className="mb-5"
             id="collapse-table"
             title={"Overview of Missed Viruses"}
             data={tableDataset}
             columns={overviewColumns}
             isCombined={false}
             isCollapsable={true}
-            className="mb-5"
           />
           <Row className="mb-5">
             <Col
@@ -592,19 +474,27 @@ const ResultPage = ({ results }) => {
                   : 12
               }
             >
-              <LineGraph
-                title={"Genomes with mutation"}
-                title2={"Genomes with mutation in 3' end"}
-                data={lineData}
+              <InLineGraph
+                rawData={baseGraphData.current}
+                dateRange={dateRange.current}
+                totalSubmission={dbActual}
+                setIsProcessingGraphs={setIsProcessingGraphCb}
                 primers={
                   primers.length === 0 ? Object.keys(baseData.current) : primers
                 }
-                dates={dateRange.current}
-                setPrimers={setPrimers}
+                pType={pType}
+                countries={countries}
+                miss={miss}
+                miss3={miss3}
+                match={match}
+                useCum={useCum}
+                lookBack={lookBack}
                 timeFrameBrush={timeFrameBrush}
-                setTimeFrameBrush={setTimeFrameBrush}
+                setTimeFrameBrush={setTimeFrameCb}
                 showModal={showModalCb}
                 setModalInfo={setModalInfo}
+                title={"Genomes with mutation"}
+                title2={"Genomes with mutation in 3' end"}
               />
             </Col>
             {primers.length === 1 ||
@@ -622,8 +512,8 @@ const ResultPage = ({ results }) => {
                       : "Cumulative"
                   }
                   data={tableDataset}
-                  lookBack={!useCum ? lookBack : -1}
-                  db={dbActual}
+                  lookBack={!useCum ? Difference_In_Days : -1}
+                  db={useCum ? dbCountCum.current : mapDb}
                   timeFrameBrush={timeFrameBrush}
                   setTimeFrameBrush={setTimeFrameBrush}
                   showModal={showModalCb}
@@ -633,11 +523,29 @@ const ResultPage = ({ results }) => {
             ) : null}
           </Row>
           {isBar ? (
-            <BarGraph
+            <BarGraphWrapper
+              rawData={baseGraphData.current}
+              dateRange={dateRange.current}
+              totalSubmission={dbActual}
+              setIsProcessingGraphs={setIsProcessingGraphCb}
+              primers={
+                primers.length === 0 ? Object.keys(baseData.current) : primers
+              }
+              pType={pType}
+              countries={countries}
+              miss={miss}
+              miss3={miss3}
+              match={match}
+              useCum={useCum}
+              lookBack={lookBack}
+              timeFrameBrush={timeFrameBrush}
+              daysBetweenComparison={daysBetweenComparison}
+              numberOfBars={numberOfBars}
+              showAbsDiff={showAbsDiff}
+              showModal={showModalCb}
+              setModalInfo={setModalInfo}
               title={"Genomes with mutation"}
               title2={"Percent of genomes with mutation in 3' end"}
-              data={barData}
-              showAbsDiff={showAbsDiff}
               className="mb-5"
             />
           ) : null}
@@ -645,19 +553,23 @@ const ResultPage = ({ results }) => {
             <div>
               <Row className="mb-5">
                 <Col xs={12} lg={6}>
-                  <LineGraph
+                  <CombinedLineGraph
+                    combinedBase={combinedBase}
+                    combinedName={combinedName}
+                    dateRange={dateRange.current}
+                    totalSubmission={dbActual}
+                    setIsProcessingGraphs={setIsProcessingGraphCb}
+                    pType={pType}
+                    countries={countries}
+                    miss={miss}
+                    miss3={miss3}
+                    match={match}
+                    useCum={useCum}
+                    lookBack={lookBack}
                     title={"Genomes with mutation (Combined)"}
                     title2={"Genomes with mutation in 3' end (Combined)"}
-                    data={lineCombinedData}
-                    primers={
-                      primers.length === 0
-                        ? [Object.keys(baseData.current).join(", ")]
-                        : [primers.join(", ")]
-                    }
-                    dates={dateRange.current}
-                    setPrimers={setPrimers}
                     timeFrameBrush={timeFrameBrush}
-                    setTimeFrameBrush={setTimeFrameBrush}
+                    setTimeFrameBrush={setTimeFrameCb}
                     showModal={showModalCb}
                     setModalInfo={setModalInfo}
                   />
@@ -675,8 +587,8 @@ const ResultPage = ({ results }) => {
                         : "Cumulative"
                     }
                     data={tableCombined}
-                    lookBack={!useCum ? lookBack : -1}
-                    db={dbActual}
+                    lookBack={!useCum ? Difference_In_Days : -1}
+                    db={useCum ? dbCountCum.current : mapDb}
                     timeFrameBrush={timeFrameBrush}
                     setTimeFrameBrush={setTimeFrameBrush}
                     showModal={showModalCb}
@@ -709,8 +621,10 @@ const ResultPage = ({ results }) => {
               id="detail-table"
               title={""}
               data={modalData}
-              columns={overviewColumns}
-              isCombined={false}
+              columns={
+                combinedBase.length === 0 ? overviewColumns : combinedCols
+              }
+              downloadFileName={"selected_details.csv"}
               isCollapsable={false}
               className="mb-5"
             />
@@ -741,28 +655,6 @@ function parseDb(rawData, database) {
     return JSON.parse(JSON.stringify(rawData[1][database]));
   }
   return {};
-}
-
-function makeBaseGraphData(baseData) {
-  /**
-   * Converts the incoming {primerName: Missed virus} to
-   * {primerName: Date: Missed Virus}
-   *
-   * @param {Object} baseData: contains the primerDetails
-   * @returns {Object}: Mapping from {primerName: Date: Missed Virus}
-   */
-
-  const toReturn = {};
-  for (const primerName of Object.keys(baseData)) {
-    const result = {};
-    for (const details of baseData[primerName]) {
-      const toAdd = result[details.date] || [];
-      toAdd.push(addName(primerName)(details));
-      result[details.date] = toAdd;
-    }
-    toReturn[primerName] = result;
-  }
-  return toReturn;
 }
 
 function makeTableData(primerDetails) {

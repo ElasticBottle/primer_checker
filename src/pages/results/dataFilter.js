@@ -198,6 +198,7 @@ export function getTotalSubmission({
   countryAsTotal,
   useCum,
   lookBack,
+  separate = false,
 }) {
   if (useCum) {
     const result = {};
@@ -209,6 +210,9 @@ export function getTotalSubmission({
     return result;
   } else {
     const result = getRangeDbCount(dbDaily, lookBack, dateRange);
+    if (separate) {
+      return result;
+    }
     for (const date of dateRange) {
       result[date] = countryAsTotal
         ? getCountriesTotal(result, countries, date)
@@ -350,9 +354,6 @@ function buildLineGraphData({
     );
   }
 
-  console.log(
-    `Finish graph data compute ${(performance.now() - start).toFixed(5)} ms`
-  );
   return useCum
     ? results.map((result) => {
         return accumulate(result, -1);
@@ -513,8 +514,7 @@ export function makeIntersection(tableData, primerNames) {
    * @returns {Array}: List of virus that is missed by all primers
    * @returns {string}: name of the combined primers
    */
-  console.log("tableData :>> ", tableData);
-  console.log("primerNames :>> ", primerNames);
+
   let intersection = [];
   if (primerNames.length > 1) {
     const name = primerNames.join(", ");
