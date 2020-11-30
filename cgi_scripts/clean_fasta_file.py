@@ -62,7 +62,7 @@ def fasta_file_cleaner(
             return False, count, format_err + 1, first_line
         elif week_lookBack != -1 and (
             (datetime.date.today() - datetime.timedelta(weeks=week_lookBack))
-            > datetime.date(date[0], date[1], date[2])
+            > datetime.date(int(date[0]), int(date[1]), int(date[2]))
         ):
             print(f"outside date range {details}")
             return False, count, format_err + 1, first_line
