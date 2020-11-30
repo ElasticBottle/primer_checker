@@ -2,7 +2,10 @@ import React, { useState, useEffect } from "react";
 
 import Form from "react-bootstrap/Form";
 import Row from "react-bootstrap/Row";
+import Col from "react-bootstrap/Col";
 import Button from "react-bootstrap/Button";
+import Card from "react-bootstrap/Card";
+import Accordion from "react-bootstrap/Accordion";
 import Container from "react-bootstrap/Container";
 import Collapse from "react-bootstrap/Collapse";
 import Spinner from "react-bootstrap/Spinner";
@@ -21,6 +24,7 @@ const UploadPage = ({ setResults, setError }) => {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [displayedFiles, setDisplayedFiles] = useState([]);
   const [validFiles, setValidFiles] = useState([]);
+  const [blastAll, setBlastAll] = useState(false);
   const [textFieldFasta, setTextFieldFasta] = useState([]);
   const [fileErrorMessage, setFileErrorMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
@@ -77,11 +81,16 @@ const UploadPage = ({ setResults, setError }) => {
   };
   const submitForm = () => {
     console.log(validFiles, textFieldFasta);
+    console.log({ files: textFieldFasta, blastAll: blastAll });
     setOpen(!open);
     setIsLoading(true);
     setTimeout(() => {
       primerCheckService
-        .checkFiles(validFiles.length === 0 ? textFieldFasta : validFiles)
+        .checkFiles(
+          validFiles.length === 0
+            ? { files: textFieldFasta, blastAll: blastAll }
+            : { files: validFiles, blastAll: blastAll }
+        )
         .then((response) => {
           resetStates();
           setIsLoading(false);
@@ -101,9 +110,45 @@ const UploadPage = ({ setResults, setError }) => {
       <Collapse id={openId} in={open}>
         <div className="collapse-container">
           <Container>
-            <Button onClick={() => history.push("/manualUpload")}>
-              Manual Upload
-            </Button>
+            <h2 className="mb-3 methodology-title">Methodology</h2>
+            <p className="mb-3 methodology-body">
+              Primer Checker blast against all sequences from the past 3 months
+              in GISAID database of high quality genomes (defined as &lt;1% Ns
+              and &lt;0.05% unique non-synonymous mutations) with one or more
+              mutations in either forward, probe or reverse primer region. This
+              does not necessarily indicate a primer would not function but
+              serves as a guide to variability of the targeted region.
+            </p>
+            <Accordion className="mb-3">
+              <Card>
+                <Accordion.Toggle as={Card.Header} eventKey="0">
+                  More Settings
+                </Accordion.Toggle>
+                <Accordion.Collapse eventKey="0">
+                  <Card.Body>
+                    <Row>
+                      <Col xs="12" md="6">
+                        <Form.Check
+                          type="checkbox"
+                          label="Blast against all database"
+                          onChange={(e) => setBlastAll(e.target.checked)}
+                        />
+                      </Col>
+                      <Col xs="12" md="6" className="manual-button">
+                        <Button
+                          onClick={() => history.push("/manualUpload")}
+                          size="sm"
+                          variant="light"
+                        >
+                          Manual Upload
+                        </Button>
+                      </Col>
+                    </Row>
+                  </Card.Body>
+                </Accordion.Collapse>
+              </Card>
+            </Accordion>
+
             <Form noValidate>
               <TextArea setTextFieldFasta={setTextFieldFasta} />
               <p className="alternative-upload">OR</p>

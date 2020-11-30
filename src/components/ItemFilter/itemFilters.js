@@ -15,11 +15,11 @@ import "./itemFilter.css";
 
 const help = {
   miss:
-    "Sets the min and max number of misses in the virus sequence to be consider a miss",
+    "Sets the min and max number of mutations in primer region to be consider a mutation",
   miss3:
-    "Sets the min and max number of misses in the 3' end (last 5 nucleotides) of the virus sequence to be considered a miss",
+    "Sets the min and max number of mutations in the 3' end (last 5 nucleotides) of the virus sequence to be considered a mutation",
   match:
-    "Sets the min and max percentage of match for a virus sequence to be considered a miss",
+    "Sets the min and max percentage of match for a virus sequence to be considered a mutation",
   primer: "Select the primers to display",
   pType: "Select which part of the primer to display",
   country:
@@ -79,7 +79,7 @@ const MissDefinition = ({
         <InputGroup size="sm" className="">
           <InputGroup.Prepend>
             <InputGroup.Text>
-              Total Misses
+              Total Mutation
               <AiOutlineQuestionCircle className="pl-1" data-tip={help.miss} />
             </InputGroup.Text>
           </InputGroup.Prepend>
@@ -99,7 +99,7 @@ const MissDefinition = ({
         <InputGroup size="sm">
           <InputGroup.Prepend>
             <InputGroup.Text>
-              Misses in 3' End
+              Mutation in 3' End
               <AiOutlineQuestionCircle className="pl-1" data-tip={help.miss3} />
             </InputGroup.Text>
           </InputGroup.Prepend>
@@ -428,7 +428,7 @@ const AdvanceFilters = ({
           <Row>
             <FilterGroup
               variant={variant}
-              buttonText={"Adjust Miss Definition"}
+              buttonText={"Adjust Mutation Definition"}
               groupId={"miss-definitions"}
               component={
                 <MissDefinition

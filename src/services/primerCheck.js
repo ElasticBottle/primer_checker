@@ -9,9 +9,8 @@ const checkFile = (file) => {
 };
 
 const checkFiles = (files) => {
-  const to_send = { data: files };
-  return axios.post(`${baseURL}`, to_send);
-  // return axios.post(`${baseURL}/check_primers`, to_send);
+  return axios.post(`${baseURL}`, files);
+  // return axios.post(`${baseURL}/check_primers`, files);
 };
 
 export default { checkFile, checkFiles };

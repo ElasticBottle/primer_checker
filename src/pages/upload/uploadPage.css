@@ -6,6 +6,20 @@
     font-size: larger;
 }
 
+.methodology-title{
+    font-size: large;   
+}
+
+.methodology-body{
+    color: gray;
+    line-height: 30px;
+    font-size: small;   
+}
+
+.manual-button {
+    text-align: end;
+}
+
 .upload-error-message {
     justify-content: center;
     color: red;
@@ -16,7 +30,6 @@
     text-align: center;
     align-items: center;
 }
-
 
 
 .loader {

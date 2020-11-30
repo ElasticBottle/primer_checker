@@ -210,7 +210,7 @@ const ResultPage = ({ results }) => {
           });
       }
     }
-  }, [countries, countryAsTotal, lookBack, useCum]);
+  }, [timeFrameBrush, countries, countryAsTotal, lookBack, useCum]);
 
   React.useEffect(() => {
     setDaysBetweenComparison(lookBack === 0 ? 1 : lookBack);
@@ -251,11 +251,11 @@ const ResultPage = ({ results }) => {
         accessor: "match_pct",
       },
       {
-        Header: "Total Miss",
+        Header: "Total Mutation in Primer Region",
         accessor: "misses",
       },
       {
-        Header: "Misses In 3' End",
+        Header: "Mutation in Primer Region's 3' End",
         accessor: "misses3",
       },
       {
@@ -455,15 +455,7 @@ const ResultPage = ({ results }) => {
             showAbsDiff={showAbsDiff}
             setShowAbsDiff={setShowAbsDiff}
           />
-          <DataTable
-            className="mb-5"
-            id="collapse-table"
-            title={"Overview of Missed Viruses"}
-            data={tableDataset}
-            columns={overviewColumns}
-            isCombined={false}
-            isCollapsable={true}
-          />
+
           <Row className="mb-5">
             <Col
               xs={12}
@@ -501,7 +493,7 @@ const ResultPage = ({ results }) => {
             Object.keys(baseData.current).length === 1 ? (
               <Col xs={12} lg={6}>
                 <MapWithToolTip
-                  title={"Map of Virus Missed"}
+                  title={"Map of Virus with Mutation in Primer Region"}
                   subtitle={
                     !useCum
                       ? `From ${startDate
@@ -549,6 +541,15 @@ const ResultPage = ({ results }) => {
               className="mb-5"
             />
           ) : null}
+          <DataTable
+            className="mb-5"
+            id="collapse-table"
+            title={"Overview of Viruses with Mutation in Primer Region"}
+            data={tableDataset}
+            columns={overviewColumns}
+            isCombined={false}
+            isCollapsable={true}
+          />
           <Collapse in={combinedBase.length !== 0}>
             <div>
               <Row className="mb-5">
@@ -576,7 +577,9 @@ const ResultPage = ({ results }) => {
                 </Col>
                 <Col xs={12} lg={6}>
                   <MapWithToolTip
-                    title={"Map of Virus Missed (Combined)"}
+                    title={
+                      "Map of Virus with Mutation in Primer Region (Combined)"
+                    }
                     subtitle={
                       !useCum
                         ? `From ${startDate
@@ -597,7 +600,7 @@ const ResultPage = ({ results }) => {
                 </Col>
               </Row>
               <DataTable
-                title={"Missed Viruses (Combined)"}
+                title={"Viruses with Mutation in Primer Region (Combined)"}
                 data={tableCombined}
                 columns={combinedCols}
                 isCombined={true}
@@ -614,7 +617,7 @@ const ResultPage = ({ results }) => {
           aria-labelledby="missed-details-modal"
         >
           <Modal.Header closeButton id="missed-details-modal">
-            <Modal.Title>Missed Viruses</Modal.Title>
+            <Modal.Title>Viruses with Mutation in Primer Region</Modal.Title>
           </Modal.Header>
           <Modal.Body>
             <DataTable

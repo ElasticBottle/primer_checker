@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { BrowserRouter as Router, Switch, Route, Link } from "react-router-dom";
-import ReactHtmlParser from "react-html-parser";
 import ManualPage from "./pages/manual/manualPage";
 import UploadPage from "./pages/upload/uploadPage";
 import ResultPage from "./pages/results/resultsPage";
