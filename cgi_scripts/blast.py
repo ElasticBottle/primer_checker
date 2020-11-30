@@ -455,7 +455,7 @@ def blast(
             f"-reward",
             "2",
             f"-num_threads",
-            "4",
+            "3",
             f"-outfmt",
             f"10 {' '.join(blast_headers.keys())}",
             "-out",

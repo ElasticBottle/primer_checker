@@ -12,6 +12,7 @@ def fasta_file_cleaner(
     format_err: int,
     first_line: bool,
     output_stream,
+    week_lookBack: int,
 ) -> Tuple[bool, int, int]:
     """
     Checks if a given [str_processing] is clean
@@ -29,6 +30,7 @@ def fasta_file_cleaner(
         - count (int): The current number of valid sequences written
         - format_err (int): The current number of invalid sequences discarded
         - output_stream (File Object): The stream to write the output content
+        - week-lookBack (int): The lookback period for which data should be considered.
 
     Returns
 
@@ -58,6 +60,12 @@ def fasta_file_cleaner(
         ):
             print(f"rejected {details}")
             return False, count, format_err + 1, first_line
+        elif week_lookBack != -1 and (
+            (datetime.date.today() - datetime.timedelta(weeks=week_lookBack))
+            > datetime.date(date[0], date[1], date[2])
+        ):
+            print(f"outside date range {details}")
+            return False, count, format_err + 1, first_line
 
         # Valid identifier, write sequence to output
         else:
@@ -73,7 +81,7 @@ def fasta_file_cleaner(
     return to_output, count, format_err, first_line
 
 
-def build_base_fasta_file(inp: str, out_file: str):
+def build_base_fasta_file(inp: str, out_file: str, week_lookBack: int):
     """
     Cleans the fasta file from GISAID to include only those with proper date and writes it to disk
 
@@ -81,6 +89,7 @@ def build_base_fasta_file(inp: str, out_file: str):
 
         - inp (str): Path to the input fasta file
         - out_file (str): Path to the output fasta file
+        - week-lookBack (int): The lookback period for which data should be considered.
 
     Returns:
 
@@ -100,6 +109,7 @@ def build_base_fasta_file(inp: str, out_file: str):
                     format_errors,
                     first_line,
                     output,
+                    week_lookBack=week_lookBack,
                 )
                 if to_output == "":
                     break
@@ -132,6 +142,14 @@ def parse_args():
         default=f"{base_path}/samples/test.fasta",
         help="output for the cleaned fasta file",
     )
+    parser.add_argument(
+        "-wl",
+        "--week_lookBack",
+        type=int,
+        dest="week_lookBack",
+        default=-1,
+        help="number of weeks prior for sequence to be considered",
+    )
     return parser.parse_args()
 
 
@@ -139,10 +157,7 @@ def main():
     start = time.time()
     args = parse_args()
 
-    _ = build_base_fasta_file(
-        args.fasta_file,
-        args.clean_fasta_out,
-    )
+    _ = build_base_fasta_file(args.fasta_file, args.clean_fasta_out, args.week_lookBack)
 
     print(f"Time Taken: {time.time() - start:.2f}")
 

@@ -24,6 +24,7 @@ tmp_path = f"{base_path}/current/tmp"
 primer_path = f"{base_path}/gamma/primer"
 blast_dir = f"{base_path}/local/anaconda3/envs/blast/bin/"
 blast_db_loc = f"{support_files_path}/database{(datetime.datetime.now()- datetime.timedelta(minutes=30)).strftime('%Y-%m-%d')}"
+blast_db_loc_3months = f"{support_files_path}/database{(datetime.datetime.now()- datetime.timedelta(minutes=30)).strftime('%Y-%m-%d')}_3MONTHS"
 fasta_input_path = f"{tmp_path}/"
 output_path = f"{tmp_path}/"
 timing_path = f"{primer_path}/support_files/"
@@ -93,6 +94,7 @@ def analyse_primer(
     input_store_path: str,
     output_file_path: str,
     fasta_db_path: str,
+    blastAll: bool,
 ):
     """
     Args:
@@ -103,6 +105,7 @@ def analyse_primer(
             be written too.
         - fasta_db_path (str): Mapping Sequence identifier to
             their sequence.
+        - blastAll (bool): If true, blast against all of Gisaid's database, otherwise, against the last 3 months.
 
     Returns:
 
@@ -125,7 +128,7 @@ def analyse_primer(
 
     results = blast(
         blast_bin=blast_dir,
-        blast_db_loc=blast_db_loc,
+        blast_db_loc=blast_db_loc if blastAll else blast_db_loc_3months,
         query_seq=f"{input_store_path}{filename}",
         fasta_db_path=fasta_db_path,
         primers=primers,
@@ -157,7 +160,7 @@ def main():
     to_send = {}
     filenames = {}
 
-    with concurrent.futures.ProcessPoolExecutor(max_workers=2) as executor:
+    with concurrent.futures.ProcessPoolExecutor(max_workers=3) as executor:
         jobs = {
             executor.submit(
                 partial(
@@ -165,10 +168,11 @@ def main():
                     input_store_path=fasta_input_path,
                     output_file_path=output_path,
                     fasta_db_path=fasta_db_path,
+                    blastAll=input_files["blastAll"],
                 ),
                 file,
             ): file.get("id", None)
-            for file in input_files.get("data", [])
+            for file in input_files.get("files", [])
         }
         for future in concurrent.futures.as_completed(jobs):
             primerId = jobs[future]
