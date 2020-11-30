@@ -189,7 +189,7 @@ def main():
                 >= (datetime.date.today() - datetime.timedelta(weeks=13)).strftime(
                     "%Y-%m-%d"
                 ),
-                database_counts[0],
+                database_counts[0].items(),
             )
         )
     with open(database_count_daily_path, "r") as f:
@@ -200,7 +200,7 @@ def main():
                 >= (datetime.date.today() - datetime.timedelta(weeks=13)).strftime(
                     "%Y-%m-%d"
                 ),
-                database_counts[1],
+                database_counts[1].items(),
             )
         )
 
