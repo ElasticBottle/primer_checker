@@ -116,8 +116,8 @@ def analyse_primer(
 
     primerId = input_seq.get("id", None)
     content = input_seq.get("content", None)
-    _, fwd, _, rev, _, prb = content.split()
-    primers = {"fwd": fwd, "rev": rev, "prb": prb}
+    fwd_str, fwd, rev_str, rev, prb_str, prb = content.split()
+    primers = {fwd_str[1:]: fwd, rev_str[1:]: rev, prb_str[1:]: prb}
 
     if not primerId:
         raise Exception(f"Invalid Id given {primerId}")

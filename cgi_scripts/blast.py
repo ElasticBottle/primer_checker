@@ -505,9 +505,10 @@ def blast(
 
     if primers is None:
         with open(query_seq, "r") as f:
-            content = [item.strip() for item in f.readlines()]
-            _, fwd, _, rev, _, prb = content
-            primers = {"fwd": fwd, "rev": rev, "prb": prb}
+            fwd_str, fwd, rev_str, rev, prb_str, prb = [
+                item.strip() for item in f.readlines()
+            ]
+            primers = {fwd_str[1:]: fwd, rev_str[1:]: rev, prb_str[1:]: prb}
     connection = sqlite3.connect(fasta_db_path)
     results = clean_missed_results(df, connection, primers)
     connection.close()
