@@ -49,7 +49,6 @@ const ResultPage = ({ results }) => {
 
   // Data to display
   const [dbActual, setDbActual] = React.useState([]);
-  const [mapDb, setMapDb] = React.useState([]);
   const [tableDataset, setTableDataset] = React.useState([]);
   const [combinedBase, setCombinedBase] = React.useState([]);
   const [combinedName, setCombinedName] = React.useState([]);
@@ -76,7 +75,8 @@ const ResultPage = ({ results }) => {
     lookBack
   );
   const [numberOfBars, setNumberOfBars] = React.useState(1);
-  const [showAbsDiff, setShowAbsDiff] = React.useState(true);
+  const [showAbsDiff, setShowAbsDiff] = React.useState(false);
+  const [barCum, setBarCum] = React.useState(true);
 
   // Detail Modal
   const [showModal, setShowModal] = React.useState(false);
@@ -181,36 +181,6 @@ const ResultPage = ({ results }) => {
           setDbActual(totalSubmission);
         });
   }, [countries, countryAsTotal, lookBack, useCum]);
-  React.useEffect(() => {
-    if (Object.keys(dbCountCum.current).length !== 0) {
-      if (!useCum) {
-        let date1 = new Date(timeFrameBrush[0] || dateRange.current[0]);
-        let date2 = new Date(
-          timeFrameBrush[1] || dateRange.current[dateRange.current.length - 1]
-        );
-
-        // To calculate the time difference of two dates
-        let Difference_In_Time = date2.getTime() - date1.getTime();
-
-        // To calculate the no. of days between two dates
-        let Difference_In_Days = Difference_In_Time / (1000 * 3600 * 24);
-        instance.current
-          .getTotalSubmission({
-            dbCum: dbCountCum.current,
-            dbDaily: dbCountDaily.current,
-            dateRange: dateRange.current,
-            countries: countries,
-            countryAsTotal: countryAsTotal,
-            useCum: useCum,
-            lookBack: Difference_In_Days,
-            separate: true,
-          })
-          .then((totalSubmission) => {
-            setMapDb(totalSubmission);
-          });
-      }
-    }
-  }, [timeFrameBrush, countries, countryAsTotal, lookBack, useCum]);
 
   React.useEffect(() => {
     setDaysBetweenComparison(lookBack === 0 ? 1 : lookBack);
@@ -270,6 +240,11 @@ const ResultPage = ({ results }) => {
         accessor: "country_name",
         disableFilters: true,
       },
+      {
+        Header: "Alpha 3 Code",
+        accessor: "ISO_A3",
+        disableFilters: true,
+      },
     ],
     []
   );
@@ -303,6 +278,11 @@ const ResultPage = ({ results }) => {
         accessor: "country_name",
         disableFilters: true,
       },
+      {
+        Header: "Alpha 3 Code",
+        accessor: "ISO_A3",
+        disableFilters: true,
+      },
     ],
     []
   );
@@ -333,7 +313,7 @@ const ResultPage = ({ results }) => {
     if (showModal) {
       console.log("modalInfo :>> ", modalInfo);
       return combinedBase.length === 0
-        ? tableDataset.filter((value) => {
+        ? baseTableData.current.filter((value) => {
             let isSameDate = true;
             let isWithinFrame = true;
             let isPrimer = true;
@@ -342,7 +322,7 @@ const ResultPage = ({ results }) => {
               isSameDate = value.date === modalInfo["date"];
             }
             if (
-              modalInfo["lookBack"] !== null ||
+              modalInfo["lookBack"] !== null &&
               modalInfo["lookBack"] !== -1
             ) {
               const selectedDate = new Date(modalInfo["date"]);
@@ -390,7 +370,7 @@ const ResultPage = ({ results }) => {
     } else {
       return [];
     }
-  }, [showModal, combinedBase, tableDataset, modalInfo]);
+  }, [showModal, combinedBase, modalInfo]);
 
   React.useEffect(() => {
     if (baseTableData.current.length !== 0) {
@@ -416,11 +396,7 @@ const ResultPage = ({ results }) => {
       timeFrameBrush[1] || dateRange.current[dateRange.current.length - 1]
     );
     const startDate = new Date(timeFrameBrush[0] || dateRange.current[0]);
-    // To calculate the time difference of two dates
-    let Difference_In_Time = endDate.getTime() - startDate.getTime();
 
-    // To calculate the no. of days between two dates
-    let Difference_In_Days = Difference_In_Time / (1000 * 3600 * 24);
     return (
       <div className="display-page">
         <Container>
@@ -454,6 +430,8 @@ const ResultPage = ({ results }) => {
             setNumberOfBars={setNumberOfBars}
             showAbsDiff={showAbsDiff}
             setShowAbsDiff={setShowAbsDiff}
+            barCum={barCum}
+            setBarCum={setBarCum}
           />
 
           <Row className="mb-5">
@@ -504,8 +482,9 @@ const ResultPage = ({ results }) => {
                       : "Cumulative"
                   }
                   data={tableDataset}
-                  lookBack={!useCum ? Difference_In_Days : -1}
-                  db={useCum ? dbCountCum.current : mapDb}
+                  db={useCum ? dbCountCum.current : dbCountDaily.current}
+                  dateRange={dateRange.current}
+                  useCum={useCum}
                   timeFrameBrush={timeFrameBrush}
                   setTimeFrameBrush={setTimeFrameBrush}
                   showModal={showModalCb}
@@ -518,7 +497,7 @@ const ResultPage = ({ results }) => {
             <BarGraphWrapper
               rawData={baseGraphData.current}
               dateRange={dateRange.current}
-              totalSubmission={dbActual}
+              totalSubmission={barCum ? dbCountCum.current : dbActual}
               setIsProcessingGraphs={setIsProcessingGraphCb}
               primers={
                 primers.length === 0 ? Object.keys(baseData.current) : primers
@@ -528,7 +507,7 @@ const ResultPage = ({ results }) => {
               miss={miss}
               miss3={miss3}
               match={match}
-              useCum={useCum}
+              useCum={barCum}
               lookBack={lookBack}
               timeFrameBrush={timeFrameBrush}
               daysBetweenComparison={daysBetweenComparison}
@@ -590,8 +569,9 @@ const ResultPage = ({ results }) => {
                         : "Cumulative"
                     }
                     data={tableCombined}
-                    lookBack={!useCum ? Difference_In_Days : -1}
-                    db={useCum ? dbCountCum.current : mapDb}
+                    db={useCum ? dbCountCum.current : dbCountDaily.current}
+                    dateRange={dateRange.current}
+                    useCum={useCum}
                     timeFrameBrush={timeFrameBrush}
                     setTimeFrameBrush={setTimeFrameBrush}
                     showModal={showModalCb}

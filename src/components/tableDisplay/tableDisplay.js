@@ -129,7 +129,7 @@ function TableDisplay({ title, data, columns, downloadFileName }) {
       data,
       initialState: {
         pageIndex: 0,
-        hiddenColumns: ["ISO_A3", "virus_match_idx", "query_match_idx"],
+        hiddenColumns: ["virus_match_idx", "query_match_idx"],
       },
       defaultColumn,
       filterTypes,

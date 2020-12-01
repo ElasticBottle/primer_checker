@@ -27,7 +27,6 @@ const BarGraphWrapper = ({
   title2,
 }) => {
   const instance = React.useRef(worker());
-
   const [barData, setBarData] = React.useState([]);
 
   const updateBarData = React.useCallback(
@@ -47,6 +46,7 @@ const BarGraphWrapper = ({
         numberOfBars
       ) => {
         let start = performance.now();
+
         setIsProcessingGraphs(true);
         instance.current
           .getLineGraphData({
@@ -63,24 +63,23 @@ const BarGraphWrapper = ({
             lookBack: lookBack,
           })
           .then((lineData) => {
-            instance.current
-              .makeBarData({
-                graphOverview: lineData,
-                dates: dateRange,
-                timeFrameBrush: timeFrameBrush,
-                daysBetweenComparison: daysBetweenComparison,
-                numberOfBars: numberOfBars,
-              })
-              .then((result) => {
-                setBarData(result);
-                console.log("barData :>> ", result);
-                console.log(
-                  `Time taken for bar graph data: ${(
-                    performance.now() - start
-                  ).toFixed(5)} milliseconds`
-                );
-                setIsProcessingGraphs(false);
-              });
+            return instance.current.makeBarData({
+              graphOverview: lineData,
+              dates: dateRange,
+              timeFrameBrush: timeFrameBrush,
+              daysBetweenComparison: daysBetweenComparison,
+              numberOfBars: numberOfBars,
+            });
+          })
+          .then((result) => {
+            setBarData(result);
+            console.log("barData :>> ", result);
+            console.log(
+              `Time taken for bar graph data: ${(
+                performance.now() - start
+              ).toFixed(5)} milliseconds`
+            );
+            setIsProcessingGraphs(false);
           });
       },
       500
@@ -88,6 +87,12 @@ const BarGraphWrapper = ({
     []
   );
   React.useEffect(() => {
+    const submission = { ...totalSubmission };
+    if (useCum) {
+      for (const date of Object.keys(totalSubmission)) {
+        submission[date] = totalSubmission[date].total;
+      }
+    }
     updateBarData(
       primers,
       pType,
@@ -97,7 +102,7 @@ const BarGraphWrapper = ({
       match,
       useCum,
       lookBack,
-      totalSubmission,
+      submission,
       timeFrameBrush,
       daysBetweenComparison,
       numberOfBars
@@ -124,7 +129,7 @@ const BarGraphWrapper = ({
         title={title}
         title2={title2}
         data={barData}
-        showAbsDiff={showAbsDiff}
+        showAbsDiff={useCum ? !useCum : showAbsDiff}
         showModal={showModal}
         setModalInfo={setModalInfo}
       />
