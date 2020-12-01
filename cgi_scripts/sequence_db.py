@@ -111,7 +111,7 @@ def parse_args():
         "--fasta-seq-dict-input",
         type=str,
         dest="fasta_seq_dict_input",
-        default="D:/Datasets/GISAID_Update_Analysis/blast/corona2020_export.fasta.clean",
+        default="D:/Datasets/GISAID/blast/test.fasta",
         help="Path to the fasta file used to build the Blast database",
     )
     parser.add_argument(
@@ -119,7 +119,7 @@ def parse_args():
         "--fasta-seq-dict-output",
         type=str,
         dest="fasta_seq_dict_output",
-        default="C:/Users/Winston/Documents/Code/intern_and_work/Astar/primer_checker/backend/models/seq_db.db",
+        default="D:/Datasets/GISAID/blast/seq_db.db",
         help="Path to the sql database file mapping identifies to sequences used to build the Blast database",
     )
     return parser.parse_args()

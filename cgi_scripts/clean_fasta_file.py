@@ -124,14 +124,14 @@ def parse_args():
         description="Cleans fasta file for ill formatted virus identifiers",
         epilog="Any errors, please open an issue!",
     )
-    base_path = "C:/Users/Winston/Documents/Code/intern_and_work/Astar/primer_checker/primer_mutation_starter_pack"
+    base_path = "D:/Datasets/GISAID/blast"
 
     parser.add_argument(
         "-ff",
         "--fasta_file",
         type=str,
         dest="fasta_file",
-        default=f"{base_path}/samples/corona2020_export.fasta",
+        default=f"{base_path}/corona2020_export.fasta",
         help=" location for the fasta file which will be first cleaned and then used to build a blast database",
     )
     parser.add_argument(
@@ -139,7 +139,7 @@ def parse_args():
         "--cleaned_fasta_out",
         type=str,
         dest="clean_fasta_out",
-        default=f"{base_path}/samples/test.fasta",
+        default=f"{base_path}/test.fasta",
         help="output for the cleaned fasta file",
     )
     parser.add_argument(

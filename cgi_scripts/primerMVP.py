@@ -183,25 +183,33 @@ def main():
     database_counts = []
     with open(database_count_path, "r") as f:
         database_counts.append(json.load(f))
-        database_counts[0] = dict(
-            filter(
-                lambda x: x[0]
-                >= (datetime.date.today() - datetime.timedelta(weeks=13)).strftime(
-                    "%Y-%m-%d"
-                ),
-                database_counts[0].items(),
+        database_counts[0] = (
+            dict(
+                filter(
+                    lambda x: x[0]
+                    >= (datetime.date.today() - datetime.timedelta(weeks=13)).strftime(
+                        "%Y-%m-%d"
+                    ),
+                    database_counts[0].items(),
+                )
             )
+            if not input_files["blastAll"]
+            else database_counts[0]
         )
     with open(database_count_daily_path, "r") as f:
         database_counts.append(json.load(f))
-        database_counts[1] = dict(
-            filter(
-                lambda x: x[0]
-                >= (datetime.date.today() - datetime.timedelta(weeks=13)).strftime(
-                    "%Y-%m-%d"
-                ),
-                database_counts[1].items(),
+        database_counts[1] = (
+            dict(
+                filter(
+                    lambda x: x[0]
+                    >= (datetime.date.today() - datetime.timedelta(weeks=13)).strftime(
+                        "%Y-%m-%d"
+                    ),
+                    database_counts[1].items(),
+                )
             )
+            if not input_files["blastAll"]
+            else database_counts[1]
         )
 
     print(

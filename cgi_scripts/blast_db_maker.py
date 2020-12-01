@@ -35,14 +35,14 @@ def parse_args():
         description="Builds a blast database from a fasta file",
         epilog="Any errors, please open an issue!",
     )
-    base_path = "C:/Users/Winston/Documents/Code/intern_and_work/Astar/primer_checker/primer_mutation_starter_pack"
+    base_path = "D:/Datasets/GISAID/blast/"
 
     parser.add_argument(
         "-ff",
         "--fasta_file",
         type=str,
         dest="fasta_file",
-        default=f"{base_path}/samples/cleaned.fasta",
+        default=f"{base_path}/test.fasta",
         help=" location for the fasta file which will be first cleaned and then used to build a blast database",
     )
     parser.add_argument(
@@ -58,7 +58,7 @@ def parse_args():
         "--blast_db_output",
         type=str,
         dest="blast_db_out",
-        default="D:/Datasets/GISAID_Update_Analysis/blast/blastdb/database",
+        default="D:/Datasets/GISAID/blast/blastdb/database",
         help="Path to the blast database",
     )
     return parser.parse_args()

@@ -147,7 +147,9 @@ def match_partial_seq(fasta_db: Connection, primers: Dict[str, str]) -> Callable
             if match_end_idx < match_start_idx:
                 match_start_idx = match_start_idx + (query_start_idx - 1)
                 match_end_idx = match_end_idx - (query_length - query_end_idx)
-                actual_seq = seq[match_start_idx + 1 : match_end_idx : -1].upper()
+                actual_seq = seq[match_start_idx - 1 : match_end_idx - 2 : -1].upper()
+                if query_id == "fwd":
+                    actual_seq = "nope"
             else:
                 match_start_idx = match_start_idx - (query_start_idx - 1)
                 match_end_idx = match_end_idx + (query_length - query_end_idx)
@@ -283,6 +285,10 @@ def clean_missed_results(
             - "query_match_idx"
     """
     # ToDo (EB): Consider dropping columns directly from blast to reduce memory consumption
+
+    result = result.iloc[
+        result.groupby(["query_id", "match_id"])["expected_value"].idxmin().values, :
+    ]
     result = result.drop(
         ["expected_value", "bitscore", "alignment_length"],
         axis=1,
@@ -506,7 +512,7 @@ def blast(
     results = clean_missed_results(df, connection, primers)
     connection.close()
     if save_csv:
-        # df.to_csv(f"{out_file_path}_temp.csv", index=False, chunksize=50000)
+        df.to_csv(f"{out_file_path}_temp.csv", index=False, chunksize=50000)
         results.to_csv(f"{out_file_path}", index=False, chunksize=50000)
     return results
 
@@ -552,7 +558,7 @@ def parse_args():
         "--blast_db",
         type=str,
         dest="blast_db",
-        default="D:/Datasets/GISAID_Update_Analysis/blast/blastdb/database",
+        default="D:/Datasets/GISAID/blast/blastdb/database",
         help="Location of the blast database",
     )
     parser.add_argument(
