@@ -273,9 +273,9 @@ function accumulate(data, lookBack) {
     name: data[0].name,
     date: data[0].date,
     mutation3_abs: data[0].mutation3_abs,
-    mutation3_pct: data[0].mutation3_abs / data[0].submission_count,
+    mutation3_pct: (data[0].mutation3_abs / data[0].submission_count) * 100,
     mutation_abs: data[0].mutation_abs,
-    mutation_pct: data[0].mutation_abs / data[0].submission_count,
+    mutation_pct: (data[0].mutation_abs / data[0].submission_count) * 100,
     submission_count: data[0].submission_count,
     countries_considered: data[0].countries,
     lookBack: data[0].lookBack,
@@ -286,7 +286,7 @@ function accumulate(data, lookBack) {
     }
   } else {
     for (let i = 1; i <= lookBack; i++) {
-      result.push(combineData("add", data[i], data[i - 1]));
+      result.push(combineData("add", data[i], result[i - 1]));
     }
     for (let i = lookBack + 1; i < data.length; i++) {
       result.push(
@@ -313,7 +313,6 @@ function buildLineGraphData({
   useCum,
   lookBack,
 }) {
-  console.log("toPlot :>> ", toPlot);
   const results = [];
   for (const primer of primers) {
     results.push(
@@ -352,7 +351,6 @@ function buildLineGraphData({
       })
     );
   }
-  console.log("results :>> ", results);
 
   return useCum
     ? results.map((result) => {
