@@ -126,12 +126,12 @@ const BarGraph = ({
             .toISOString()
             .slice(0, 10)} to ${endDate.toISOString().slice(0, 10)}:</strong> 
           <br/>
-          ${submissionCount} Submissions from ${countries} 
+          ${submissionCount.size} Submissions from ${countries} 
           <br/>
           <strong>Abs Mutation:</strong> ${item.data.mutation_abs}<br/>
-          <strong>Abs Mutation in 3' end:</strong> ${item.data.mutation3_abs}%
+          <strong>Abs Mutation in 3' end:</strong> ${item.data.mutation3_abs}
           <br/>
-          <strong>Mutation %:</strong> ${item.data.mutation_pct.toFixed(3)}
+          <strong>Mutation %:</strong> ${item.data.mutation_pct.toFixed(3)}%
           <br/>
           <strong>Mutation % in 3' end:</strong> ${item.data.mutation3_pct.toFixed(
             3

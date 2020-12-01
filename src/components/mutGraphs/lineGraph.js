@@ -235,7 +235,7 @@ const LineGraph = ({
   };
 
   const seeEvent = (e) => {
-    console.log(e);
+    // console.log(e);
     setModalInfo((prev) => {
       return {
         ...prev,

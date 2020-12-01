@@ -81,7 +81,6 @@ const UploadPage = ({ setResults, setError }) => {
   };
   const submitForm = () => {
     console.log(validFiles, textFieldFasta);
-    console.log({ files: textFieldFasta, blastAll: blastAll });
     setOpen(!open);
     setIsLoading(true);
     setTimeout(() => {
@@ -206,6 +205,15 @@ const UploadPage = ({ setResults, setError }) => {
                 role="status"
                 variant="dark"
               />
+              <div className="mt-3">
+                Do not click back or refresh while the page is loading!
+              </div>
+              <div>
+                This will take about 4 minutes depending on server loads.
+              </div>
+              <div>
+                If you stop seeing this, chances are, the server timed out.
+              </div>
             </Container>
           </Fade>
         ) : null}

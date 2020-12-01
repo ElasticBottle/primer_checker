@@ -10,7 +10,7 @@ import Container from "react-bootstrap/Container";
 import { CSVLink } from "react-csv";
 
 const geoUrl =
-  "https://raw.githubusercontent.com/zcreativelabs/react-simple-maps/master/topojson-maps/world-110m.json";
+  "https://raw.githubusercontent.com/zcreativelabs/react-simple-maps/master/topojson-maps/world-50m.json";
 
 const colorScale = scaleLinear().domain([0, 1]).range(["#ffedea", "#ff5233"]);
 
@@ -18,8 +18,9 @@ const PrimerMap = ({
   title,
   setTooltipContent,
   data,
-  lookBack,
   db,
+  dateRange,
+  useCum,
   timeFrameBrush,
   showModal,
   setModalInfo,
@@ -36,18 +37,17 @@ const PrimerMap = ({
       key: "ISO_A3",
     },
     {
-      label: "Missed %",
+      label: "Mutation %",
       key: "missed_pct",
     },
     {
-      label: "Absolute Misses",
+      label: "Absolute Mutations",
       key: "abs_miss",
     },
     {
-      label: "Submitted Virus",
+      label: "Number of Submitted Virus",
       key: "country_total",
     },
-
     {
       label: "Start Date",
       key: "startDate",
@@ -58,7 +58,7 @@ const PrimerMap = ({
     },
   ];
 
-  function handleClick(countryISO3, endDate, lookBack) {
+  function handleClick(countryISO3, startDateStr, endDateStr, db) {
     // const timeFrame = extent(
     //   data.reduce((dates, data) => {
     //     if (data.ISO_A3 === countryISO3) {
@@ -69,21 +69,30 @@ const PrimerMap = ({
     //     }
     //   }, [])
     // );
-    showModal();
-    setModalInfo((prev) => {
-      return {
-        ...prev,
-        primer: null,
-        country: countryISO3,
-        lookBack: lookBack,
-        date: endDate,
-      };
-    });
+    if (db[endDateStr][countryISO3] !== 0) {
+      const endDate = new Date(endDateStr);
+      const startDate = new Date(startDateStr);
+      // To calculate the time difference of two dates
+      let Difference_In_Time = endDate.getTime() - startDate.getTime();
+      // To calculate the no. of days between two dates
+      let Difference_In_Days = Difference_In_Time / (1000 * 3600 * 24);
+      showModal();
+      setModalInfo((prev) => {
+        return {
+          ...prev,
+          primer: null,
+          country: countryISO3,
+          lookBack: Difference_In_Days,
+          date: endDateStr,
+        };
+      });
+    }
   }
 
   function downloadDataClick(
     countryMisses,
     countryMissesPct,
+    db,
     startDate,
     endDate,
     data
@@ -91,40 +100,29 @@ const PrimerMap = ({
     return () => {
       const toDownload = [];
       for (const [countryISO, absMiss] of countryMisses) {
+        const countryName = data.find(
+          (element) => element.ISO_A3 === countryISO
+        ).country_name;
         toDownload.push({
-          country: data.find((element) => element.ISO_A3 === countryISO)
-            .country_name,
+          country: countryName,
           ISO_A3: countryISO,
-          country_total: absMiss / (countryMissesPct.get(countryISO) / 100),
           missed_pct: countryMissesPct.get(countryISO),
-          abs_miss: absMiss,
+          abs_miss: absMiss.size,
+          country_total: db[endDate][countryISO],
           startDate: startDate,
           endDate: endDate,
         });
       }
-      console.log("fired", toDownload);
       setDownloadData(toDownload);
     };
   }
 
-  function getCountryMissCounts(data, lookBack, date) {
+  function getCountryMissCounts(data) {
     /**
      * @param {Array} data: contains a list of missed virus Objects to be visualized on the map.
      * @returns {Map} Containing the number of misses per country.
      */
     let currData = data;
-    if (lookBack >= 0) {
-      const endDate = new Date(date);
-      const startDate = new Date(date);
-      startDate.setDate(startDate.getDate() - lookBack);
-      currData = data.filter((val) => {
-        const currDate = new Date(val.date);
-        return (
-          currDate.getTime() <= endDate.getTime() &&
-          currDate.getTime() >= startDate.getTime()
-        );
-      });
-    }
     return currData.reduce((count, currData) => {
       count.has(currData.ISO_A3)
         ? count.set(
@@ -156,10 +154,31 @@ const PrimerMap = ({
     var date = new Date(time);
     return date.toISOString().slice(0, 10);
   }
-  const [startDate, endDate] = getDates(timeFrameBrush, db);
-  const countryMisses = getCountryMissCounts(data, -1, endDate);
-  const countryMissesPct = Array.from(countryMisses.keys()).reduce(
-    (accumulated, country) => {
+
+  function getMapDb(db, dateRange, useCum, startDate, endDate) {
+    function addObject(obj1, obj2) {
+      const toReturn = { ...obj1 };
+      for (const key of Object.keys(obj2)) {
+        toReturn[key] = obj2[key] + (obj1[key] || 0);
+      }
+      return toReturn;
+    }
+    if (useCum) {
+      return db;
+    } else {
+      const mapDb = {};
+      mapDb[endDate] = {};
+      for (const date of dateRange) {
+        if (date >= startDate && date <= endDate) {
+          mapDb[endDate] = addObject(mapDb[endDate], db[date]);
+        }
+      }
+      return mapDb;
+    }
+  }
+
+  function getCountryMissPct(countryMisses, db, endDate) {
+    return Array.from(countryMisses.keys()).reduce((accumulated, country) => {
       accumulated.set(
         country,
         (
@@ -168,10 +187,12 @@ const PrimerMap = ({
         ).toFixed(2)
       );
       return accumulated;
-    },
-    new Map()
-  );
-
+    }, new Map());
+  }
+  const [startDate, endDate] = getDates(timeFrameBrush, db);
+  const countryMisses = getCountryMissCounts(data);
+  const mapDb = getMapDb(db, dateRange, useCum, startDate, endDate);
+  const countryMissesPct = getCountryMissPct(countryMisses, mapDb, endDate);
   // console.log("countryMisses :>> ", countryMisses);
   // console.log("startDate, endDate :>> ", startDate, endDate);
   // console.log("countryMissesPct :>> ", countryMissesPct);
@@ -200,10 +221,10 @@ const PrimerMap = ({
                       setTooltipContent(
                         `${NAME}: <br/> 
                           ${
-                            db[endDate][geo.properties.ISO_A3] || 0
+                            (mapDb[endDate] || [])[geo.properties.ISO_A3] || 0
                           } submissions <br/>
-                          ${missCount} Absolute Misses.<br/> 
-                          ${pctMiss}% Miss <br/>
+                          ${missCount} Absolute Mutations<br/> 
+                          ${pctMiss}% Mutations<br/>
                           `
                       );
                     }}
@@ -211,7 +232,12 @@ const PrimerMap = ({
                       setTooltipContent("");
                     }}
                     onClick={() => {
-                      handleClick(geo.properties.ISO_A3, endDate, lookBack);
+                      handleClick(
+                        geo.properties.ISO_A3,
+                        startDate,
+                        endDate,
+                        mapDb
+                      );
                     }}
                     style={{
                       default: {
@@ -243,6 +269,7 @@ const PrimerMap = ({
         onClick={downloadDataClick(
           countryMisses,
           countryMissesPct,
+          mapDb,
           startDate,
           endDate,
           data

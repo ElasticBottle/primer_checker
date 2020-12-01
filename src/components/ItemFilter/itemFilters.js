@@ -28,6 +28,8 @@ const help = {
     "Show the difference from the current bar and the previous bar if enable (The last bar will be compared against another bar off charts)",
   daysBetweenCompare: "Sets the number of days between comparison",
   numBars: "Sets the number of bars to be displayed",
+  barCum:
+    "If enabled, uses all visible data to plot bars. Disables Absolute Difference",
   countryTotal:
     "Sets whether selected country will be used as total or all submission within said time frame will be used as total",
   cumulative:
@@ -146,10 +148,12 @@ const BarGraphSettings = ({
   setNumberOfBars,
   showAbsDiff,
   setShowAbsDiff,
+  barCum,
+  setBarCum,
 }) => {
   return (
     <Row>
-      <Col sm={12} lg={2}>
+      <Col sm={12} lg={1}>
         <InputGroup className="mb-3" size="sm">
           <InputGroup.Prepend>
             <InputGroup.Text>Show</InputGroup.Text>
@@ -163,7 +167,29 @@ const BarGraphSettings = ({
           />
         </InputGroup>
       </Col>
-      <Col sm={12} lg={3}>
+      <Col sm={12} lg={2}>
+        <InputGroup className="mb-3" size="sm">
+          <InputGroup.Prepend>
+            <InputGroup.Text>
+              Cumulative
+              <AiOutlineQuestionCircle
+                className="pl-1"
+                data-tip={help.barCum}
+              />
+            </InputGroup.Text>
+          </InputGroup.Prepend>
+          <Switch
+            type="checkbox"
+            checked={barCum}
+            onChange={() => {
+              setShowAbsDiff((prev) => !prev);
+              setBarCum(!barCum);
+            }}
+            disabled={!isBar}
+          />
+        </InputGroup>
+      </Col>
+      <Col sm={12} lg={2}>
         <InputGroup className="mb-3" size="sm">
           <InputGroup.Prepend>
             <InputGroup.Text>
@@ -177,7 +203,10 @@ const BarGraphSettings = ({
           <Switch
             type="checkbox"
             checked={showAbsDiff}
-            onChange={() => setShowAbsDiff(!showAbsDiff)}
+            onChange={() => {
+              setBarCum((prev) => !prev);
+              setShowAbsDiff(!showAbsDiff);
+            }}
             disabled={!isBar}
           />
         </InputGroup>
@@ -195,7 +224,7 @@ const BarGraphSettings = ({
           </InputGroup.Prepend>
           <Form.Control
             value={daysBetweenComparison.toString()}
-            disabled={!isBar}
+            disabled={!isBar || barCum}
             as="input"
             type="number"
             min={1}
@@ -221,7 +250,7 @@ const BarGraphSettings = ({
           </InputGroup.Prepend>
           <Form.Control
             value={numberOfBars.toString()}
-            disabled={!isBar}
+            disabled={!isBar || barCum}
             as="input"
             type="number"
             min={1}
@@ -238,27 +267,59 @@ const BarGraphSettings = ({
   );
 };
 
-const LineGraphSettings = ({ countryAsTotal, setCountryAsTotal }) => {
+const LineGraphSettings = ({
+  countryAsTotal,
+  setCountryAsTotal,
+  useCum,
+  setUseCum,
+}) => {
   return (
-    <InputGroup className="mb-3" size="sm">
-      <InputGroup.Prepend>
-        <InputGroup.Text htmlFor="country">
-          Selected Countries as Total
-          <AiOutlineQuestionCircle
-            className="pl-1"
-            data-tip={help.countryTotal}
-          />
-        </InputGroup.Text>
-      </InputGroup.Prepend>
-      <Switch
-        id="country"
-        className="use-country"
-        checked={countryAsTotal}
-        onChange={(e) => {
-          setCountryAsTotal(e.target.checked);
-        }}
-      />
-    </InputGroup>
+    <Col>
+      <Row>
+        <Col xs={12} lg={6} className="pr-lg-0 pl-lg-0">
+          <InputGroup className="mb-3" size="sm">
+            <InputGroup.Prepend>
+              <InputGroup.Text htmlFor="cumulative">
+                Cumulative
+                <AiOutlineQuestionCircle
+                  className="pl-1"
+                  data-tip={help.cumulative}
+                />
+              </InputGroup.Text>
+            </InputGroup.Prepend>
+            <Switch
+              id="cumulative"
+              className="use-cumulative"
+              checked={useCum}
+              onChange={(e) => {
+                setUseCum(e.target.checked);
+              }}
+            />
+          </InputGroup>
+        </Col>
+        <Col xs={12} lg={6} className="pr-lg-0 pl-lg-0">
+          <InputGroup className="mb-3" size="sm">
+            <InputGroup.Prepend>
+              <InputGroup.Text htmlFor="country">
+                Selected Countries as Total
+                <AiOutlineQuestionCircle
+                  className="pl-1"
+                  data-tip={help.countryTotal}
+                />
+              </InputGroup.Text>
+            </InputGroup.Prepend>
+            <Switch
+              id="country"
+              className="use-country"
+              checked={countryAsTotal}
+              onChange={(e) => {
+                setCountryAsTotal(e.target.checked);
+              }}
+            />
+          </InputGroup>
+        </Col>
+      </Row>
+    </Col>
   );
 };
 const GraphMapSetting = ({
@@ -280,6 +341,8 @@ const GraphMapSetting = ({
   useCum,
   setUseCum,
   variant,
+  barCum,
+  setBarCum,
 }) => {
   const dateChange = (e) => {
     console.log("e :>> ", e);
@@ -289,7 +352,7 @@ const GraphMapSetting = ({
   return (
     <Col>
       <Row>
-        <Col xs={12} lg={5} className="pr-lg-0">
+        <Col xs={12} lg={6} className="pr-lg-0">
           <InputGroup className="mb-3 " size="sm">
             <InputGroup.Prepend>
               <InputGroup.Text>
@@ -310,29 +373,7 @@ const GraphMapSetting = ({
           </InputGroup>
         </Col>
 
-        <Col xs={12} lg={3} className="pr-lg-0 pl-lg-0">
-          <InputGroup className="mb-3" size="sm">
-            <InputGroup.Prepend>
-              <InputGroup.Text htmlFor="cumulative">
-                Cumulative
-                <AiOutlineQuestionCircle
-                  className="pl-1"
-                  data-tip={help.cumulative}
-                />
-              </InputGroup.Text>
-            </InputGroup.Prepend>
-            <Switch
-              id="cumulative"
-              className="use-cumulative"
-              checked={useCum}
-              onChange={(e) => {
-                setUseCum(e.target.checked);
-              }}
-            />
-          </InputGroup>
-        </Col>
-
-        <Col xs={12} lg={4} className="pl-lg-0">
+        <Col xs={12} lg={6} className="pl-lg-0">
           <InputGroup className="mb-3 " size="sm">
             <InputGroup.Prepend>
               <InputGroup.Text>
@@ -373,6 +414,8 @@ const GraphMapSetting = ({
             setNumberOfBars={setNumberOfBars}
             showAbsDiff={showAbsDiff}
             setShowAbsDiff={setShowAbsDiff}
+            barCum={barCum}
+            setBarCum={setBarCum}
           />
         }
       />
@@ -384,6 +427,8 @@ const GraphMapSetting = ({
           <LineGraphSettings
             countryAsTotal={countryAsTotal}
             setCountryAsTotal={setCountryAsTotal}
+            useCum={useCum}
+            setUseCum={setUseCum}
           />
         }
       />
@@ -416,6 +461,8 @@ const AdvanceFilters = ({
   setNumberOfBars,
   showAbsDiff,
   setShowAbsDiff,
+  barCum,
+  setBarCum,
 }) => {
   const variant = "light";
   return (
@@ -468,6 +515,8 @@ const AdvanceFilters = ({
                   setShowAbsDiff={setShowAbsDiff}
                   countryAsTotal={countryAsTotal}
                   setCountryAsTotal={setCountryAsTotal}
+                  barCum={barCum}
+                  setBarCum={setBarCum}
                 />
               }
             />
@@ -661,6 +710,8 @@ const ItemFilters = ({
   setNumberOfBars,
   showAbsDiff,
   setShowAbsDiff,
+  barCum,
+  setBarCum,
 }) => {
   return (
     <div>
@@ -702,6 +753,8 @@ const ItemFilters = ({
           setNumberOfBars={setNumberOfBars}
           showAbsDiff={showAbsDiff}
           setShowAbsDiff={setShowAbsDiff}
+          barCum={barCum}
+          setBarCum={setBarCum}
         />
       </Row>
       <ReactTooltip html={true}></ReactTooltip>

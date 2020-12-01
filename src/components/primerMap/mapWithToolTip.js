@@ -7,8 +7,9 @@ import "./primerMap.css";
 const MapWithToolTip = ({
   title,
   data,
-  lookBack,
   db,
+  dateRange,
+  useCum,
   timeFrameBrush,
   setTimeFrameBrush,
   showModal,
@@ -24,8 +25,9 @@ const MapWithToolTip = ({
         subtitle={subtitle}
         setTooltipContent={setTooltipContent}
         data={data}
-        lookBack={lookBack}
         db={db}
+        dateRange={dateRange}
+        useCum={useCum}
         timeFrameBrush={timeFrameBrush}
         setTimeFrameBrush={setTimeFrameBrush}
         showModal={showModal}
