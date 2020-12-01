@@ -1,6 +1,5 @@
 import React from "react";
 import { scaleLinear } from "d3-scale";
-import { extent } from "d3-array";
 import {
   ZoomableGroup,
   ComposableMap,
@@ -128,8 +127,11 @@ const PrimerMap = ({
     }
     return currData.reduce((count, currData) => {
       count.has(currData.ISO_A3)
-        ? count.set(currData.ISO_A3, count.get(currData.ISO_A3) + 1)
-        : count.set(currData.ISO_A3, 1);
+        ? count.set(
+            currData.ISO_A3,
+            count.get(currData.ISO_A3).add(currData.virus_name)
+          )
+        : count.set(currData.ISO_A3, new Set().add(currData.virus_name));
       return count;
     }, new Map());
   }
@@ -154,7 +156,6 @@ const PrimerMap = ({
     var date = new Date(time);
     return date.toISOString().slice(0, 10);
   }
-  console.log("db :>> ", db);
   const [startDate, endDate] = getDates(timeFrameBrush, db);
   const countryMisses = getCountryMissCounts(data, -1, endDate);
   const countryMissesPct = Array.from(countryMisses.keys()).reduce(
@@ -162,7 +163,7 @@ const PrimerMap = ({
       accumulated.set(
         country,
         (
-          (countryMisses.get(country) / (db[endDate][country] || 100)) *
+          (countryMisses.get(country).size / (db[endDate][country] || 100)) *
           100
         ).toFixed(2)
       );
@@ -185,7 +186,9 @@ const PrimerMap = ({
           <Geographies geography={geoUrl}>
             {({ geographies }) =>
               geographies.map((geo) => {
-                const missCount = countryMisses.get(geo.properties.ISO_A3) || 0;
+                const missCount = (
+                  countryMisses.get(geo.properties.ISO_A3) || new Set()
+                ).size;
                 const pctMiss =
                   countryMissesPct.get(geo.properties.ISO_A3) || 0;
                 return (

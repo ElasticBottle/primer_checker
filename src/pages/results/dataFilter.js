@@ -313,8 +313,7 @@ function buildLineGraphData({
   useCum,
   lookBack,
 }) {
-  let start = performance.now();
-
+  console.log("toPlot :>> ", toPlot);
   const results = [];
   for (const primer of primers) {
     results.push(
@@ -332,17 +331,17 @@ function buildLineGraphData({
             ) {
               prevVal[0].add(currVal.virus_name);
               if (currVal.misses3 >= 1) {
-                prevVal[1] = prevVal[1] + 1;
+                prevVal[1].add(currVal.virus_name);
               }
             }
             return prevVal;
           },
-          [new Set(), 0]
+          [new Set(), new Set()]
         );
         return {
           name: primer,
           date: date,
-          mutation3_abs: filteredData[1],
+          mutation3_abs: filteredData[1].size,
           mutation3_pct: 0,
           mutation_abs: filteredData[0].size,
           mutation_pct: 0,
@@ -353,6 +352,7 @@ function buildLineGraphData({
       })
     );
   }
+  console.log("results :>> ", results);
 
   return useCum
     ? results.map((result) => {

@@ -125,10 +125,10 @@ const LineGraph = ({
             <strong>Abs Mutation:</strong> ${params[i].data.mutation_abs}<br/>
             <strong>Abs Mutation in 3' end:</strong> ${
               params[i].data.mutation3_abs
-            }%<br/>
+            }<br/>
             <strong>Mutation %:</strong> ${params[i].data.mutation_pct.toFixed(
               3
-            )}<br/>
+            )}%<br/>
             <strong>Mutation % in 3' end:</strong> ${params[
               i
             ].data.mutation3_pct.toFixed(3)}%</div><br/>`;
