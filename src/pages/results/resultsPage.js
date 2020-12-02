@@ -313,7 +313,11 @@ const ResultPage = ({ results }) => {
   React.useEffect(() => {
     if (showModal) {
       console.log("modalInfo :>> ", modalInfo);
-      let primer = primers;
+      let primer = modalInfo["isCombined"]
+        ? primers.join(", ") === ""
+          ? []
+          : [primers.join(", ")]
+        : primers;
       let date = modalInfo["date"];
       let startDate = null;
       let country = countries;
@@ -331,7 +335,7 @@ const ResultPage = ({ results }) => {
         country = [{ value: modalInfo["country"] }];
       }
       if (modalInfo["primer"] !== null) {
-        primer = modalInfo["primer"];
+        primer = [String(modalInfo["primer"])];
       }
 
       const filterCb = debounce((data) => {
@@ -455,6 +459,7 @@ const ResultPage = ({ results }) => {
                 }
                 pType={pType}
                 countries={countries}
+                countryAsTotal={countryAsTotal}
                 miss={miss}
                 miss3={miss3}
                 match={match}

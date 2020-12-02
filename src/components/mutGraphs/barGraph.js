@@ -5,6 +5,7 @@ const BarGraph = ({
   title,
   title2,
   data,
+  countryAsTotal,
   showAbsDiff,
   showModal,
   setModalInfo,
@@ -117,10 +118,11 @@ const BarGraph = ({
         let tooltip = `<div>Details for ${primerName} (Left to Right)</div><br/>`;
         for (const item of data) {
           const submissionCount = item.data.submission_count;
-          const countries =
-            item.data.countries_considered.length === 0
-              ? "All Countries"
-              : `${item.data.countries_considered.length} countries`;
+          const countries = !countryAsTotal
+            ? "all available Countries"
+            : (item.data.countries_considered.length === 0 || []).length === 0
+            ? "all available Countries"
+            : `${item.data.countries_considered.length} countries`;
           const endDate = new Date(item.data.date);
           const startDate = new Date(item.data.date);
           startDate.setDate(startDate.getDate() - parseInt(item.data.lookBack));

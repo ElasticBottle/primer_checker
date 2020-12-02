@@ -18,7 +18,7 @@ const dataFilter = ({
    * @param {Array} miss:  the min and max misses for the sequence
    * @param {Array} miss3: the min and max misses in 3' end
    * @param {Array} match: the min and max homolog %
-   * @returns {function} A function that takes a value and filter for parameters above
+   * @returns {function} A function that takes a value and filter for parameters aboves
    */
   return (value) => {
     let isWithinTimeFrame = true;
@@ -58,6 +58,8 @@ const dataFilter = ({
         value.match_pct >= (match[0] || 0) &&
         value.match_pct <= (match[1] || 100);
     }
+    console.log("isCountry :>> ", isCountry);
+    console.log("isPrimer :>> ", isPrimer);
     return (
       isWithinTimeFrame &&
       isPrimer &&
@@ -80,6 +82,7 @@ export function filterTable({
   miss3 = [],
   match = [],
 }) {
+  console.log("baseTableData :>> ", baseTableData);
   return baseTableData.filter(
     dataFilter({
       primers: primers,
@@ -465,14 +468,20 @@ export function makeBarData({
   }
 
   if (useCum) {
-    let now = (timeFrameBrush[1] || dates[dates.length - 1]).slice(0, 10);
+    let now = timeFrameBrush[1] || dates[dates.length - 1];
     const start = timeFrameBrush[0] || dates[0];
     const endDate = new Date(now);
+    now = endDate.toISOString().slice(0, 10);
     const startDate = new Date(start);
     let Difference_In_Time = endDate.getTime() - startDate.getTime();
     // To calculate the no. of days between two dates
     let differenceInDays = Difference_In_Time / (1000 * 3600 * 24);
-    const currDb = getDb(dbDaily, dates, start, now);
+    const currDb = getDb(
+      dbDaily,
+      dates,
+      startDate.toISOString().slice(0, 10),
+      now
+    );
     const barData = data.reduce((result, currVal) => {
       return result.has(currVal.primer)
         ? result.set(currVal.primer, {
@@ -580,7 +589,10 @@ export function makeIntersection(tableData, primerNames) {
    * @returns {string}: name of the combined primers
    */
   let intersection = [];
-  if (primerNames.length === Object.values(tableData).length) {
+  if (
+    primerNames.length === Object.values(tableData).length &&
+    primerNames.length > 1
+  ) {
     const name = primerNames.join(", ");
     intersection = findListIntersection(
       Object.values(tableData),

@@ -8,6 +8,7 @@ const LineGraph = ({
   data,
   primers,
   dates,
+  countryAsTotal,
   setTimeFrameBrush,
   timeFrameBrush,
   showModal,
@@ -113,10 +114,11 @@ const LineGraph = ({
             ? dates[0]
             : getStartDate(dates, date, baseDetails.lookBack);
         let submissionCount = baseDetails.submission_count;
-        let countries =
-          (baseDetails.countries_considered || []).length === 0
-            ? "all available Countries"
-            : `${baseDetails.countries_considered.length} countries`;
+        let countries = !countryAsTotal
+          ? "all available Countries"
+          : (baseDetails.countries_considered || []).length === 0
+          ? "all available Countries"
+          : `${baseDetails.countries_considered.length} countries`;
 
         let tooltip = `<div>Details from ${startDate} to ${date}<br/>Total Submissions: ${submissionCount} from ${countries}</div><br/>`;
 
