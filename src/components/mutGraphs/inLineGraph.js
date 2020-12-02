@@ -1,6 +1,7 @@
 import React from "react";
 import LineGraph from "../../components/mutGraphs/lineGraph";
 import { debounce } from "../util";
+
 import worker from "workerize-loader!../../pages/results/dataFilter"; // eslint-disable-line import/no-webpack-loader-syntax
 
 const InLineGraph = ({

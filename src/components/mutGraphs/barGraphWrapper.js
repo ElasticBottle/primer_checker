@@ -37,29 +37,23 @@ const BarGraphWrapper = ({
         useCum,
         timeFrameBrush,
         daysBetweenComparison,
-        numberOfBars,
-        setNumberOfBars
+        numberOfBars
       ) => {
         let start = performance.now();
 
         setIsProcessingGraphs(true);
         instance.current
-          .makeBarData(
-            JSON.parse(
-              JSON.stringify({
-                data: rawData,
-                dbDaily: dbDaily,
-                countries: countries,
-                countryAsTotal: countryAsTotal,
-                dates: dateRange,
-                useCum: useCum,
-                timeFrameBrush: timeFrameBrush,
-                daysBetweenComparison: daysBetweenComparison,
-                numberOfBars: numberOfBars,
-                setNumberOfBars: setNumberOfBars,
-              })
-            )
-          )
+          .makeBarData({
+            data: rawData,
+            dbDaily: dbDaily,
+            countries: countries,
+            countryAsTotal: countryAsTotal,
+            dates: dateRange,
+            useCum: useCum,
+            timeFrameBrush: timeFrameBrush,
+            daysBetweenComparison: daysBetweenComparison,
+            numberOfBars: numberOfBars,
+          })
           .then((result) => {
             setBarData(result);
             // console.log("barData :>> ", result);
@@ -85,8 +79,7 @@ const BarGraphWrapper = ({
       useCum,
       timeFrameBrush,
       daysBetweenComparison,
-      numberOfBars,
-      setNumberOfBars
+      numberOfBars
     );
   }, [
     updateBarData,
@@ -99,7 +92,6 @@ const BarGraphWrapper = ({
     timeFrameBrush,
     daysBetweenComparison,
     numberOfBars,
-    setNumberOfBars,
   ]);
 
   if (Object.keys(rawData).length !== 0) {
@@ -111,7 +103,7 @@ const BarGraphWrapper = ({
         showAbsDiff={showAbsDiff}
         showModal={showModal}
         setModalInfo={setModalInfo}
-        isCombined={false}
+        isCombined={isCombined}
       />
     );
   } else {

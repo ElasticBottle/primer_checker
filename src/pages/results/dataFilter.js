@@ -256,7 +256,7 @@ function combineData(f, data1, data2) {
       lookBack: data1.lookBack,
     };
   } else {
-    throw `invalid f, expected "add" or "subtract", got ${f}`;
+    throw Error(`invalid f, expected "add" or "subtract", got ${f}`);
   }
 }
 function accumulate(data, lookBack) {
@@ -433,7 +433,6 @@ export function makeBarData({
   timeFrameBrush,
   daysBetweenComparison,
   numberOfBars,
-  setNumberOfBars,
 }) {
   /**
    * Makes the bar data to be used for display
@@ -465,10 +464,7 @@ export function makeBarData({
     return result;
   }
 
-  const dateDetails = [];
   if (useCum) {
-    console.log("timeFrameBrush[1] :>> ", timeFrameBrush[1]);
-    console.log("dates[dates.length - 1] :>> ", dates[dates.length - 1]);
     let now = (timeFrameBrush[1] || dates[dates.length - 1]).slice(0, 10);
     const start = timeFrameBrush[0] || dates[0];
     const endDate = new Date(now);
@@ -510,31 +506,29 @@ export function makeBarData({
     }, new Map());
     return [[], [...barData.values()]];
   } else {
-    // TODO (EB): THIS IS NOT WORKING
-    const now = timeFrameBrush[1] || new Date(dates[dates.length - 1]);
-    const start = new Date(now);
-    start.setDate(start.getDate() - daysBetweenComparison * numberOfBars);
-    while (start.getTime() < new Date(dates[0])) {
-      start.setDate(start.getDate() + daysBetweenComparison);
-      setNumberOfBars((prev) => prev - 1);
-    }
-
-    for (
-      let d = start;
-      d <= now;
-      d.setDate(d.getDate() + daysBetweenComparison)
-    ) {
-      const primerMutations = [];
-      for (let i = 0; i < graphOverview.length; i++) {
-        const details = graphOverview[i].filter(
-          (val) => val.date === d.toISOString().slice(0, 10)
-        );
-        primerMutations.push(...details);
-      }
-      dateDetails.push(primerMutations);
-    }
-
-    return dateDetails;
+    // TODO (EB): THIS IS NOT WORKING. The additional features for bar graph.
+    // const now = timeFrameBrush[1] || new Date(dates[dates.length - 1]);
+    // const start = new Date(now);
+    // start.setDate(start.getDate() - daysBetweenComparison * numberOfBars);
+    // while (start.getTime() < new Date(dates[0])) {
+    //   start.setDate(start.getDate() + daysBetweenComparison);
+    //   // setNumberOfBars((prev) => prev - 1);
+    // }
+    // for (
+    //   let d = start;
+    //   d <= now;
+    //   d.setDate(d.getDate() + daysBetweenComparison)
+    // ) {
+    //   const primerMutations = [];
+    //   for (let i = 0; i < graphOverview.length; i++) {
+    //     const details = graphOverview[i].filter(
+    //       (val) => val.date === d.toISOString().slice(0, 10)
+    //     );
+    //     primerMutations.push(...details);
+    //   }
+    //   dateDetails.push(primerMutations);
+    // }
+    // return dateDetails;
   }
 }
 
@@ -585,11 +579,9 @@ export function makeIntersection(tableData, primerNames) {
    * @returns {Array}: List of virus that is missed by all primers
    * @returns {string}: name of the combined primers
    */
-  console.log("primerNames :>> ", primerNames);
   let intersection = [];
   if (primerNames.length === Object.values(tableData).length) {
     const name = primerNames.join(", ");
-    console.log("tableData :>> ", tableData);
     intersection = findListIntersection(
       Object.values(tableData),
       primerNames.length

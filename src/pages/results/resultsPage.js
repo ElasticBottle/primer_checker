@@ -5,7 +5,7 @@ import Collapse from "react-bootstrap/Collapse";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Modal from "react-bootstrap/Modal";
-import { useParams } from "react-router-dom";
+// import { useParams } from "react-router-dom";
 import { useHistory } from "react-router-dom";
 
 import "./resultsPage.css";
@@ -44,8 +44,8 @@ const ResultPage = ({ results }) => {
   const dbCountCum = React.useRef(parseDb(result.current, 0));
   const dateRange = React.useRef(Object.keys(dbCountCum.current) || []);
 
-  const { display } = useParams();
-  const toDisplay = display.split("&");
+  // const { display } = useParams();
+  // const toDisplay = display.split("&");
 
   // Data to display
   const [dbActual, setDbActual] = React.useState([]);
