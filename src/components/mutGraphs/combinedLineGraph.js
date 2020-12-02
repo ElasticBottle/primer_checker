@@ -20,6 +20,7 @@ const CombinedLineGraph = ({
   setTimeFrameBrush,
   showModal,
   setModalInfo,
+  isCombined,
   title,
   title2,
 }) => {
@@ -111,6 +112,7 @@ const CombinedLineGraph = ({
         setTimeFrameBrush={setTimeFrameBrush}
         showModal={showModal}
         setModalInfo={setModalInfo}
+        isCombined={isCombined}
       />
     );
   } else {

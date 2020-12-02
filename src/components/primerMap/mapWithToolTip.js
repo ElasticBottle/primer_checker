@@ -9,11 +9,10 @@ const MapWithToolTip = ({
   data,
   db,
   dateRange,
-  useCum,
   timeFrameBrush,
-  setTimeFrameBrush,
   showModal,
   setModalInfo,
+  isCombined,
   subtitle = "",
 }) => {
   const [tooltipContent, setTooltipContent] = React.useState("");
@@ -27,11 +26,10 @@ const MapWithToolTip = ({
         data={data}
         db={db}
         dateRange={dateRange}
-        useCum={useCum}
         timeFrameBrush={timeFrameBrush}
-        setTimeFrameBrush={setTimeFrameBrush}
         showModal={showModal}
         setModalInfo={setModalInfo}
+        isCombined={isCombined}
       />
       <ReactTooltip html={true}>{tooltipContent}</ReactTooltip>
     </>

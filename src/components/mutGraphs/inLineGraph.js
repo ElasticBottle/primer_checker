@@ -108,6 +108,7 @@ const InLineGraph = ({
         setTimeFrameBrush={setTimeFrameBrush}
         showModal={showModal}
         setModalInfo={setModalInfo}
+        isCombined={false}
       />
     );
   } else {

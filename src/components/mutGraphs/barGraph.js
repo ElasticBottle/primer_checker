@@ -8,6 +8,7 @@ const BarGraph = ({
   showAbsDiff,
   showModal,
   setModalInfo,
+  isCombined = false,
   subtitle = "",
   subtitle2 = "",
 }) => {
@@ -52,14 +53,15 @@ const BarGraph = ({
     for (const dataset of datasets) {
       data.push({
         dimensions: [
-          "countries_considered",
+          "name",
           "date",
+          "countries_considered",
+          "lookBack",
+          "submission_count",
           "mutation3_abs",
           "mutation3_pct",
           "mutation_abs",
           "mutation_pct",
-          "name",
-          "submission_count",
         ],
         source: dataset,
       });
@@ -126,7 +128,7 @@ const BarGraph = ({
             .toISOString()
             .slice(0, 10)} to ${endDate.toISOString().slice(0, 10)}:</strong> 
           <br/>
-          ${submissionCount.size} Submissions from ${countries} 
+          ${submissionCount} Submissions from ${countries} 
           <br/>
           <strong>Abs Mutation:</strong> ${item.data.mutation_abs}<br/>
           <strong>Abs Mutation in 3' end:</strong> ${item.data.mutation3_abs}
@@ -146,7 +148,7 @@ const BarGraph = ({
       },
       position: function (pos, params, el, elRect, size) {
         let obj = {};
-        obj[["top", "bottom"][+(pos[1] < size.viewSize[1] / 2)]] = 10;
+        obj[["top", "bottom"][+(pos[1] > size.viewSize[1] / 2)]] = 10;
         obj["left"] = pos[0];
         return obj;
       },
@@ -200,6 +202,7 @@ const BarGraph = ({
     setModalInfo((prev) => {
       return {
         ...prev,
+        isCombined: isCombined,
         date: e.data.date,
         lookBack: e.data.lookBack,
         primer: e.data.name,

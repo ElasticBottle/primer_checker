@@ -7,22 +7,19 @@ import worker from "workerize-loader!../../pages/results/dataFilter"; // eslint-
 const BarGraphWrapper = ({
   rawData,
   dateRange,
-  totalSubmission,
+  dbDaily,
   setIsProcessingGraphs,
-  primers,
-  pType,
   countries,
-  miss,
-  miss3,
-  match,
+  countryAsTotal,
   useCum,
-  lookBack,
   timeFrameBrush,
-  showModal,
-  setModalInfo,
-  showAbsDiff,
   daysBetweenComparison,
   numberOfBars,
+  setNumberOfBars,
+  showAbsDiff,
+  showModal,
+  setModalInfo,
+  isCombined,
   title,
   title2,
 }) => {
@@ -32,48 +29,40 @@ const BarGraphWrapper = ({
   const updateBarData = React.useCallback(
     debounce(
       (
-        primers,
-        pType,
+        rawData,
+        dbDaily,
         countries,
-        miss,
-        miss3,
-        match,
+        countryAsTotal,
+        dateRange,
         useCum,
-        lookBack,
-        totalSubmission,
         timeFrameBrush,
         daysBetweenComparison,
-        numberOfBars
+        numberOfBars,
+        setNumberOfBars
       ) => {
         let start = performance.now();
 
         setIsProcessingGraphs(true);
         instance.current
-          .getLineGraphData({
-            baseData: rawData,
-            dateRange: dateRange,
-            primers: primers,
-            pType: pType,
-            countries: countries,
-            miss: miss,
-            miss3: miss3,
-            match: match,
-            totalSubmission: totalSubmission,
-            useCum: useCum,
-            lookBack: lookBack,
-          })
-          .then((lineData) => {
-            return instance.current.makeBarData({
-              graphOverview: lineData,
-              dates: dateRange,
-              timeFrameBrush: timeFrameBrush,
-              daysBetweenComparison: daysBetweenComparison,
-              numberOfBars: numberOfBars,
-            });
-          })
+          .makeBarData(
+            JSON.parse(
+              JSON.stringify({
+                data: rawData,
+                dbDaily: dbDaily,
+                countries: countries,
+                countryAsTotal: countryAsTotal,
+                dates: dateRange,
+                useCum: useCum,
+                timeFrameBrush: timeFrameBrush,
+                daysBetweenComparison: daysBetweenComparison,
+                numberOfBars: numberOfBars,
+                setNumberOfBars: setNumberOfBars,
+              })
+            )
+          )
           .then((result) => {
             setBarData(result);
-            console.log("barData :>> ", result);
+            // console.log("barData :>> ", result);
             console.log(
               `Time taken for bar graph data: ${(
                 performance.now() - start
@@ -87,40 +76,30 @@ const BarGraphWrapper = ({
     []
   );
   React.useEffect(() => {
-    const submission = { ...totalSubmission };
-    if (useCum) {
-      for (const date of Object.keys(totalSubmission)) {
-        submission[date] = totalSubmission[date].total;
-      }
-    }
     updateBarData(
-      primers,
-      pType,
+      rawData,
+      dbDaily,
       countries,
-      miss,
-      miss3,
-      match,
+      countryAsTotal,
+      dateRange,
       useCum,
-      lookBack,
-      submission,
       timeFrameBrush,
       daysBetweenComparison,
-      numberOfBars
+      numberOfBars,
+      setNumberOfBars
     );
   }, [
     updateBarData,
-    primers,
-    pType,
+    rawData,
+    dbDaily,
     countries,
-    miss,
-    miss3,
-    match,
+    countryAsTotal,
+    dateRange,
     useCum,
-    lookBack,
-    totalSubmission,
     timeFrameBrush,
     daysBetweenComparison,
     numberOfBars,
+    setNumberOfBars,
   ]);
 
   if (Object.keys(rawData).length !== 0) {
@@ -129,9 +108,10 @@ const BarGraphWrapper = ({
         title={title}
         title2={title2}
         data={barData}
-        showAbsDiff={useCum ? !useCum : showAbsDiff}
+        showAbsDiff={showAbsDiff}
         showModal={showModal}
         setModalInfo={setModalInfo}
+        isCombined={false}
       />
     );
   } else {
@@ -146,22 +126,15 @@ const objEqual = (a, b) => {
 };
 const areEqual = (prev, next) => {
   return (
-    prev.lookBack === next.lookBack &&
     objEqual(prev.rawData, next.rawData) &&
-    objEqual(prev.dateRange, next.dateRange) &&
-    objEqual(prev.totalSubmission, next.totalSubmission) &&
+    objEqual(prev.dbDaily, next.dbDaily) &&
     objEqual(prev.timeFrameBrush, next.timeFrameBrush) &&
-    objEqual(prev.miss, next.miss) &&
-    objEqual(prev.miss3, next.miss3) &&
-    objEqual(prev.match, next.match) &&
     prev.useCum === next.useCum &&
-    prev.lookBack === next.lookBack &&
     prev.daysBetweenComparison === next.daysBetweenComparison &&
     prev.numberOfBars === next.numberOfBars &&
     prev.showAbsDiff === next.showAbsDiff &&
-    objEqual(prev.pType, next.pType) &&
-    objEqual(prev.countries, next.countries) &&
-    objEqual(prev.primers, next.primers)
+    prev.countryAsTotal === next.countryAsTotal &&
+    objEqual(prev.countries, next.countries)
   );
 };
 

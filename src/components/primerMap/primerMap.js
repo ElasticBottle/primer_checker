@@ -20,10 +20,10 @@ const PrimerMap = ({
   data,
   db,
   dateRange,
-  useCum,
   timeFrameBrush,
   showModal,
   setModalInfo,
+  isCombined,
   subtitle = "",
 }) => {
   const [downloadData, setDownloadData] = React.useState([]);
@@ -57,8 +57,7 @@ const PrimerMap = ({
       key: "endDate",
     },
   ];
-
-  function handleClick(countryISO3, startDateStr, endDateStr, db) {
+  function handleClick(countryISO3, startDateStr, endDateStr, db, isCombined) {
     // const timeFrame = extent(
     //   data.reduce((dates, data) => {
     //     if (data.ISO_A3 === countryISO3) {
@@ -69,19 +68,21 @@ const PrimerMap = ({
     //     }
     //   }, [])
     // );
+    const endDate = new Date(endDateStr);
+    const startDate = new Date(startDateStr);
+    // To calculate the time difference of two dates
+    let Difference_In_Time = endDate.getTime() - startDate.getTime();
+    // To calculate the no. of days between two dates
+    let Difference_In_Days = Difference_In_Time / (1000 * 3600 * 24);
+
     if (db[endDateStr][countryISO3] !== 0) {
-      const endDate = new Date(endDateStr);
-      const startDate = new Date(startDateStr);
-      // To calculate the time difference of two dates
-      let Difference_In_Time = endDate.getTime() - startDate.getTime();
-      // To calculate the no. of days between two dates
-      let Difference_In_Days = Difference_In_Time / (1000 * 3600 * 24);
       showModal();
       setModalInfo((prev) => {
         return {
           ...prev,
           primer: null,
           country: countryISO3,
+          isCombined: isCombined,
           lookBack: Difference_In_Days,
           date: endDateStr,
         };
@@ -155,7 +156,7 @@ const PrimerMap = ({
     return date.toISOString().slice(0, 10);
   }
 
-  function getMapDb(db, dateRange, useCum, startDate, endDate) {
+  function getMapDb(db, dateRange, startDate, endDate) {
     function addObject(obj1, obj2) {
       const toReturn = { ...obj1 };
       for (const key of Object.keys(obj2)) {
@@ -163,18 +164,15 @@ const PrimerMap = ({
       }
       return toReturn;
     }
-    if (useCum) {
-      return db;
-    } else {
-      const mapDb = {};
-      mapDb[endDate] = {};
-      for (const date of dateRange) {
-        if (date >= startDate && date <= endDate) {
-          mapDb[endDate] = addObject(mapDb[endDate], db[date]);
-        }
+
+    const mapDb = {};
+    mapDb[endDate] = {};
+    for (const date of dateRange) {
+      if (date >= startDate && date <= endDate) {
+        mapDb[endDate] = addObject(mapDb[endDate], db[date]);
       }
-      return mapDb;
     }
+    return mapDb;
   }
 
   function getCountryMissPct(countryMisses, db, endDate) {
@@ -191,7 +189,7 @@ const PrimerMap = ({
   }
   const [startDate, endDate] = getDates(timeFrameBrush, db);
   const countryMisses = getCountryMissCounts(data);
-  const mapDb = getMapDb(db, dateRange, useCum, startDate, endDate);
+  const mapDb = getMapDb(db, dateRange, startDate, endDate);
   const countryMissesPct = getCountryMissPct(countryMisses, mapDb, endDate);
   // console.log("countryMisses :>> ", countryMisses);
   // console.log("startDate, endDate :>> ", startDate, endDate);
@@ -236,7 +234,8 @@ const PrimerMap = ({
                         geo.properties.ISO_A3,
                         startDate,
                         endDate,
-                        mapDb
+                        mapDb,
+                        isCombined
                       );
                     }}
                     style={{

@@ -43,9 +43,7 @@ const dataFilter = ({
       isPType = pType.includes(value.type);
     }
     if (countries.length !== 0) {
-      isCountry = countries
-        .map((val) => val.label)
-        .includes(value.country_name);
+      isCountry = countries.map((val) => val.value).includes(value.ISO_A3);
     }
     if (miss.length !== 0) {
       isMiss =
@@ -236,9 +234,9 @@ function combineData(f, data1, data2) {
       name: data1.name,
       date: data1.date,
       mutation3_abs: m3,
-      mutation3_pct: (m3 / data1.submission_count) * 100,
+      mutation3_pct: (m3 / data1.submission_count || 0) * 100,
       mutation_abs: m,
-      mutation_pct: (m / data1.submission_count) * 100,
+      mutation_pct: (m / data1.submission_count || 0) * 100,
       submission_count: data1.submission_count,
       countries_considered: data1.countries_considered,
       lookBack: data1.lookBack,
@@ -250,9 +248,9 @@ function combineData(f, data1, data2) {
       name: data1.name,
       date: data1.date,
       mutation3_abs: m3,
-      mutation3_pct: (m3 / data1.submission_count) * 100,
+      mutation3_pct: (m3 / data1.submission_count || 0) * 100,
       mutation_abs: m,
-      mutation_pct: (m / data1.submission_count) * 100,
+      mutation_pct: (m / data1.submission_count || 0) * 100,
       submission_count: data1.submission_count,
       countries_considered: data1.countries_considered,
       lookBack: data1.lookBack,
@@ -273,9 +271,10 @@ function accumulate(data, lookBack) {
     name: data[0].name,
     date: data[0].date,
     mutation3_abs: data[0].mutation3_abs,
-    mutation3_pct: (data[0].mutation3_abs / data[0].submission_count) * 100,
+    mutation3_pct:
+      (data[0].mutation3_abs / data[0].submission_count || 0) * 100,
     mutation_abs: data[0].mutation_abs,
-    mutation_pct: (data[0].mutation_abs / data[0].submission_count) * 100,
+    mutation_pct: (data[0].mutation_abs / data[0].submission_count || 0) * 100,
     submission_count: data[0].submission_count,
     countries_considered: data[0].countries,
     lookBack: data[0].lookBack,
@@ -425,11 +424,16 @@ export function getCombinedLineData(
 }
 
 export function makeBarData({
-  graphOverview,
+  data,
+  dbDaily,
+  countries,
+  countryAsTotal,
   dates,
+  useCum,
   timeFrameBrush,
   daysBetweenComparison,
   numberOfBars,
+  setNumberOfBars,
 }) {
   /**
    * Makes the bar data to be used for display
@@ -439,30 +443,99 @@ export function makeBarData({
    * @param {Array} timeFrameBrush: Contains the minimum and maximum date of interest
    * @returns {Array} Contains a List of List. Each list corresponds to a particular primer
    */
-  const dateDetails = [];
-
-  const now = timeFrameBrush[1] || new Date(dates[dates.length - 1]);
-  const start = new Date(now);
-  start.setDate(start.getDate() - daysBetweenComparison * numberOfBars);
-  while (start.getTime() < new Date(dates[0])) {
-    start.setDate(start.getDate() + daysBetweenComparison);
-  }
-  for (
-    let d = start;
-    d <= now;
-    d.setDate(d.getDate() + daysBetweenComparison)
-  ) {
-    const primerMutations = [];
-    for (let i = 0; i < graphOverview.length; i++) {
-      const details = graphOverview[i].filter(
-        (val) => val.date === d.toISOString().slice(0, 10)
-      );
-      primerMutations.push(...details);
+  function getDb(db, dateRange, startDate, endDate) {
+    function addObject(obj1, obj2) {
+      const toReturn = { ...obj1 };
+      for (const key of Object.keys(obj2)) {
+        toReturn[key] = obj2[key] + (obj1[key] || 0);
+      }
+      return toReturn;
     }
-    dateDetails.push(primerMutations);
+
+    const result = {};
+    result[endDate] = {};
+    for (const date of dateRange) {
+      if (date >= startDate && date <= endDate) {
+        result[endDate] = addObject(result[endDate], db[date]);
+      }
+    }
+    result[endDate] = countryAsTotal
+      ? getCountriesTotal(result, countries, endDate)
+      : result[endDate].total;
+    return result;
   }
 
-  return dateDetails;
+  const dateDetails = [];
+  if (useCum) {
+    console.log("timeFrameBrush[1] :>> ", timeFrameBrush[1]);
+    console.log("dates[dates.length - 1] :>> ", dates[dates.length - 1]);
+    let now = (timeFrameBrush[1] || dates[dates.length - 1]).slice(0, 10);
+    const start = timeFrameBrush[0] || dates[0];
+    const endDate = new Date(now);
+    const startDate = new Date(start);
+    let Difference_In_Time = endDate.getTime() - startDate.getTime();
+    // To calculate the no. of days between two dates
+    let differenceInDays = Difference_In_Time / (1000 * 3600 * 24);
+    const currDb = getDb(dbDaily, dates, start, now);
+    const barData = data.reduce((result, currVal) => {
+      return result.has(currVal.primer)
+        ? result.set(currVal.primer, {
+            ...result.get(currVal.primer),
+            mutation3_abs:
+              result.get(currVal.primer).mutation3_abs + currVal.misses3 === 0
+                ? 0
+                : 1,
+            mutation3_pct:
+              ((result.get(currVal.primer).mutation3_abs + currVal.misses3 === 0
+                ? 0
+                : 1) /
+                currDb[now]) *
+              100,
+            mutation_abs: result.get(currVal.primer).mutation_abs + 1,
+            mutation_pct:
+              ((result.get(currVal.primer).mutation_abs + 1) / currDb[now]) *
+              100,
+          })
+        : result.set(currVal.primer, {
+            name: currVal.primer,
+            date: now,
+            countries_considered: countries,
+            lookBack: differenceInDays,
+            submission_count: currDb[now],
+            mutation3_abs: 1,
+            mutation3_pct: (0 / currDb[now]) * 100,
+            mutation_abs: 1,
+            mutation_pct: (1 / currDb[now]) * 100,
+          });
+    }, new Map());
+    return [[], [...barData.values()]];
+  } else {
+    // TODO (EB): THIS IS NOT WORKING
+    const now = timeFrameBrush[1] || new Date(dates[dates.length - 1]);
+    const start = new Date(now);
+    start.setDate(start.getDate() - daysBetweenComparison * numberOfBars);
+    while (start.getTime() < new Date(dates[0])) {
+      start.setDate(start.getDate() + daysBetweenComparison);
+      setNumberOfBars((prev) => prev - 1);
+    }
+
+    for (
+      let d = start;
+      d <= now;
+      d.setDate(d.getDate() + daysBetweenComparison)
+    ) {
+      const primerMutations = [];
+      for (let i = 0; i < graphOverview.length; i++) {
+        const details = graphOverview[i].filter(
+          (val) => val.date === d.toISOString().slice(0, 10)
+        );
+        primerMutations.push(...details);
+      }
+      dateDetails.push(primerMutations);
+    }
+
+    return dateDetails;
+  }
 }
 
 function findIntersection(list1, list2, key, intersect = true) {
@@ -489,7 +562,7 @@ function findIntersection(list1, list2, key, intersect = true) {
   }
 }
 
-function findListIntersection(itemList, key = "accession_id") {
+function findListIntersection(itemList, numList, key = "accession_id") {
   /**
    * Finds the intersecting items within each list
    * @param   {Array}  itemList: Contains lists which contain info to find intersection of.
@@ -512,11 +585,15 @@ export function makeIntersection(tableData, primerNames) {
    * @returns {Array}: List of virus that is missed by all primers
    * @returns {string}: name of the combined primers
    */
-
+  console.log("primerNames :>> ", primerNames);
   let intersection = [];
-  if (primerNames.length > 1) {
+  if (primerNames.length === Object.values(tableData).length) {
     const name = primerNames.join(", ");
-    intersection = findListIntersection(Object.values(tableData));
+    console.log("tableData :>> ", tableData);
+    intersection = findListIntersection(
+      Object.values(tableData),
+      primerNames.length
+    );
     intersection = intersection.map(addName(name));
     return [intersection, [name]];
   }

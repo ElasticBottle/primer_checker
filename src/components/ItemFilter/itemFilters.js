@@ -26,7 +26,7 @@ const help = {
     "Selects the countries to display. Total will be over selected countries then. To change, check extra settings",
   absDiff:
     "Show the difference from the current bar and the previous bar if enable (The last bar will be compared against another bar off charts)",
-  daysBetweenCompare: "Sets the number of days between comparison",
+  daysBetweenCompare: "Sets the number of day which constitutes a bar",
   numBars: "Sets the number of bars to be displayed",
   barCum:
     "If enabled, uses all visible data to plot bars. Disables Absolute Difference",
@@ -167,11 +167,11 @@ const BarGraphSettings = ({
           />
         </InputGroup>
       </Col>
-      <Col sm={12} lg={2}>
+      {/* <Col sm={12} lg={2}>
         <InputGroup className="mb-3" size="sm">
           <InputGroup.Prepend>
             <InputGroup.Text>
-              Cumulative
+              Use Visible Data
               <AiOutlineQuestionCircle
                 className="pl-1"
                 data-tip={help.barCum}
@@ -182,7 +182,7 @@ const BarGraphSettings = ({
             type="checkbox"
             checked={barCum}
             onChange={() => {
-              setShowAbsDiff((prev) => !prev);
+              setShowAbsDiff(false);
               setBarCum(!barCum);
             }}
             disabled={!isBar}
@@ -204,7 +204,7 @@ const BarGraphSettings = ({
             type="checkbox"
             checked={showAbsDiff}
             onChange={() => {
-              setBarCum((prev) => !prev);
+              setBarCum(false);
               setShowAbsDiff(!showAbsDiff);
             }}
             disabled={!isBar}
@@ -215,7 +215,7 @@ const BarGraphSettings = ({
         <InputGroup className="mb-3" size="sm">
           <InputGroup.Prepend>
             <InputGroup.Text>
-              Days between Comparison
+              Days Per Bar
               <AiOutlineQuestionCircle
                 className="pl-1"
                 data-tip={help.daysBetweenCompare}
@@ -262,7 +262,7 @@ const BarGraphSettings = ({
             }}
           />
         </InputGroup>
-      </Col>
+      </Col> */}
     </Row>
   );
 };
@@ -272,11 +272,13 @@ const LineGraphSettings = ({
   setCountryAsTotal,
   useCum,
   setUseCum,
+  lookBack,
+  setLookBack,
 }) => {
   return (
     <Col>
       <Row>
-        <Col xs={12} lg={6} className="pr-lg-0 pl-lg-0">
+        <Col xs={12} lg={3} className="pr-lg-0 pl-lg-0">
           <InputGroup className="mb-3" size="sm">
             <InputGroup.Prepend>
               <InputGroup.Text htmlFor="cumulative">
@@ -297,7 +299,7 @@ const LineGraphSettings = ({
             />
           </InputGroup>
         </Col>
-        <Col xs={12} lg={6} className="pr-lg-0 pl-lg-0">
+        <Col xs={12} lg={3} className="pr-lg-0 pl-lg-0">
           <InputGroup className="mb-3" size="sm">
             <InputGroup.Prepend>
               <InputGroup.Text htmlFor="country">
@@ -314,6 +316,32 @@ const LineGraphSettings = ({
               checked={countryAsTotal}
               onChange={(e) => {
                 setCountryAsTotal(e.target.checked);
+              }}
+            />
+          </InputGroup>
+        </Col>
+        <Col xs={12} lg={6} className="pl-lg-0">
+          <InputGroup className="mb-3 " size="sm">
+            <InputGroup.Prepend>
+              <InputGroup.Text>
+                Look Back
+                <AiOutlineQuestionCircle
+                  className="pl-1"
+                  data-tip={help.lookBack}
+                />
+              </InputGroup.Text>
+            </InputGroup.Prepend>
+            <Form.Control
+              value={lookBack.toString()}
+              disabled={useCum}
+              as="input"
+              type="number"
+              min={0}
+              max={200}
+              step={1}
+              onChange={(e) => {
+                const val = e.target.value;
+                setLookBack(parseInt(val, 10) || 0);
               }}
             />
           </InputGroup>
@@ -372,33 +400,6 @@ const GraphMapSetting = ({
             />
           </InputGroup>
         </Col>
-
-        <Col xs={12} lg={6} className="pl-lg-0">
-          <InputGroup className="mb-3 " size="sm">
-            <InputGroup.Prepend>
-              <InputGroup.Text>
-                Look Back
-                <AiOutlineQuestionCircle
-                  className="pl-1"
-                  data-tip={help.lookBack}
-                />
-              </InputGroup.Text>
-            </InputGroup.Prepend>
-            <Form.Control
-              value={lookBack.toString()}
-              disabled={useCum}
-              as="input"
-              type="number"
-              min={0}
-              max={200}
-              step={1}
-              onChange={(e) => {
-                const val = e.target.value;
-                setLookBack(parseInt(val, 10) || 0);
-              }}
-            />
-          </InputGroup>
-        </Col>
       </Row>
       <FilterGroup
         variant={variant}
@@ -429,6 +430,8 @@ const GraphMapSetting = ({
             setCountryAsTotal={setCountryAsTotal}
             useCum={useCum}
             setUseCum={setUseCum}
+            lookBack={lookBack}
+            setLookBack={setLookBack}
           />
         }
       />

@@ -12,6 +12,7 @@ const LineGraph = ({
   timeFrameBrush,
   showModal,
   setModalInfo,
+  isCombined,
   subtitle = "",
   subtitle2 = "",
 }) => {
@@ -240,6 +241,7 @@ const LineGraph = ({
       return {
         ...prev,
         date: e.data.date,
+        isCombined: isCombined,
         lookBack: e.data.lookBack,
         primer: e.data.name,
         country: null,

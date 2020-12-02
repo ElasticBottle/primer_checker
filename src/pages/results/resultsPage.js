@@ -53,6 +53,7 @@ const ResultPage = ({ results }) => {
   const [combinedBase, setCombinedBase] = React.useState([]);
   const [combinedName, setCombinedName] = React.useState([]);
   const [tableCombined, setTableCombined] = React.useState([]);
+  const [modalData, setModalData] = React.useState([]);
 
   // Filtering for table and graph data
   const [miss, setMiss] = React.useState(React.useMemo(() => [], []));
@@ -309,68 +310,68 @@ const ResultPage = ({ results }) => {
     timeFrameBrush,
   ]);
 
-  const modalData = React.useMemo(() => {
+  React.useEffect(() => {
     if (showModal) {
       console.log("modalInfo :>> ", modalInfo);
-      return combinedBase.length === 0
-        ? baseTableData.current.filter((value) => {
-            let isSameDate = true;
-            let isWithinFrame = true;
-            let isPrimer = true;
-            let isCountry = true;
-            if (modalInfo["date"] !== null) {
-              isSameDate = value.date === modalInfo["date"];
-            }
-            if (
-              modalInfo["lookBack"] !== null &&
-              modalInfo["lookBack"] !== -1
-            ) {
-              const selectedDate = new Date(modalInfo["date"]);
-              const startDate = new Date(selectedDate);
-              startDate.setDate(startDate.getDate() - modalInfo["lookBack"]);
-              isWithinFrame =
-                value.date >= startDate.toISOString().slice(0, 10) &&
-                value.date <= modalInfo["date"];
-            }
-            if (modalInfo["primer"] !== null) {
-              isPrimer = value.primer === modalInfo["primer"];
-            }
-            if (modalInfo["country"] !== null) {
-              isCountry = value.ISO_A3 === modalInfo["country"];
-            }
-            return (isSameDate || isWithinFrame) && isPrimer && isCountry;
+      let primer = primers;
+      let date = modalInfo["date"];
+      let startDate = null;
+      let country = countries;
+      let timeFrame = [];
+      if (modalInfo["lookBack"] !== null && modalInfo["lookBack"] !== -1) {
+        const selectedDate = new Date(modalInfo["date"]);
+        startDate = new Date(selectedDate);
+        startDate.setDate(startDate.getDate() - modalInfo["lookBack"]);
+        timeFrame = [startDate, new Date(date)];
+      }
+      if (date !== null && startDate === null) {
+        timeFrame = [new Date(dateRange.current[0]), new Date(date)];
+      }
+      if (modalInfo["country"] !== null) {
+        country = [{ value: modalInfo["country"] }];
+      }
+      if (modalInfo["primer"] !== null) {
+        primer = modalInfo["primer"];
+      }
+
+      const filterCb = debounce((data) => {
+        let start = performance.now();
+        instance.current
+          .filterTable({
+            baseTableData: data,
+            primers: primer,
+            pType: pType,
+            countries: country,
+            miss: miss,
+            miss3: miss3,
+            match: match,
+            timeFrameBrush: timeFrame,
           })
-        : combinedBase.filter((value) => {
-            let isSameDate = true;
-            let isWithinFrame = true;
-            let isPrimer = true;
-            let isCountry = true;
-            if (modalInfo["date"] !== null) {
-              isSameDate = value.date === modalInfo["date"];
-            }
-            if (
-              modalInfo["lookBack"] !== null ||
-              modalInfo["lookBack"] !== -1
-            ) {
-              const selectedDate = new Date(modalInfo["date"]);
-              const startDate = new Date(selectedDate);
-              startDate.setDate(startDate.getDate() - modalInfo["lookBack"]);
-              isWithinFrame =
-                value.date >= startDate.toISOString().slice(0, 10) &&
-                value.date <= modalInfo["date"];
-            }
-            if (modalInfo["primer"] !== null) {
-              isPrimer = value.primer === modalInfo["primer"][0];
-            }
-            if (modalInfo["country"] !== null) {
-              isCountry = value.ISO_A3 === modalInfo["country"];
-            }
-            return (isSameDate || isWithinFrame) && isPrimer && isCountry;
+          .then((data) => {
+            setIsProcessing(false);
+            setModalData(data);
+            console.log(
+              `Time taken for filtering table data: ${(
+                performance.now() - start
+              ).toFixed(5)} milliseconds`
+            );
           });
-    } else {
-      return [];
+      }, 500);
+      modalInfo["isCombined"]
+        ? filterCb(combinedBase)
+        : filterCb(baseTableData.current);
     }
-  }, [showModal, combinedBase, modalInfo]);
+  }, [
+    primers,
+    pType,
+    countries,
+    miss,
+    miss3,
+    match,
+    showModal,
+    combinedBase,
+    modalInfo,
+  ]);
 
   React.useEffect(() => {
     if (baseTableData.current.length !== 0) {
@@ -463,6 +464,7 @@ const ResultPage = ({ results }) => {
                 setTimeFrameBrush={setTimeFrameCb}
                 showModal={showModalCb}
                 setModalInfo={setModalInfo}
+                isCombined={false}
                 title={"Genomes with mutation"}
                 title2={"Genomes with mutation in 3' end"}
               />
@@ -472,49 +474,37 @@ const ResultPage = ({ results }) => {
               <Col xs={12} lg={6}>
                 <MapWithToolTip
                   title={"Map of Virus with Mutation in Primer Region"}
-                  subtitle={
-                    !useCum
-                      ? `From ${startDate
-                          .toISOString()
-                          .slice(0, 10)} to ${endDate
-                          .toISOString()
-                          .slice(0, 10)}`
-                      : "Cumulative"
-                  }
+                  subtitle={`From ${startDate
+                    .toISOString()
+                    .slice(0, 10)} to ${endDate.toISOString().slice(0, 10)}`}
                   data={tableDataset}
-                  db={useCum ? dbCountCum.current : dbCountDaily.current}
+                  db={dbCountDaily.current}
                   dateRange={dateRange.current}
-                  useCum={useCum}
                   timeFrameBrush={timeFrameBrush}
-                  setTimeFrameBrush={setTimeFrameBrush}
                   showModal={showModalCb}
                   setModalInfo={setModalInfo}
+                  isCombined={false}
                 />
               </Col>
             ) : null}
           </Row>
           {isBar ? (
             <BarGraphWrapper
-              rawData={baseGraphData.current}
+              rawData={tableDataset}
               dateRange={dateRange.current}
-              totalSubmission={barCum ? dbCountCum.current : dbActual}
+              dbDaily={dbCountDaily.current}
               setIsProcessingGraphs={setIsProcessingGraphCb}
-              primers={
-                primers.length === 0 ? Object.keys(baseData.current) : primers
-              }
-              pType={pType}
               countries={countries}
-              miss={miss}
-              miss3={miss3}
-              match={match}
+              countryAsTotal={countryAsTotal}
               useCum={barCum}
-              lookBack={lookBack}
               timeFrameBrush={timeFrameBrush}
               daysBetweenComparison={daysBetweenComparison}
               numberOfBars={numberOfBars}
+              setNumberOfBars={setNumberOfBars}
               showAbsDiff={showAbsDiff}
               showModal={showModalCb}
               setModalInfo={setModalInfo}
+              isCombined={false}
               title={"Genomes with mutation"}
               title2={"Percent of genomes with mutation in 3' end"}
               className="mb-5"
@@ -552,6 +542,7 @@ const ResultPage = ({ results }) => {
                     setTimeFrameBrush={setTimeFrameCb}
                     showModal={showModalCb}
                     setModalInfo={setModalInfo}
+                    isCombined={true}
                   />
                 </Col>
                 <Col xs={12} lg={6}>
@@ -569,13 +560,13 @@ const ResultPage = ({ results }) => {
                         : "Cumulative"
                     }
                     data={tableCombined}
-                    db={useCum ? dbCountCum.current : dbCountDaily.current}
+                    db={dbCountDaily.current}
                     dateRange={dateRange.current}
                     useCum={useCum}
                     timeFrameBrush={timeFrameBrush}
-                    setTimeFrameBrush={setTimeFrameBrush}
                     showModal={showModalCb}
                     setModalInfo={setModalInfo}
+                    isCombined={true}
                   />
                 </Col>
               </Row>
@@ -604,9 +595,7 @@ const ResultPage = ({ results }) => {
               id="detail-table"
               title={""}
               data={modalData}
-              columns={
-                combinedBase.length === 0 ? overviewColumns : combinedCols
-              }
+              columns={modalInfo["isCombined"] ? combinedCols : overviewColumns}
               downloadFileName={"selected_details.csv"}
               isCollapsable={false}
               className="mb-5"
