@@ -120,7 +120,7 @@ const BarGraph = ({
           const submissionCount = item.data.submission_count;
           const countries = !countryAsTotal
             ? "all available Countries"
-            : (item.data.countries_considered.length === 0 || []).length === 0
+            : (item.data.countries_considered || []).length === 0
             ? "all available Countries"
             : `${item.data.countries_considered.length} countries`;
           const endDate = new Date(item.data.date);

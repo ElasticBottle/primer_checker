@@ -12,6 +12,7 @@ const InLineGraph = ({
   primers,
   pType,
   countries,
+  countryAsTotal,
   miss,
   miss3,
   match,
@@ -105,6 +106,7 @@ const InLineGraph = ({
         data={lineData}
         primers={primers.length === 0 ? Object.keys(rawData) : primers}
         dates={dateRange}
+        countryAsTotal={countryAsTotal}
         timeFrameBrush={timeFrameBrush}
         setTimeFrameBrush={setTimeFrameBrush}
         showModal={showModal}

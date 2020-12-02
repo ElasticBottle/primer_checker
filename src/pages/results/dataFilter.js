@@ -58,8 +58,6 @@ const dataFilter = ({
         value.match_pct >= (match[0] || 0) &&
         value.match_pct <= (match[1] || 100);
     }
-    console.log("isCountry :>> ", isCountry);
-    console.log("isPrimer :>> ", isPrimer);
     return (
       isWithinTimeFrame &&
       isPrimer &&

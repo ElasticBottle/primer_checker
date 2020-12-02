@@ -1,10 +1,10 @@
 self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
-    "revision": "e36b53cd6a8d1d0fe96d77b426648ae4",
-    "url": "https://mendel3.bii.a-star.edu.sg/METHODS/corona/gamma/primer/build/166b28b8265a4882f5b6.worker.js"
+    "revision": "331952a5649daca3b1365bd432046408",
+    "url": "https://mendel3.bii.a-star.edu.sg/METHODS/corona/gamma/primer/build/e0d61da6d9ad5210a0e8.worker.js"
   },
   {
-    "revision": "1b263fa744f71a46021cf90f8dee2ece",
+    "revision": "a758339f7d61bcd96046dc9e4f50c96f",
     "url": "https://mendel3.bii.a-star.edu.sg/METHODS/corona/gamma/primer/build/index.html"
   },
   {
@@ -12,7 +12,7 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "https://mendel3.bii.a-star.edu.sg/METHODS/corona/gamma/primer/build/static/css/2.35d896b9.chunk.css"
   },
   {
-    "revision": "dd01106f6cc098ebb3b3",
+    "revision": "29ce84383c4e7a7abc63",
     "url": "https://mendel3.bii.a-star.edu.sg/METHODS/corona/gamma/primer/build/static/css/main.0162f8f8.chunk.css"
   },
   {
@@ -24,8 +24,8 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "https://mendel3.bii.a-star.edu.sg/METHODS/corona/gamma/primer/build/static/js/2.0552be4b.chunk.js.LICENSE.txt"
   },
   {
-    "revision": "dd01106f6cc098ebb3b3",
-    "url": "https://mendel3.bii.a-star.edu.sg/METHODS/corona/gamma/primer/build/static/js/main.e10c9e8f.chunk.js"
+    "revision": "29ce84383c4e7a7abc63",
+    "url": "https://mendel3.bii.a-star.edu.sg/METHODS/corona/gamma/primer/build/static/js/main.a02a1949.chunk.js"
   },
   {
     "revision": "79a542f59e7b9e414810",

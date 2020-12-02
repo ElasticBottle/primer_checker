@@ -100,6 +100,7 @@ const BarGraphWrapper = ({
         title={title}
         title2={title2}
         data={barData}
+        countryAsTotal={countryAsTotal}
         showAbsDiff={showAbsDiff}
         showModal={showModal}
         setModalInfo={setModalInfo}
