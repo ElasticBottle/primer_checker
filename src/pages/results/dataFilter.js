@@ -80,7 +80,6 @@ export function filterTable({
   miss3 = [],
   match = [],
 }) {
-  console.log("baseTableData :>> ", baseTableData);
   return baseTableData.filter(
     dataFilter({
       primers: primers,
@@ -277,7 +276,7 @@ function accumulate(data, lookBack) {
     mutation_abs: data[0].mutation_abs,
     mutation_pct: (data[0].mutation_abs / data[0].submission_count || 0) * 100,
     submission_count: data[0].submission_count,
-    countries_considered: data[0].countries,
+    countries_considered: data[0].countries_considered,
     lookBack: data[0].lookBack,
   });
   if (lookBack === -1) {
@@ -480,18 +479,17 @@ export function makeBarData({
       startDate.toISOString().slice(0, 10),
       now
     );
+    // TODO: Account for scenario where the same primer but different regions have mutations
     const barData = data.reduce((result, currVal) => {
       return result.has(currVal.primer)
         ? result.set(currVal.primer, {
             ...result.get(currVal.primer),
             mutation3_abs:
-              result.get(currVal.primer).mutation3_abs + currVal.misses3 === 0
-                ? 0
-                : 1,
+              result.get(currVal.primer).mutation3_abs +
+              (currVal.misses3 === 0 ? 0 : 1),
             mutation3_pct:
-              ((result.get(currVal.primer).mutation3_abs + currVal.misses3 === 0
-                ? 0
-                : 1) /
+              ((result.get(currVal.primer).mutation3_abs +
+                (currVal.misses3 === 0 ? 0 : 1)) /
                 currDb[now]) *
               100,
             mutation_abs: result.get(currVal.primer).mutation_abs + 1,
@@ -505,8 +503,9 @@ export function makeBarData({
             countries_considered: countries,
             lookBack: differenceInDays,
             submission_count: currDb[now],
-            mutation3_abs: 1,
-            mutation3_pct: (0 / currDb[now]) * 100,
+            mutation3_abs: currVal.misses3 === 0 ? 0 : 1,
+            mutation3_pct:
+              ((currVal.misses3 === 0 ? 0 : 1) / currDb[now]) * 100,
             mutation_abs: 1,
             mutation_pct: (1 / currDb[now]) * 100,
           });
