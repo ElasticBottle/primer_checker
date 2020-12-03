@@ -481,34 +481,34 @@ export function makeBarData({
     );
     // TODO: Account for scenario where the same primer but different regions have mutations
     const barData = data.reduce((result, currVal) => {
-      return result.has(currVal.primer)
-        ? result.set(currVal.primer, {
-            ...result.get(currVal.primer),
-            mutation3_abs:
-              result.get(currVal.primer).mutation3_abs +
-              (currVal.misses3 === 0 ? 0 : 1),
-            mutation3_pct:
-              ((result.get(currVal.primer).mutation3_abs +
-                (currVal.misses3 === 0 ? 0 : 1)) /
-                currDb[now]) *
-              100,
-            mutation_abs: result.get(currVal.primer).mutation_abs + 1,
-            mutation_pct:
-              ((result.get(currVal.primer).mutation_abs + 1) / currDb[now]) *
-              100,
-          })
-        : result.set(currVal.primer, {
-            name: currVal.primer,
-            date: now,
-            countries_considered: countries,
-            lookBack: differenceInDays,
-            submission_count: currDb[now],
-            mutation3_abs: currVal.misses3 === 0 ? 0 : 1,
-            mutation3_pct:
-              ((currVal.misses3 === 0 ? 0 : 1) / currDb[now]) * 100,
-            mutation_abs: 1,
-            mutation_pct: (1 / currDb[now]) * 100,
-          });
+      if (result.has(currVal.primer)) {
+        return result.set(currVal.primer, {
+          ...result.get(currVal.primer),
+          mutation3_abs:
+            result.get(currVal.primer).mutation3_abs +
+            (currVal.misses3 === 0 ? 0 : 1),
+          mutation3_pct:
+            ((result.get(currVal.primer).mutation3_abs +
+              (currVal.misses3 === 0 ? 0 : 1)) /
+              currDb[now]) *
+            100,
+          mutation_abs: result.get(currVal.primer).mutation_abs + 1,
+          mutation_pct:
+            ((result.get(currVal.primer).mutation_abs + 1) / currDb[now]) * 100,
+        });
+      } else {
+        return result.set(currVal.primer, {
+          name: currVal.primer,
+          date: now,
+          countries_considered: countries,
+          lookBack: differenceInDays,
+          submission_count: currDb[now],
+          mutation3_abs: currVal.misses3 === 0 ? 0 : 1,
+          mutation3_pct: ((currVal.misses3 === 0 ? 0 : 1) / currDb[now]) * 100,
+          mutation_abs: 1,
+          mutation_pct: (1 / currDb[now]) * 100,
+        });
+      }
     }, new Map());
     return [[], [...barData.values()]];
   } else {
