@@ -129,7 +129,12 @@ function TableDisplay({ title, data, columns, downloadFileName }) {
       data,
       initialState: {
         pageIndex: 0,
-        hiddenColumns: ["virus_match_idx", "query_match_idx"],
+        hiddenColumns: [
+          "virus_match_start_idx",
+          "virus_match_end_idx",
+          "query_match_start_idx",
+          "query_match_end_idx",
+        ],
       },
       defaultColumn,
       filterTypes,

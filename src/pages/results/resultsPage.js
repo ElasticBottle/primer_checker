@@ -250,6 +250,26 @@ const ResultPage = ({ results }) => {
         accessor: "ISO_A3",
         disableFilters: true,
       },
+      {
+        Header: "Virus Start Index",
+        accessor: "virus_match_start_idx",
+        disableFilters: true,
+      },
+      {
+        Header: "Virus End   Index",
+        accessor: "virus_match_end_idx",
+        disableFilters: true,
+      },
+      {
+        Header: "Query Start Index",
+        accessor: "query_match_start_idx",
+        disableFilters: true,
+      },
+      {
+        Header: "Query End Index",
+        accessor: "query_match_end_idx",
+        disableFilters: true,
+      },
     ],
     []
   );

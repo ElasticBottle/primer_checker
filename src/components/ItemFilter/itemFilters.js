@@ -23,7 +23,7 @@ const help = {
   match:
     "Sets the min and max percentage of match for a virus sequence to be considered a mutation",
   primer: "Select the primers to display",
-  mutationType: "Choose what kinds of mutation to display",
+  mutationType: "Choose what kind of mutations to display",
   pType: "Select which part of the primer to display",
   country:
     "Selects the countries to display. Total will be over selected countries then. To change, check extra settings",
