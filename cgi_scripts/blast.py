@@ -349,12 +349,10 @@ def clean_missed_results(
     df_cleaned = df_cleaned[[is_valid_sequence(seq) for seq in df_cleaned["match_seq"]]]
 
     # Merging the index of alignment for sequence and virus.
-    df_cleaned["virus_match_idx"] = df_cleaned["m_start"].str.cat(
-        df_cleaned["m_end"], sep=" "
-    )
-    df_cleaned["query_match_idx"] = df_cleaned["q_start"].str.cat(
-        df_cleaned["q_end"], sep=" "
-    )
+    df_cleaned["virus_match_start_idx"] = df_cleaned["m_start"]
+    df_cleaned["virus_match_end_idx"] = df_cleaned["m_end"]
+    df_cleaned["query_match_start_idx"] = df_cleaned["q_start"]
+    df_cleaned["query_match_end_idx"] = df_cleaned["q_end"]
 
     # reordering data columns to be returned
     df_cleaned = df_cleaned[
@@ -370,8 +368,10 @@ def clean_missed_results(
             "misses",
             "match_pct",
             "type",
-            "virus_match_idx",
-            "query_match_idx",
+            "virus_match_start_idx",
+            "virus_match_end_idx",
+            "query_match_start_idx",
+            "query_match_end_idx",
         ]
     ]
     return df_cleaned
