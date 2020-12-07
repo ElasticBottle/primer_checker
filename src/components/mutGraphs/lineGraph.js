@@ -114,10 +114,7 @@ const LineGraph = ({
             ? dates[0]
             : getStartDate(dates, date, baseDetails.lookBack);
         let submissionCount = baseDetails.submission_count;
-        console.log(
-          "baseDetails.countries_considered :>> ",
-          baseDetails.countries_considered
-        );
+
         let countries = !countryAsTotal
           ? "all available Countries"
           : (baseDetails.countries_considered || []).length === 0

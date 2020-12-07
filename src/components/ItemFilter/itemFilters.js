@@ -7,9 +7,11 @@ import ReactTooltip from "react-tooltip";
 import { useHistory } from "react-router-dom";
 import { AiOutlineQuestionCircle, AiTwotoneCalendar } from "react-icons/ai";
 import DateRangePicker from "@wojtekmaj/react-daterange-picker";
+import Select from "react-select";
+import makeAnimated from "react-select/animated";
+
 import SelectDropdown from "../selectDropdown/selectDropdown";
 import NumberRangeFilter from "./minMaxFilter";
-
 import FilterGroup from "./filterGroup";
 import "./itemFilter.css";
 
@@ -21,6 +23,7 @@ const help = {
   match:
     "Sets the min and max percentage of match for a virus sequence to be considered a mutation",
   primer: "Select the primers to display",
+  mutationType: "Choose what kinds of mutation to display",
   pType: "Select which part of the primer to display",
   country:
     "Selects the countries to display. Total will be over selected countries then. To change, check extra settings",
@@ -371,6 +374,8 @@ const GraphMapSetting = ({
   variant,
   barCum,
   setBarCum,
+  pTypeChange,
+  isProcessing,
 }) => {
   const dateChange = (e) => {
     console.log("e :>> ", e);
@@ -399,6 +404,34 @@ const GraphMapSetting = ({
               value={timeFrameBrush.length === 0 ? null : timeFrameBrush}
             />
           </InputGroup>
+        </Col>
+        <Col xs={12} lg={6}>
+          <Row>
+            <Col sm={12} lg={5} className="mr-0 pr-lg-0">
+              <InputGroup.Text>
+                Primer Type
+                <AiOutlineQuestionCircle
+                  className="pl-1"
+                  data-tip={help.pType}
+                />
+              </InputGroup.Text>
+            </Col>
+            <Col sm={12} lg={7} className="pl-lg-0">
+              <SelectDropdown
+                onChange={pTypeChange}
+                options={React.useMemo(
+                  () => [
+                    { label: "fwd", value: "fwd" },
+                    { label: "rev", value: "rev" },
+                    { label: "prb", value: "prb" },
+                  ],
+                  []
+                )}
+                placeholder={"Specify Type"}
+                isLoading={isProcessing}
+              />
+            </Col>
+          </Row>
         </Col>
       </Row>
       <FilterGroup
@@ -466,6 +499,8 @@ const AdvanceFilters = ({
   setShowAbsDiff,
   barCum,
   setBarCum,
+  pTypeChange,
+  isProcessing,
 }) => {
   const variant = "light";
   return (
@@ -520,6 +555,8 @@ const AdvanceFilters = ({
                   setCountryAsTotal={setCountryAsTotal}
                   barCum={barCum}
                   setBarCum={setBarCum}
+                  pTypeChange={pTypeChange}
+                  isProcessing={isProcessing}
                 />
               }
             />
@@ -532,14 +569,17 @@ const AdvanceFilters = ({
 
 function BasicFilters({
   baseData,
+  selectionChange,
   setIsProcessing,
   isProcessing,
   setCountries,
   primers,
   setPrimers,
-  setPType,
+  mutationType,
+  setMutationType,
 }) {
   const history = useHistory();
+  const animatedComponents = makeAnimated();
 
   function primerChange(setSelectedPrimers) {
     return (selection) => {
@@ -556,21 +596,6 @@ function BasicFilters({
     };
   }
 
-  function selectionChange(setSelection) {
-    return (selection) => {
-      setIsProcessing(true);
-      const toFilter = selection || [];
-      if (toFilter.length === 0) {
-        setSelection(toFilter);
-      } else {
-        const selection = toFilter.map((val) => {
-          if (val.value === val.label) return val.value;
-          return val;
-        });
-        setSelection(selection);
-      }
-    };
-  }
   return (
     <FilterGroup
       isOpen={true}
@@ -580,7 +605,7 @@ function BasicFilters({
       component={
         <>
           <Row className="mb-3">
-            <Col xs={12} lg={7} className="mb-3">
+            <Col xs={12} lg={6} className="mb-3">
               <Row>
                 <Col sm={12} lg={3} className="mr-0 pr-lg-0">
                   <InputGroup.Text>
@@ -606,30 +631,46 @@ function BasicFilters({
                 </Col>
               </Row>
             </Col>
-            <Col xs={12} lg={5} className="mb-3">
+            <Col xs={12} lg={6} className="mb-3">
               <Row>
-                <Col sm={12} lg={5} className="mr-0 pr-lg-0">
+                <Col sm={12} lg={4} className="mr-0 pr-lg-0">
                   <InputGroup.Text>
-                    Primer Type
+                    Mutation Type
                     <AiOutlineQuestionCircle
                       className="pl-1"
-                      data-tip={help.pType}
+                      data-tip={help.mutationType}
                     />
                   </InputGroup.Text>
                 </Col>
-                <Col sm={12} lg={7} className="pl-lg-0">
-                  <SelectDropdown
-                    onChange={selectionChange(setPType)}
+                <Col sm={12} lg={8} className="pl-lg-0">
+                  <Select
+                    onChange={(e) => {
+                      setMutationType(e.value);
+                    }}
                     options={React.useMemo(
                       () => [
-                        { label: "fwd", value: "fwd" },
-                        { label: "rev", value: "rev" },
-                        { label: "prb", value: "prb" },
+                        { label: "Mutations anywhere", value: 0 },
+                        {
+                          label:
+                            "One or more mutations in 3' end (within last 5 positions)",
+                          value: 1,
+                        },
+                        {
+                          label:
+                            "Two or more mutations in 3' end (within last 5 positions)",
+                          value: 2,
+                        },
                       ],
                       []
                     )}
-                    placeholder={"Specify Type"}
+                    placeholder={"Mutation Type"}
                     isLoading={isProcessing}
+                    isSearchable
+                    closeMenuOnSelect={true}
+                    components={animatedComponents}
+                    defaultValue={[
+                      { label: "Mutations anywhere", value: mutationType },
+                    ]}
                   />
                 </Col>
               </Row>
@@ -638,7 +679,7 @@ function BasicFilters({
           <Row className="mb-3">
             <Col sm={12} lg={2} className="mr-0 pr-lg-0">
               <InputGroup.Text>
-                Counties
+                Countries
                 <AiOutlineQuestionCircle
                   className="pl-1"
                   data-tip={help.country}
@@ -715,18 +756,38 @@ const ItemFilters = ({
   setShowAbsDiff,
   barCum,
   setBarCum,
+  mutationType,
+  setMutationType,
 }) => {
+  function selectionChange(setSelection) {
+    return (selection) => {
+      setIsProcessing(true);
+      const toFilter = selection || [];
+      if (toFilter.length === 0) {
+        setSelection(toFilter);
+      } else {
+        const selection = toFilter.map((val) => {
+          if (val.value === val.label) return val.value;
+          return val;
+        });
+        setSelection(selection);
+      }
+    };
+  }
+
   return (
     <div>
       <Row>
         <BasicFilters
           baseData={baseData}
+          selectionChange={selectionChange}
           isProcessing={isProcessing}
           setIsProcessing={setIsProcessing}
           setCountries={setCountries}
           primers={primers}
           setPrimers={setPrimers}
-          setPType={setPType}
+          mutationType={mutationType}
+          setMutationType={setMutationType}
         />
       </Row>
       <Row>
@@ -758,6 +819,8 @@ const ItemFilters = ({
           setShowAbsDiff={setShowAbsDiff}
           barCum={barCum}
           setBarCum={setBarCum}
+          isProcessing={isProcessing}
+          pTypeChange={selectionChange(setPType)}
         />
       </Row>
       <ReactTooltip html={true}></ReactTooltip>

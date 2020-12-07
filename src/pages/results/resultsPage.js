@@ -20,6 +20,8 @@ import worker from "workerize-loader!./dataFilter"; // eslint-disable-line impor
 
 import { debounce, addName, makeBaseGraphData } from "../../components/util";
 
+const Mutations = Object.freeze({ anywhere: 0, in3End: 1, gt2In3End: 2 });
+
 const InputData = () => {
   const history = useHistory();
   return (
@@ -66,6 +68,7 @@ const ResultPage = ({ results }) => {
   const [countries, setCountries] = React.useState(React.useMemo(() => [], []));
   const [primers, setPrimers] = React.useState(React.useMemo(() => [], []));
   const [pType, setPType] = React.useState(React.useMemo(() => [], []));
+  const [mutationType, setMutationType] = React.useState(Mutations.anywhere);
 
   // Filtering for graph data
   const [useCum, setUseCum] = React.useState(false);
@@ -183,9 +186,10 @@ const ResultPage = ({ results }) => {
         });
   }, [countries, countryAsTotal, lookBack, useCum]);
 
-  React.useEffect(() => {
-    setDaysBetweenComparison(lookBack === 0 ? 1 : lookBack);
-  }, [lookBack]);
+  // ! Not in use because barChart feature has been limited
+  // React.useEffect(() => {
+  //   setDaysBetweenComparison(lookBack === 0 ? 1 : lookBack);
+  // }, [lookBack]);
 
   const overviewColumns = React.useMemo(
     () => [
@@ -288,6 +292,18 @@ const ResultPage = ({ results }) => {
     []
   );
 
+  React.useEffect(() => {
+    if (mutationType === Mutations.anywhere) {
+      setMiss([]);
+      setMiss3([]);
+    } else if (mutationType === Mutations.in3End) {
+      setMiss([]);
+      setMiss3([1]);
+    } else if (mutationType === Mutations.gt2In3End) {
+      setMiss([]);
+      setMiss3([2]);
+    }
+  }, [mutationType, setMiss, setMiss3]);
   React.useEffect(() => {
     setIsProcessing(true);
     updateTableData(
@@ -437,6 +453,8 @@ const ResultPage = ({ results }) => {
             setShowAbsDiff={setShowAbsDiff}
             barCum={barCum}
             setBarCum={setBarCum}
+            mutationType={mutationType}
+            setMutationType={setMutationType}
           />
 
           <Row className="mb-5">
