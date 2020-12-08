@@ -181,25 +181,15 @@ def main():
             to_send[primerId] = results.to_dict("records")
 
     database_counts = []
-    with open(database_count_path, "r") as f:
-        database_counts.append(json.load(f))
-        database_counts[0] = (
-            dict(
-                filter(
-                    lambda x: x[0]
-                    >= (datetime.date.today() - datetime.timedelta(weeks=13)).strftime(
-                        "%Y-%m-%d"
-                    ),
-                    database_counts[0].items(),
-                )
-            )
-            if not input_files["blastAll"]
-            else database_counts[0]
-        )
-    with open(database_count_daily_path, "r") as f:
-        database_counts.append(json.load(f))
-        database_counts[1] = (
-            dict(
+    if input_files["blast_all"]:
+        with open(database_count_path, "r") as f:
+            database_counts.append(json.load(f))
+        with open(database_count_daily_path, "r") as f:
+            database_counts.append(json.load(f))
+    else:
+        with open(database_count_daily_path, "r") as f:
+            database_counts.append(json.load(f))
+            database_counts[1] = dict(
                 filter(
                     lambda x: x[0]
                     >= (datetime.date.today() - datetime.timedelta(weeks=13)).strftime(
@@ -208,9 +198,13 @@ def main():
                     database_counts[1].items(),
                 )
             )
-            if not input_files["blastAll"]
-            else database_counts[1]
-        )
+        df = pd.DataFrame.from_dict(database_counts[1], orient="index")
+        df.index = pd.to_datetime(df.index, format="%Y-%m-%d")
+        date_range = pd.date_range(df.index.min(), df.index.max())
+        df = df.reindex(date_range)
+        df = df.fillna(0)
+        df = df.cumsum(axis=0)
+        database_counts[0] = df
 
     print(
         json.dumps(
