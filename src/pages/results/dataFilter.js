@@ -208,6 +208,9 @@ export function getTotalSubmission({
     return result;
   } else {
     const result = getRangeDbCount(dbDaily, lookBack, dateRange);
+    console.log("result :>> ", result);
+    console.log("dateRange :>> ", dateRange);
+    console.log("dbDaily :>> ", dbDaily);
     if (separate) {
       return result;
     }
@@ -481,23 +484,29 @@ export function makeBarData({
     );
     // TODO: Account for scenario where the same primer but different regions have mutations
     const barData = data.reduce((result, currVal) => {
-      if (result.has(currVal.primer)) {
-        return result.set(currVal.primer, {
-          ...result.get(currVal.primer),
+      if (result[0].has(currVal.primer)) {
+        // TODO Change to account for map to set
+        result[1].add(currVal.virus_name);
+        if (currVal.misses3 === 0) {
+          result[2].add(currVal.virus_name);
+        }
+        return result[0].set(currVal.primer, {
+          ...result[0].get(currVal.primer),
           mutation3_abs:
-            result.get(currVal.primer).mutation3_abs +
+            result[0].get(currVal.primer).mutation3_abs +
             (currVal.misses3 === 0 ? 0 : 1),
           mutation3_pct:
-            ((result.get(currVal.primer).mutation3_abs +
+            ((result[0].get(currVal.primer).mutation3_abs +
               (currVal.misses3 === 0 ? 0 : 1)) /
               currDb[now]) *
             100,
-          mutation_abs: result.get(currVal.primer).mutation_abs + 1,
+          mutation_abs: result[0].get(currVal.primer).mutation_abs + 1,
           mutation_pct:
-            ((result.get(currVal.primer).mutation_abs + 1) / currDb[now]) * 100,
+            ((result[0].get(currVal.primer).mutation_abs + 1) / currDb[now]) *
+            100,
         });
       } else {
-        return result.set(currVal.primer, {
+        return result[0].set(currVal.primer, {
           name: currVal.primer,
           date: now,
           countries_considered: countries,
@@ -509,7 +518,7 @@ export function makeBarData({
           mutation_pct: (1 / currDb[now]) * 100,
         });
       }
-    }, new Map());
+    }, [new Map(), new Map(), new Map()]());
     return [[], [...barData.values()]];
   } else {
     // TODO (EB): THIS IS NOT WORKING. The additional features for bar graph.
