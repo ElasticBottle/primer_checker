@@ -70,13 +70,15 @@ def is_valid_sequence(sequence: str) -> bool:
     return True
 
 
-def recalculate_values(actual_seq: str, primer: str):
+def recalculate_values(query_id: str, actual_seq: str, primer: str):
     # print(actual_seq, primer)
     try:
         assert len(actual_seq) == len(primer)
     except:
         print("actual: ", actual_seq, "query: ", primer)
         raise Exception()
+    if query_id == "rev":
+        actual_seq = complement(actual_seq)
     primer_length = len(primer)
     match_diag = find_matches(primer, actual_seq)
     misses = match_diag.count("X")
@@ -97,6 +99,14 @@ def get_sequence(fasta_db: Connection, virus_id: str) -> str:
     cursor.execute("SELECT sequence FROM Sequences WHERE identifier = ?", (virus_id,))
     result = cursor.fetchall()
     return result[0][0]
+
+
+def complement(seq):
+    """Returns a complement DNA sequence"""
+    complement_dict = {"A": "T", "C": "G", "T": "A", "G": "C"}
+    seq_list = list(seq)
+    seq_list = [complement_dict.get(base, "N") for base in seq_list]
+    return "".join(seq_list)
 
 
 def match_partial_seq(fasta_db: Connection, primers: Dict[str, str]) -> Callable:
@@ -168,7 +178,7 @@ def match_partial_seq(fasta_db: Connection, primers: Dict[str, str]) -> Callable
         elif query_end_idx != query_length:
             if match_end_idx < match_start_idx:
                 match_end_idx = match_end_idx - (query_length - query_end_idx)
-                actual_seq = seq[match_start_idx + 1 : match_end_idx : -1].upper()
+                actual_seq = seq[match_start_idx - 1 : match_end_idx - 2 : -1].upper()
             else:
                 match_end_idx = match_end_idx + (query_length - query_end_idx)
                 actual_seq = seq[match_start_idx - 1 : match_end_idx].upper()
@@ -210,7 +220,7 @@ def match_partial_seq(fasta_db: Connection, primers: Dict[str, str]) -> Callable
                 original_country_name,
             )
         try:
-            return recalculate_values(actual_seq, primer) + (
+            return recalculate_values(query_id, actual_seq, primer) + (
                 query_id,
                 f"{match_start_idx}",
                 f"{match_end_idx}",
@@ -296,6 +306,7 @@ def clean_missed_results(
     result = result[
         (result["abs_mismatch"] >= 1) | (result["abs_match"] != result["query_length"])
     ]
+    print(len(result))
 
     # Checking the virus is globally aligned to query sequence
     df_cleaned = pd.DataFrame(
@@ -495,6 +506,8 @@ def blast(
                 "evalue": "int",
                 "bitscore": "float",
             },
+            error_bad_lines=False,
+            warn_bad_lines=True,
         )
     except:
         with open(out_file_path) as f:
