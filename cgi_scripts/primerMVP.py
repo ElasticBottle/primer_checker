@@ -116,8 +116,14 @@ def analyse_primer(
 
     primerId = input_seq.get("id", None)
     content = input_seq.get("content", None)
-    fwd_str, fwd, rev_str, rev, prb_str, prb = content.split()
-    primers = {fwd_str[1:]: fwd, rev_str[1:]: rev, prb_str[1:]: prb}
+    primer = dict()
+    content = content.split()
+    if len(content) == 4:
+        fwd_str, fwd, rev_str, rev = content
+        primers = {fwd_str[1:]: fwd, rev_str[1:]: rev}
+    else:
+        fwd_str, fwd, rev_str, rev, prb_str, prb = content
+        primers = {fwd_str[1:]: fwd, rev_str[1:]: rev, prb_str[1:]: prb}
 
     if not primerId:
         raise Exception(f"Invalid Id given {primerId}")
@@ -181,7 +187,7 @@ def main():
             to_send[primerId] = results.to_dict("records")
 
     database_counts = []
-    if input_files["blast_all"]:
+    if input_files["blastAll"]:
         with open(database_count_path, "r") as f:
             database_counts.append(json.load(f))
         with open(database_count_daily_path, "r") as f:
@@ -189,13 +195,15 @@ def main():
     else:
         with open(database_count_daily_path, "r") as f:
             database_counts.append(json.load(f))
-            database_counts[1] = dict(
-                filter(
-                    lambda x: x[0]
-                    >= (datetime.date.today() - datetime.timedelta(weeks=13)).strftime(
-                        "%Y-%m-%d"
-                    ),
-                    database_counts[1].items(),
+            database_counts.append(
+                dict(
+                    filter(
+                        lambda x: x[0]
+                        >= (
+                            datetime.date.today() - datetime.timedelta(weeks=13)
+                        ).strftime("%Y-%m-%d"),
+                        database_counts[0].items(),
+                    )
                 )
             )
         df = pd.DataFrame.from_dict(database_counts[1], orient="index")
@@ -204,7 +212,8 @@ def main():
         df = df.reindex(date_range)
         df = df.fillna(0)
         df = df.cumsum(axis=0)
-        database_counts[0] = df
+        df.index = df.index.strftime("%Y-%m-%d")
+        database_counts[0] = df.to_dict(orient="index")
 
     print(
         json.dumps(

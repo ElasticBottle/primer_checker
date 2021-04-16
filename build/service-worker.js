@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/4.3.1/workbox-sw.js");
 
 importScripts(
-  "https://mendel3.bii.a-star.edu.sg/METHODS/corona/gamma/primer/build/precache-manifest.831dba62c8d9808f75508f0b1fdaa2c0.js"
+  "https://mendel3.bii.a-star.edu.sg/METHODS/corona/gamma/primer/build/precache-manifest.321e0b00629f2ec733a45292de45464f.js"
 );
 
 self.addEventListener('message', (event) => {

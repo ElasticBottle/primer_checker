@@ -12,9 +12,8 @@ jupyter-contrib-nbextensions = "*"
 
 [packages]
 pandas = "*"
-numpy = "*"
 pycountry= "*"
-numexpr = "*"
+numpy = "==1.19.3"
 
 [requires]
 python_version = "3.8"

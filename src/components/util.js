@@ -1,7 +1,9 @@
 export const validateFormat = (content) => {
   let format = /^(>fwd|>rev|>prb)[\s\S]{1,2}[ACGTacgt]+[\s\S]{1,2}(>fwd|>rev|>prb)[\s\S]{1,2}[ACGTacgt]+[\s\S]{1,2}(>fwd|>rev|>prb)[\s\S]{1,2}[ACGTacgt]+[\s\S]{1,2}$/;
+  let format2 = /^(>fwd|>rev|>prb)[\s\S]{1,2}[ACGTacgt]+[\s\S]{1,2}(>fwd|>rev|>prb)[\s\S]{1,2}[ACGTacgt]+[\s\S]{1,2}$/;
   let correct_format = format.exec(content);
-  return correct_format !== null;
+  let correct_format2 = format2.exec(content);
+  return correct_format !== null || correct_format2 !== null;
 };
 
 export const getRandomInt = (min, max) => {
