@@ -116,13 +116,13 @@ def analyse_primer(
 
     primerId = input_seq.get("id", None)
     content = input_seq.get("content", None)
-    primer = dict()
-    content = content.split()
-    if len(content) == 4:
-        fwd_str, fwd, rev_str, rev = content
+    primers = dict()
+    contents = content.split()
+    if len(contents) == 4:
+        fwd_str, fwd, rev_str, rev = contents
         primers = {fwd_str[1:]: fwd, rev_str[1:]: rev}
     else:
-        fwd_str, fwd, rev_str, rev, prb_str, prb = content
+        fwd_str, fwd, rev_str, rev, prb_str, prb = contents
         primers = {fwd_str[1:]: fwd, rev_str[1:]: rev, prb_str[1:]: prb}
 
     if not primerId:

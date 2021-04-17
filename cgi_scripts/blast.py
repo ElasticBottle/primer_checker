@@ -77,21 +77,23 @@ def recalculate_values(query_id: str, actual_seq: str, primer: str):
     except:
         print("actual: ", actual_seq, "query: ", primer)
         raise Exception()
-    if query_id == "rev":
-        actual_seq = complement(actual_seq)
     primer_length = len(primer)
     match_diag = find_matches(primer, actual_seq)
     misses = match_diag.count("X")
     misses3 = match_diag[-5:].count("X")
     abs_match = primer_length - misses
     pct_match = (abs_match / primer_length) * 100
-    return (
-        actual_seq,
-        f"{primer} {match_diag} {actual_seq}",
-        misses3,
-        misses,
-        pct_match,
-    )
+    if pct_match < 20:
+        actual_seq = complement(actual_seq)
+        return recalculate_values(query_id, actual_seq, primer)
+    else:
+        return (
+            actual_seq,
+            f"{primer} {match_diag} {actual_seq}",
+            misses3,
+            misses,
+            pct_match,
+        )
 
 
 def get_sequence(fasta_db: Connection, virus_id: str) -> str:
